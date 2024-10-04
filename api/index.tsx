@@ -459,6 +459,8 @@ app.frame('/game', async (c) => {
 })
 
 function renderBoard(board: (string | null)[], profileImage: string | null) {
+  console.log('Rendering board with profile image:', profileImage);
+
   return (
     <div style={{
       display: 'flex',
@@ -480,19 +482,22 @@ function renderBoard(board: (string | null)[], profileImage: string | null) {
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
               }}>
-                {board[index] === 'O' && profileImage ? (
-                  <img 
-                    src={profileImage} 
-                    alt="Player"
-                    style={{
-                      width: '120px',
-                      height: '120px',
-                      borderRadius: '50%',
-                    }}
-                  />
-                ) : (
-                  board[index]
-                )}
+                {board[index] === 'O' ? (
+                  profileImage ? (
+                    <img 
+                      src={profileImage} 
+                      alt="Player"
+                      style={{
+                        width: '100px',
+                        height: '100px',
+                        borderRadius: '50%',
+                      }}
+                      onerror="this.onerror=null; this.src='https://example.com/placeholder.png';"
+                    />
+                  ) : (
+                    'O'
+                  )
+                ) : board[index]}
               </div>
             );
           })}
