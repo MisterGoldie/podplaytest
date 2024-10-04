@@ -233,15 +233,14 @@ app.frame('/game', async (c) => {
   let username = 'Player';
   if (fid) {
     try {
-      username = await Promise.race([
-        getUsername(fid.toString()),
-        new Promise<string>((_, reject) => setTimeout(() => reject(new Error('Username fetch timeout')), 3000))
-      ]);
+      username = await getUsername(fid.toString());
+      console.log(`Username retrieved in /game route: ${username}`);
     } catch (error) {
-      console.error('Error or timeout getting username:', error);
+      console.error('Error getting username:', error);
     }
   }
 
+  // Always initialize a new game state when entering this route
   let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false }
   let message = `New game started! Your turn, ${username}`
 
@@ -251,6 +250,7 @@ app.frame('/game', async (c) => {
 
     const move = parseInt(buttonValue.split(':')[2])
     if (board[move] === null && !isGameOver) {
+      // Player's move
       board[move] = 'O'
       message = `${username} moved at ${COORDINATES[move]}.`
       
@@ -258,12 +258,13 @@ app.frame('/game', async (c) => {
         message = `${username} wins! Game over.`
         isGameOver = true
         if (fid) {
-          updateUserRecord(fid.toString(), true).catch(error => console.error('Error updating user record:', error));
+          await updateUserRecord(fid.toString(), true);
         }
       } else if (board.every((cell: string | null) => cell !== null)) {
         message = "Game over! It's a draw."
         isGameOver = true
       } else {
+        // Computer's move
         const computerMove = getBestMove(board, 'X')
         if (computerMove !== -1) {
           board[computerMove] = 'X'
@@ -273,7 +274,7 @@ app.frame('/game', async (c) => {
             message += ` Computer wins! Game over.`
             isGameOver = true
             if (fid) {
-              updateUserRecord(fid.toString(), false).catch(error => console.error('Error updating user record:', error));
+              await updateUserRecord(fid.toString(), false);
             }
           } else if (board.every((cell: string | null) => cell !== null)) {
             message += " It's a draw. Game over."
@@ -292,12 +293,16 @@ app.frame('/game', async (c) => {
     state = { board, currentPlayer, isGameOver }
   }
 
+  // Encode the state in the button values
   const encodedState = encodeState(state)
+
+  // Get available moves
   const availableMoves = state.board.reduce((acc, cell, index) => {
     if (cell === null) acc.push(index)
     return acc
   }, [] as number[])
 
+  // Shuffle available moves and take the first 4 (or less if fewer are available)
   const shuffledMoves = shuffleArray([...availableMoves]).slice(0, 4)
 
   const intents = state.isGameOver
@@ -310,6 +315,10 @@ app.frame('/game', async (c) => {
           {COORDINATES[index]}
         </Button>
       )
+
+  console.log(`Rendering /game route for username: ${username}`);
+  console.log(`Game state: ${JSON.stringify(state)}`);
+  console.log(`Intents: ${JSON.stringify(intents)}`);
 
   return c.res({
     image: (
