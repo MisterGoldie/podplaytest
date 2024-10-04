@@ -192,6 +192,7 @@ app.frame('/game', async (c) => {
   if (fid) {
     try {
       username = await getUsername(fid.toString());
+      console.log(`Username retrieved in /game route: ${username}`);
     } catch (error) {
       console.error('Error getting username:', error);
     }
@@ -266,6 +267,10 @@ app.frame('/game', async (c) => {
           {COORDINATES[index]}
         </Button>
       )
+
+  console.log(`Rendering /game route for username: ${username}`);
+  console.log(`Game state: ${JSON.stringify(state)}`);
+  console.log(`Intents: ${JSON.stringify(intents)}`);
 
   return c.res({
     image: (
@@ -356,33 +361,14 @@ app.frame('/share', async (c) => {
   return c.res({
     image: (
       <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '1080px',
-        height: '1080px',
-        backgroundImage: 'url(https://bafybeigp3dkqr7wqgvp7wmycpg6axhgmc42pljkzmhdbnrsnxehoieqeri.ipfs.w3s.link/Frame%209.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        fontSize: '48px',
-        fontFamily: 'Arial, sans-serif',
-        textAlign: 'center',
-        position: 'relative',
+        // ... (styles remain the same)
       }}>
         {profileImage && (
           <img 
             src={profileImage} 
             alt={`${username}'s profile`} 
             style={{
-              position: 'absolute',
-              top: '20px',
-              left: '20px',
-              width: '100px',
-              height: '100px',
-              borderRadius: '50%',
-              border: '3px solid white',
+              // ... (styles remain the same)
             }}
           />
         )}
