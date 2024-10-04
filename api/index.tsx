@@ -286,17 +286,21 @@ app.frame('/game', async (c) => {
         color: 'white',
         fontSize: '36px',
         fontFamily: 'Arial, sans-serif',
+        position: 'relative', // Add this to position the profile picture absolutely within this container
       }}>
         {profilePicture && (
           <img 
             src={profilePicture} 
             alt={`${username}'s profile`} 
             style={{
-              width: '100px',
-              height: '100px',
+              position: 'absolute',
+              bottom: '20px',
+              left: '20px',
+              width: '80px',
+              height: '80px',
               borderRadius: '50%',
-              marginBottom: '20px',
-              border: '3px solid white'
+              border: '3px solid white',
+              zIndex: 10,
             }}
           />
         )}
