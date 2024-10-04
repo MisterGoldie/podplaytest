@@ -159,7 +159,7 @@ app.frame('/', () => {
 // How to Play route
 app.frame('/howtoplay', () => {
   const imageUrl = 'https://bafybeifzk7uojcicnh6yhnqvoldkpzuf32sullm34ela266xthbidca6ny.ipfs.w3s.link/HowToPlay%20(1).png'
-  const baseUrl = 'https://podplay.vercel.app' // Update this to your actual domain
+  const baseUrl = 'https://podplaytest.vercel.app' // Update this to your actual domain
 
   const html = `
     <!DOCTYPE html>
@@ -353,7 +353,7 @@ function renderBoard(board: (string | null)[]) {
 
 app.frame('/share', (c) => {
   const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
-  const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
+  const baseUrl = 'https://podplaytest.vercel.app'; // Update this to your actual domain
   const originalFramesLink = `${baseUrl}/api`;
   
   // Construct the Farcaster share URL with both text and the embedded link
