@@ -343,6 +343,13 @@ function renderBoard(board: (string | null)[]) {
 app.frame('/share', async (c) => {
   const { frameData } = c;
   const fid = frameData?.fid;
+  const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
+  const baseUrl = 'https://podplaytest.vercel.app'; // Update this to your actual domain
+  const originalFramesLink = `${baseUrl}/api`;
+  
+  // Construct the Farcaster share URL with both text and the embedded link
+  const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
+
 
   let profileImage: string | null = null;
   if (fid) {
@@ -387,7 +394,8 @@ app.frame('/share', async (c) => {
       </div>
     ),
     intents: [
-      <Button action="/">Back to Game</Button>
+      <Button action="/">Back to Game</Button>,
+      <Button.Link href={farcasterShareURL}>Share</Button.Link>
     ],
   });
 });
