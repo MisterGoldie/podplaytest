@@ -99,6 +99,13 @@ async function getUserProfilePicture(username: string) {
 
     const data = await response.json();
     console.log('Profile picture API response:', JSON.stringify(data));
+
+    // Check if the Social field is null
+    if (data.data.Socials.Social === null) {
+      console.log('No social data found for the user');
+      return null;
+    }
+
     return data;
   } catch (error) {
     console.error('Error fetching profile picture:', error);
@@ -337,8 +344,11 @@ app.frame('/share', async (c) => {
   let profilePicture = null;
   try {
     const profileData = await getUserProfilePicture(username);
-    if (profileData && profileData.data && profileData.data.Socials && profileData.data.Socials.Social && profileData.data.Socials.Social[0]) {
-      profilePicture = profileData.data.Socials.Social[0].profileImage;
+    if (profileData && profileData.data && profileData.data.Socials && profileData.data.Socials.Social) {
+      // Check if Social is an array and has at least one element
+      if (Array.isArray(profileData.data.Socials.Social) && profileData.data.Socials.Social.length > 0) {
+        profilePicture = profileData.data.Socials.Social[0].profileImage;
+      }
     }
   } catch (error) {
     console.error('Error fetching profile picture:', error);
@@ -395,6 +405,7 @@ app.frame('/share', async (c) => {
     ],
   });
 });
+
 
 function getBestMove(board: (string | null)[], player: string): number {
   const opponent = player === 'X' ? 'O' : 'X'
