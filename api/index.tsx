@@ -227,15 +227,15 @@ function renderBoard(board: (string | null)[], profileImage: string | null) {
                     src={profileImage} 
                     alt="Player"
                     style={{
-                      width: '180px',
-                      height: '180px',
+                      width: '120px',
+                      height: '120px',
                       borderRadius: '50%',
                       border: '3px solid white',
                     }}
                   />
-                ) : board[index] === 'X' ? (
-                  <span style={{ color: 'white' }}>X</span>
-                ) : null}
+                ) : (
+                  <span style={{ color: 'white' }}>{board[index]}</span>
+                )}
               </div>
             );
           })}
