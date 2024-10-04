@@ -12,7 +12,6 @@ const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
 const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as string;
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 
-// Initialize Firebase
 initializeApp({
   credential: cert({
     projectId: process.env.FIREBASE_PROJECT_ID,
@@ -22,6 +21,7 @@ initializeApp({
 });
 
 const db = getFirestore();
+
 
 export const app = new Frog<{ Variables: NeynarVariables }>({
   basePath: '/api',
