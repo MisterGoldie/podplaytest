@@ -13,51 +13,20 @@ const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as str
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 
 // Enhanced Firebase Initialization
-try {
-  if (getApps().length === 0) {
-    console.log('Initializing Firebase app...');
-    
-    const projectId = process.env.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-
-    if (!projectId || !clientEmail || !privateKey) {
-      throw new Error('Missing Firebase configuration. Check your environment variables.');
-    }
-
-    // Log the length of the private key (don't log the actual key for security reasons)
-    console.log('Private key length:', privateKey.length);
-
-    // Ensure the private key is properly formatted
-    if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
-      privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----\n`;
-    }
-
-    privateKey = privateKey.replace(/\\n/g, '\n');
-
-    console.log('Formatted private key length:', privateKey.length);
-
+if (getApps().length === 0) {
+  try {
     initializeApp({
       credential: cert({
-        projectId,
-        clientEmail,
-        privateKey,
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
       }),
     });
     console.log('Firebase app initialized successfully');
-  } else {
-    console.log('Firebase app already initialized');
+  } catch (error) {
+    console.error('Error initializing Firebase:', error);
+    throw error;
   }
-} catch (error) {
-  console.error('Error initializing Firebase:');
-  if (error instanceof Error) {
-    console.error('Error name:', error.name);
-    console.error('Error message:', error.message);
-    console.error('Error stack:', error.stack);
-  } else {
-    console.error('Unexpected error:', error);
-  }
-  throw error;
 }
 
 const db = getFirestore();
@@ -211,7 +180,6 @@ async function updateUserRecord(fid: string, isWin: boolean) {
         }
       }
     });
-
 
     console.log(`User record updated successfully for FID: ${fid}`);
   } catch (error) {
