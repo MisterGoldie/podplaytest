@@ -7,6 +7,7 @@ import { NeynarVariables } from 'frog/middlewares'
 
 const AIRSTACK_API_URL = 'https://api.airstack.xyz/gql';
 const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
+const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as string;
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 
 export const app = new Frog<{ Variables: NeynarVariables }>({
@@ -53,7 +54,7 @@ async function getUsername(fid: string): Promise<string> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': AIRSTACK_API_KEY,
+        'Authorization': AIRSTACK_API_KEY_SECONDARY,
       },
       body: JSON.stringify({ query, variables: { fid } }),
     });
@@ -70,6 +71,44 @@ async function getUsername(fid: string): Promise<string> {
   } catch (error) {
     console.error('Error fetching username:', error);
     return 'Player';
+  }
+}
+
+async function getUserProfilePicture(username: string): Promise<string | null> {
+  const query = `
+    query GetUserProfilePicture {
+      Socials(input: {filter: {profileName: {_eq: "${username}"}}, blockchain: ethereum, limit: 50}) {
+        Social {
+          dappName
+          profileName
+          profileImage
+        }
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch(AIRSTACK_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': AIRSTACK_API_KEY_SECONDARY,
+      },
+      body: JSON.stringify({ query }),
+    });
+
+    const data = await response.json();
+    console.log('Profile picture API response:', JSON.stringify(data));
+
+    if (data && data.data && data.data.Socials && Array.isArray(data.data.Socials.Social) && data.data.Socials.Social.length > 0) {
+      return data.data.Socials.Social[0]?.profileImage || null;
+    } else {
+      console.log('Unexpected API response structure:', JSON.stringify(data));
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching profile picture:', error);
+    return null;
   }
 }
 
@@ -152,11 +191,13 @@ app.frame('/game', async (c) => {
   const fid = frameData?.fid;
 
   let username = 'Player';
+  let profilePicture = null;
   if (fid) {
     try {
       username = await getUsername(fid.toString());
+      profilePicture = await getUserProfilePicture(username);
     } catch (error) {
-      console.error('Error getting username:', error);
+      console.error('Error getting user info:', error);
     }
   }
 
@@ -246,6 +287,19 @@ app.frame('/game', async (c) => {
         fontSize: '36px',
         fontFamily: 'Arial, sans-serif',
       }}>
+        {profilePicture && (
+          <img 
+            src={profilePicture} 
+            alt={`${username}'s profile`} 
+            style={{
+              width: '100px',
+              height: '100px',
+              borderRadius: '50%',
+              marginBottom: '20px',
+              border: '3px solid white'
+            }}
+          />
+        )}
         {renderBoard(state.board)}
         <div style={{ 
           marginTop: '40px', 
