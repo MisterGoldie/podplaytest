@@ -200,7 +200,7 @@ function shuffleArray<T>(array: T[]): T[] {
   return array;
 }
 
-function renderBoard(board: (string | null)[]) {
+function renderBoard(board: (string | null)[], profileImage: string | null) {
   return (
     <div style={{
       display: 'flex',
@@ -222,7 +222,20 @@ function renderBoard(board: (string | null)[]) {
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
               }}>
-                {board[index]}
+                {board[index] === 'O' && profileImage ? (
+                  <img 
+                    src={profileImage} 
+                    alt="Player"
+                    style={{
+                      width: '180px',
+                      height: '180px',
+                      borderRadius: '50%',
+                      border: '3px solid white',
+                    }}
+                  />
+                ) : board[index] === 'X' ? (
+                  <span style={{ color: 'white' }}>X</span>
+                ) : null}
               </div>
             );
           })}
@@ -376,14 +389,14 @@ app.frame('/game', async (c) => {
   const fid = frameData?.fid;
 
   let username = 'Player';
+  let profilePicture: string | null = null;
   if (fid) {
     try {
-      username = await Promise.race([
-        getUsername(fid.toString()),
-        new Promise<string>((_, reject) => setTimeout(() => reject(new Error('Username fetch timeout')), 3000))
-      ]);
+      username = await getUsername(fid.toString());
+      profilePicture = await getUserProfilePicture(fid.toString());
+      console.log(`Username: ${username}, Profile Picture: ${profilePicture}`);
     } catch (error) {
-      console.error('Error or timeout getting username:', error);
+      console.error('Error getting user info:', error);
     }
   }
 
@@ -472,7 +485,7 @@ app.frame('/game', async (c) => {
         fontSize: '36px',
         fontFamily: 'Arial, sans-serif',
       }}>
-        {renderBoard(state.board)}
+        {renderBoard(state.board, profilePicture)}
         <div style={{ 
           marginTop: '40px', 
           maxWidth: '900px', 
@@ -617,14 +630,16 @@ app.frame('/game', async (c) => {
   const fid = frameData?.fid;
 
   let username = 'Player';
+  let profileImage: string | null = null;
   if (fid) {
     try {
-      username = await Promise.race([
+      [username, profileImage] = await Promise.all([
         getUsername(fid.toString()),
-        new Promise<string>((_, reject) => setTimeout(() => reject(new Error('Username fetch timeout')), 3000))
+        getUserProfilePicture(fid.toString())
       ]);
+      console.log(`Username: ${username}, Profile Image: ${profileImage}`);
     } catch (error) {
-      console.error('Error or timeout getting username:', error);
+      console.error('Error getting user info:', error);
     }
   }
 
@@ -713,7 +728,7 @@ app.frame('/game', async (c) => {
         fontSize: '36px',
         fontFamily: 'Arial, sans-serif',
       }}>
-        {renderBoard(state.board)}
+        {renderBoard(state.board, profileImage)}
         <div style={{ 
           marginTop: '40px', 
           maxWidth: '900px', 
