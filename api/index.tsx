@@ -4,7 +4,7 @@ import { Button, Frog } from 'frog'
 import { handle } from 'frog/vercel'
 import { neynar } from 'frog/middlewares'
 import { NeynarVariables } from 'frog/middlewares'
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 const AIRSTACK_API_URL = 'https://api.airstack.xyz/gql';
@@ -12,36 +12,16 @@ const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
 const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as string;
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 
-// Firebase Initialization
-try {
-  if (getApps().length === 0) {
-    console.log('Initializing Firebase app...');
-    const privateKeyBase64 = process.env.FIREBASE_PRIVATE_KEY_BASE64;
-    if (!privateKeyBase64) {
-      throw new Error('FIREBASE_PRIVATE_KEY_BASE64 is not set in environment variables');
-    }
-    
-    const privateKey = Buffer.from(privateKeyBase64, 'base64').toString('ascii');
-    console.log('Decoded private key length:', privateKey.length);
-    
-    initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: privateKey,
-      }),
-    });
-    console.log('Firebase app initialized successfully');
-  } else {
-    console.log('Firebase app already initialized');
-  }
-} catch (error) {
-  console.error('Error initializing Firebase:', error);
-  throw error;
-}
+initializeApp({
+  credential: cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+  }),
+});
 
 const db = getFirestore();
-console.log('Firestore instance created');
+
 
 export const app = new Frog<{ Variables: NeynarVariables }>({
   basePath: '/api',
@@ -148,45 +128,28 @@ async function getUserProfilePicture(fid: string): Promise<string | null> {
 async function updateUserRecord(fid: string, isWin: boolean) {
   const userRef = db.collection('users').doc(fid);
   
-  try {
-    await db.runTransaction(async (transaction) => {
-      const userDoc = await transaction.get(userRef);
-      if (!userDoc.exists) {
-        transaction.set(userRef, { wins: isWin ? 1 : 0, losses: isWin ? 0 : 1 });
+  await db.runTransaction(async (transaction) => {
+    const userDoc = await transaction.get(userRef);
+    if (!userDoc.exists) {
+      transaction.set(userRef, { wins: isWin ? 1 : 0, losses: isWin ? 0 : 1 });
+    } else {
+      const userData = userDoc.data();
+      if (isWin) {
+        transaction.update(userRef, { wins: (userData!.wins || 0) + 1 });
       } else {
-        const userData = userDoc.data();
-        if (isWin) {
-          transaction.update(userRef, { wins: (userData!.wins || 0) + 1 });
-        } else {
-          transaction.update(userRef, { losses: (userData!.losses || 0) + 1 });
-        }
+        transaction.update(userRef, { losses: (userData!.losses || 0) + 1 });
       }
-    });
-    console.log(`User record updated successfully for FID: ${fid}`);
-  } catch (error) {
-    console.error(`Error updating user record for FID ${fid}:`, error);
-  }
+    }
+  });
 }
 
 async function getUserRecord(fid: string): Promise<{ wins: number; losses: number }> {
-  console.log(`Attempting to get user record for FID: ${fid}`);
-  try {
-    const userDoc = await db.collection('users').doc(fid).get();
-    console.log(`User document retrieved for FID ${fid}:`, userDoc.exists);
-    if (!userDoc.exists) {
-      console.log(`No record found for FID: ${fid}. Returning default record.`);
-      return { wins: 0, losses: 0 };
-    }
-    const userData = userDoc.data();
-    console.log(`User data for FID ${fid}:`, userData);
-    return { 
-      wins: userData?.wins || 0, 
-      losses: userData?.losses || 0 
-    };
-  } catch (error) {
-    console.error(`Error getting user record for FID ${fid}:`, error);
+  const userDoc = await db.collection('users').doc(fid).get();
+  if (!userDoc.exists) {
     return { wins: 0, losses: 0 };
   }
+  const userData = userDoc.data();
+  return { wins: userData!.wins || 0, losses: userData!.losses || 0 };
 }
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -197,117 +160,6 @@ function shuffleArray<T>(array: T[]): T[] {
   return array;
 }
 
-function renderBoard(board: (string | null)[]) {
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '20px',
-    }}>
-      {[0, 1, 2].map(row => (
-        <div key={row} style={{ display: 'flex', gap: '20px' }}>
-          {[0, 1, 2].map(col => {
-            const index = row * 3 + col;
-            return (
-              <div key={index} style={{
-                width: '200px',
-                height: '200px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '120px',
-                background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
-                border: '4px solid black',
-              }}>
-                {board[index]}
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function getBestMove(board: (string | null)[], player: string): number {
-  const opponent = player === 'X' ? 'O' : 'X'
-
-  // Randomly choose to make a suboptimal move (20% chance)
-  if (Math.random() < 0.2) {
-    const availableMoves = board.reduce((acc, cell, index) => {
-      if (cell === null) acc.push(index)
-      return acc
-    }, [] as number[])
-    return availableMoves[Math.floor(Math.random() * availableMoves.length)]
-  }
-
-  // If it's the first move (only one 'O' on the board), choose a random available position
-  if (board.filter(cell => cell !== null).length === 1) {
-    const availableMoves = board.reduce((acc, cell, index) => {
-      if (cell === null) acc.push(index)
-      return acc
-    }, [] as number[])
-    return availableMoves[Math.floor(Math.random() * availableMoves.length)]
-  }
-
-  // Check for winning move
-  for (let i = 0; i < 9; i++) {
-    if (board[i] === null) {
-      board[i] = player
-      if (checkWin(board)) {
-        board[i] = null
-        return i
-      }
-      board[i] = null
-    }
-  }
-
-  // Check for blocking opponent's winning move
-  for (let i = 0; i < 9; i++) {
-    if (board[i] === null) {
-      board[i] = opponent
-      if (checkWin(board)) {
-        board[i] = null
-        return i
-      }
-      board[i] = null
-    }
-  }
-
-  // Choose center if available (70% chance)
-  if (board[4] === null && Math.random() < 0.7) return 4
-
-  // Choose corners or sides randomly
-  const availableMoves = board.reduce((acc, cell, index) => {
-    if (cell === null) acc.push(index)
-    return acc
-  }, [] as number[])
-  return availableMoves[Math.floor(Math.random() * availableMoves.length)]
-}
-
-function checkWin(board: (string | null)[]) {
-  const winPatterns = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-    [0, 4, 8], [2, 4, 6] // Diagonals
-  ]
-
-  return winPatterns.some(pattern =>
-    board[pattern[0]] &&
-    board[pattern[0]] === board[pattern[1]] &&
-    board[pattern[0]] === board[pattern[2]]
-  )
-}
-
-function encodeState(state: GameState): string {
-  return Buffer.from(JSON.stringify(state)).toString('base64')
-}
-
-function decodeState(encodedState: string): GameState {
-  return JSON.parse(Buffer.from(encodedState, 'base64').toString())
-}
-
-// Routes will be defined here...
 
 // Initial route
 app.frame('/', () => {
@@ -549,6 +401,116 @@ app.frame('/share', async (c) => {
     ],
   });
 });
+
+function renderBoard(board: (string | null)[]) {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '20px',
+    }}>
+      {[0, 1, 2].map(row => (
+        <div key={row} style={{ display: 'flex', gap: '20px' }}>
+          {[0, 1, 2].map(col => {
+            const index = row * 3 + col;
+            return (
+              <div key={index} style={{
+                width: '200px',
+                height: '200px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '120px',
+                background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
+                border: '4px solid black',
+              }}>
+                {board[index]}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function getBestMove(board: (string | null)[], player: string): number {
+  const opponent = player === 'X' ? 'O' : 'X'
+
+  // Randomly choose to make a suboptimal move (started off at 30% chance)
+  if (Math.random() < 0.2) {
+    const availableMoves = board.reduce((acc, cell, index) => {
+      if (cell === null) acc.push(index)
+      return acc
+    }, [] as number[])
+    return availableMoves[Math.floor(Math.random() * availableMoves.length)]
+  }
+
+  // If it's the first move (only one 'O' on the board), choose a random available position
+  if (board.filter(cell => cell !== null).length === 1) {
+    const availableMoves = board.reduce((acc, cell, index) => {
+      if (cell === null) acc.push(index)
+      return acc
+    }, [] as number[])
+    return availableMoves[Math.floor(Math.random() * availableMoves.length)]
+  }
+
+  // Check for winning move
+  for (let i = 0; i < 9; i++) {
+    if (board[i] === null) {
+      board[i] = player
+      if (checkWin(board)) {
+        board[i] = null
+        return i
+      }
+      board[i] = null
+    }
+  }
+
+  // Check for blocking opponent's winning move
+  for (let i = 0; i < 9; i++) {
+    if (board[i] === null) {
+      board[i] = opponent
+      if (checkWin(board)) {
+        board[i] = null
+        return i
+      }
+      board[i] = null
+    }
+  }
+
+  // Choose center if available (70% chance)
+  if (board[4] === null && Math.random() < 0.7) return 4
+
+  // Choose corners or sides randomly
+  const availableMoves = board.reduce((acc, cell, index) => {
+    if (cell === null) acc.push(index)
+    return acc
+  }, [] as number[])
+  return availableMoves[Math.floor(Math.random() * availableMoves.length)]
+}
+
+function checkWin(board: (string | null)[]) {
+  const winPatterns = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+    [0, 4, 8], [2, 4, 6] // Diagonals
+  ]
+
+  return winPatterns.some(pattern =>
+    board[pattern[0]] &&
+    board[pattern[0]] === board[pattern[1]] &&
+    board[pattern[0]] === board[pattern[2]]
+  )
+}
+
+function encodeState(state: GameState): string {
+  return Buffer.from(JSON.stringify(state)).toString('base64')
+}
+
+function decodeState(encodedState: string): GameState {
+  return JSON.parse(Buffer.from(encodedState, 'base64').toString())
+}
 
 export const GET = handle(app)
 export const POST = handle(app)
