@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@farcaster/hub-nodejs": "^0.12.4",
+    "firebase-admin": "^12.6.0",
     "frog": "latest",
     "hono": "^4",
     "neynar-next": "^0.3.3"

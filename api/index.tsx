@@ -4,11 +4,24 @@ import { Button, Frog } from 'frog'
 import { handle } from 'frog/vercel'
 import { neynar } from 'frog/middlewares'
 import { NeynarVariables } from 'frog/middlewares'
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 
 const AIRSTACK_API_URL = 'https://api.airstack.xyz/gql';
 const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
 const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as string;
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
+
+// Initialize Firebase
+initializeApp({
+  credential: cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+  }),
+});
+
+const db = getFirestore();
 
 export const app = new Frog<{ Variables: NeynarVariables }>({
   basePath: '/api',
@@ -112,6 +125,33 @@ async function getUserProfilePicture(fid: string): Promise<string | null> {
   }
 }
 
+async function updateUserRecord(fid: string, isWin: boolean) {
+  const userRef = db.collection('users').doc(fid);
+  
+  await db.runTransaction(async (transaction) => {
+    const userDoc = await transaction.get(userRef);
+    if (!userDoc.exists) {
+      transaction.set(userRef, { wins: isWin ? 1 : 0, losses: isWin ? 0 : 1 });
+    } else {
+      const userData = userDoc.data();
+      if (isWin) {
+        transaction.update(userRef, { wins: (userData!.wins || 0) + 1 });
+      } else {
+        transaction.update(userRef, { losses: (userData!.losses || 0) + 1 });
+      }
+    }
+  });
+}
+
+async function getUserRecord(fid: string): Promise<{ wins: number; losses: number }> {
+  const userDoc = await db.collection('users').doc(fid).get();
+  if (!userDoc.exists) {
+    return { wins: 0, losses: 0 };
+  }
+  const userData = userDoc.data();
+  return { wins: userData!.wins || 0, losses: userData!.losses || 0 };
+}
+
 function shuffleArray<T>(array: T[]): T[] {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -119,6 +159,7 @@ function shuffleArray<T>(array: T[]): T[] {
   }
   return array;
 }
+
 
 // Initial route
 app.frame('/', () => {
@@ -216,6 +257,9 @@ app.frame('/game', async (c) => {
       if (checkWin(board)) {
         message = `${username} wins! Game over.`
         isGameOver = true
+        if (fid) {
+          await updateUserRecord(fid.toString(), true);
+        }
       } else if (board.every((cell: string | null) => cell !== null)) {
         message = "Game over! It's a draw."
         isGameOver = true
@@ -229,6 +273,9 @@ app.frame('/game', async (c) => {
           if (checkWin(board)) {
             message += ` Computer wins! Game over.`
             isGameOver = true
+            if (fid) {
+              await updateUserRecord(fid.toString(), false);
+            }
           } else if (board.every((cell: string | null) => cell !== null)) {
             message += " It's a draw. Game over."
             isGameOver = true
@@ -307,57 +354,21 @@ app.frame('/game', async (c) => {
   })
 })
 
-function renderBoard(board: (string | null)[]) {
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '20px',
-    }}>
-      {[0, 1, 2].map(row => (
-        <div key={row} style={{ display: 'flex', gap: '20px' }}>
-          {[0, 1, 2].map(col => {
-            const index = row * 3 + col;
-            return (
-              <div key={index} style={{
-                width: '200px',
-                height: '200px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '120px',
-                background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
-                border: '4px solid black',
-              }}>
-                {board[index]}
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-
 app.frame('/share', async (c) => {
   const { frameData } = c;
   const fid = frameData?.fid;
-  const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
-  const baseUrl = 'https://podplaytest.vercel.app'; // Update this to your actual domain
-  const originalFramesLink = `${baseUrl}/api`;
-  
-  // Construct the Farcaster share URL with both text and the embedded link
-  const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
-
 
   let profileImage: string | null = null;
+  let userRecord = { wins: 0, losses: 0 };
+
   if (fid) {
     try {
       profileImage = await getUserProfilePicture(fid.toString());
+      userRecord = await getUserRecord(fid.toString());
       console.log(`Profile image URL for FID ${fid}:`, profileImage);
+      console.log(`User record for FID ${fid}:`, userRecord);
     } catch (error) {
-      console.error(`Error fetching profile image for FID ${fid}:`, error);
+      console.error(`Error fetching data for FID ${fid}:`, error);
     }
   }
 
@@ -390,18 +401,47 @@ app.frame('/share', async (c) => {
           />
         )}
         <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>Thanks for Playing!</h1>
-        <p style={{ fontSize: '24px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
+        <p style={{ fontSize: '24px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L</p>
+        <p style={{ fontSize: '18px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
     intents: [
-      <Button action="/">Back to Game</Button>,
-      <Button.Link href={farcasterShareURL}>Share</Button.Link>
+      <Button action="/">Back to Game</Button>
     ],
   });
 });
 
-
-
+function renderBoard(board: (string | null)[]) {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '20px',
+    }}>
+      {[0, 1, 2].map(row => (
+        <div key={row} style={{ display: 'flex', gap: '20px' }}>
+          {[0, 1, 2].map(col => {
+            const index = row * 3 + col;
+            return (
+              <div key={index} style={{
+                width: '200px',
+                height: '200px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '120px',
+                background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
+                border: '4px solid black',
+              }}>
+                {board[index]}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function getBestMove(board: (string | null)[], player: string): number {
   const opponent = player === 'X' ? 'O' : 'X'
