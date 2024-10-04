@@ -336,7 +336,17 @@ function renderBoard(board: (string | null)[]) {
 }
 
 
-app.frame('/share', (c) => {
+app.frame('/share', async (c) => {
+  const { searchParams } = new URL(c.req.url);
+  const username = searchParams.get('username') || 'Player';
+
+  let profilePicture = null;
+  try {
+    profilePicture = await getUserProfilePicture(username);
+  } catch (error) {
+    console.error('Error fetching profile picture:', error);
+  }
+
   const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
   const baseUrl = 'https://podplaytest.vercel.app'; // Update this to your actual domain
   const originalFramesLink = `${baseUrl}/api`;
@@ -360,8 +370,24 @@ app.frame('/share', (c) => {
         fontSize: '48px',
         fontFamily: 'Arial, sans-serif',
         textAlign: 'center',
+        position: 'relative',
       }}>
-        <h1 style={{ marginBottom: '20px' }}>Thanks for Playing!</h1>
+        {profilePicture && (
+          <img 
+            src={profilePicture} 
+            alt={`${username}'s profile`} 
+            style={{
+              position: 'absolute',
+              top: '20px',
+              left: '20px',
+              width: '100px',
+              height: '100px',
+              borderRadius: '50%',
+              border: '3px solid white',
+            }}
+          />
+        )}
+        <h1 style={{ marginBottom: '20px' }}>Thanks for Playing, {username}!</h1>
         <p style={{ fontSize: '30px', marginTop: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
