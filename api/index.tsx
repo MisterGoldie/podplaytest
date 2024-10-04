@@ -164,7 +164,7 @@ function shuffleArray<T>(array: T[]): T[] {
 // Initial route
 app.frame('/', () => {
   const gifUrl = 'https://bafybeidnv5uh2ne54dlzyummobyv3bmc7uzuyt5htodvy27toqqhijf4xu.ipfs.w3s.link/PodPlay.gif'
-  const baseUrl = 'https://podplaytest.vercel.app' // Update this to your actual domain
+  const baseUrl = 'https://podplaytest.vercel.app' // Update this to your actual Domain
 
   const html = `
     <!DOCTYPE html>
