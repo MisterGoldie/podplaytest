@@ -358,26 +358,32 @@ app.frame('/share', async (c) => {
     image: (
       <div style={{
         display: 'flex',
+        flexDirection: 'column' as const,
         justifyContent: 'center',
         alignItems: 'center',
         width: '1080px',
         height: '1080px',
-        backgroundColor: 'black',
+        backgroundImage: 'url(https://bafybeigp3dkqr7wqgvp7wmycpg6axhgmc42pljkzmhdbnrsnxehoieqeri.ipfs.w3s.link/Frame%209.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontFamily: 'Arial, sans-serif',
       }}>
-        {profileImage ? (
+        {profileImage && (
           <img 
             src={profileImage} 
             alt="User profile"
             style={{
-              width: '400px',
-              height: '400px',
+              width: '100px',
+              height: '100px',
               borderRadius: '50%',
-              border: '5px solid white',
+              border: '3px solid white',
+              marginBottom: '20px',
             }}
           />
-        ) : (
-          <p style={{ color: 'white', fontSize: '48px' }}>No profile picture found</p>
         )}
+        <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>Thanks for Playing!</h1>
+        <p style={{ fontSize: '24px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
     intents: [
@@ -385,7 +391,6 @@ app.frame('/share', async (c) => {
     ],
   });
 });
-
 
 
 
