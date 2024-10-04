@@ -389,12 +389,14 @@ app.frame('/game', async (c) => {
   const fid = frameData?.fid;
 
   let username = 'Player';
-  let profilePicture: string | null = null;
+  let profileImage: string | null = null;
   if (fid) {
     try {
-      username = await getUsername(fid.toString());
-      profilePicture = await getUserProfilePicture(fid.toString());
-      console.log(`Username: ${username}, Profile Picture: ${profilePicture}`);
+      [username, profileImage] = await Promise.all([
+        getUsername(fid.toString()),
+        getUserProfilePicture(fid.toString())
+      ]);
+      console.log(`Username: ${username}, Profile Image: ${profileImage}`);
     } catch (error) {
       console.error('Error getting user info:', error);
     }
@@ -485,7 +487,7 @@ app.frame('/game', async (c) => {
         fontSize: '36px',
         fontFamily: 'Arial, sans-serif',
       }}>
-        {renderBoard(state.board, profilePicture)}
+        {renderBoard(state.board, profileImage)}
         <div style={{ 
           marginTop: '40px', 
           maxWidth: '900px', 
@@ -502,6 +504,7 @@ app.frame('/game', async (c) => {
     intents: intents,
   });
 });
+
 
 app.frame('/share', async (c) => {
   const { frameData } = c;
