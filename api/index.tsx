@@ -183,7 +183,6 @@ app.frame('/howtoplay', () => {
   })
 })
 
-
 app.frame('/game', async (c) => {
   const { buttonValue, status, frameData } = c
   const fid = frameData?.fid;
@@ -276,7 +275,7 @@ app.frame('/game', async (c) => {
     image: (
       <div style={{
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'column' as const,
         alignItems: 'center',
         justifyContent: 'center',
         width: '1080px',
@@ -310,7 +309,7 @@ function renderBoard(board: (string | null)[]) {
   return (
     <div style={{
       display: 'flex',
-      flexDirection: 'column',
+      flexDirection: 'column' as const,
       gap: '20px',
     }}>
       {[0, 1, 2].map(row => (
@@ -337,6 +336,7 @@ function renderBoard(board: (string | null)[]) {
     </div>
   )
 }
+
 
 
 app.frame('/share', async (c) => {
