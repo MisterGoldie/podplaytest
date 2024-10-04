@@ -265,198 +265,12 @@ function checkWin(board: (string | null)[]) {
 }
 
 function encodeState(state: GameState): string {
-  return Buffer.from(JSON.stringify(state)).toString('base64')
+  return Buffer.from(JSON.stringify(state)).toString('base64');
 }
 
 function decodeState(encodedState: string): GameState {
-  return JSON.parse(Buffer.from(encodedState, 'base64').toString())
+  return JSON.parse(Buffer.from(encodedState, 'base64').toString());
 }
-
-// Routes will be defined here...
-
-// Initial route
-app.frame('/', () => {
-  const gifUrl = 'https://bafybeidnv5uh2ne54dlzyummobyv3bmc7uzuyt5htodvy27toqqhijf4xu.ipfs.w3s.link/PodPlay.gif'
-  const baseUrl = 'https://podplaytest.vercel.app' // Update this to your actual Domain
-
-  const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Tic-Tac-Toe Game</title>
-      <meta property="fc:frame" content="vNext">
-      <meta property="fc:frame:image" content="${gifUrl}">
-      <meta property="fc:frame:image:aspect_ratio" content="1:1">
-      <meta property="fc:frame:button:1" content="Start">
-      <meta property="fc:frame:button:1:action" content="post">
-      <meta property="fc:frame:post_url" content="${baseUrl}/api/howtoplay">
-      
-      <!-- Added Open Graph tags -->
-      <meta property="og:title" content="Tic-Tac-Toe">
-      <meta property="og:description" content="Start New Game or Share!">
-      <meta property="og:image" content="${gifUrl}">
-      <meta property="og:url" content="${baseUrl}/api">
-      <meta property="og:type" content="website">
-    </head>
-    <body>
-    </body>
-    </html>
-  `
-
-  return new Response(html, {
-    headers: { 'Content-Type': 'text/html' },
-  })
-})
-
-// How to Play route
-app.frame('/howtoplay', () => {
-  const imageUrl = 'https://bafybeifzk7uojcicnh6yhnqvoldkpzuf32sullm34ela266xthbidca6ny.ipfs.w3s.link/HowToPlay%20(1).png'
-  const baseUrl = 'https://podplaytest.vercel.app' // Update this to your actual domain
-
-  const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>How to Play Tic-Tac-Toe</title>
-      <meta property="fc:frame" content="vNext">
-      <meta property="fc:frame:image" content="${imageUrl}">
-      <meta property="fc:frame:image:aspect_ratio" content="1:1">
-      <meta property="fc:frame:button:1" content="Start Game">
-      <meta property="fc:frame:button:1:action" content="post">
-      <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
-    </head>
-    <body>
-    </body>
-    </html>
-  `
-
-  return new Response(html, {
-    headers: { 'Content-Type': 'text/html' },
-  })
-})
-
-app.frame('/game', async (c) => {
-  const { buttonValue, status, frameData } = c
-  const fid = frameData?.fid;
-
-  let username = 'Player';
-  let profileImage: string | null = null;
-  if (fid) {
-    try {
-      username = await getUsername(fid.toString());
-      profileImage = await getUserProfilePicture(fid.toString());
-    } catch (error) {
-      console.error('Error getting user info:', error);
-    }
-  }
-
-  // Always initialize a new game state when entering this route
-  let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false }
-  let message = `New game started! Your turn, ${username}`
-
-  if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
-    state = decodeState(buttonValue.split(':')[1])
-    let { board, currentPlayer, isGameOver } = state
-
-    const move = parseInt(buttonValue.split(':')[2])
-    if (board[move] === null && !isGameOver) {
-      // Player's move
-      board[move] = 'O'
-      message = `${username} moved at ${COORDINATES[move]}.`
-      
-      if (checkWin(board)) {
-        message = `${username} wins! Game over.`
-        isGameOver = true
-      } else if (board.every((cell: string | null) => cell !== null)) {
-        message = "Game over! It's a draw."
-        isGameOver = true
-      } else {
-        // Computer's move
-        const computerMove = getBestMove(board, 'X')
-        if (computerMove !== -1) {
-          board[computerMove] = 'X'
-          message += ` Computer moved at ${COORDINATES[computerMove]}.`
-          
-          if (checkWin(board)) {
-            message += ` Computer wins! Game over.`
-            isGameOver = true
-          } else if (board.every((cell: string | null) => cell !== null)) {
-            message += " It's a draw. Game over."
-            isGameOver = true
-          } else {
-            message += ` Your turn, ${username}.`
-          }
-        }
-      }
-    } else if (isGameOver) {
-      message = "Game is over. Start a new game!"
-    } else {
-      message = "That spot is already taken! Choose another."
-    }
-
-    state = { board, currentPlayer, isGameOver }
-  }
-
-  // Encode the state in the button values
-  const encodedState = encodeState(state)
-
-  // Get available moves
-  const availableMoves = state.board.reduce((acc, cell, index) => {
-    if (cell === null) acc.push(index)
-    return acc
-  }, [] as number[])
-
-  // Shuffle available moves and take the first 4 (or less if fewer are available)
-  const shuffledMoves = shuffleArray([...availableMoves]).slice(0, 4)
-
-  const intents = state.isGameOver
-    ? [
-        <Button value="newgame">New Game</Button>,
-        <Button action="/share">Share Game</Button>
-      ]
-    : shuffledMoves.map((index) => 
-        <Button value={`move:${encodedState}:${index}`}>
-          {COORDINATES[index]}
-        </Button>
-      )
-
-  return c.res({
-    image: (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '1080px',
-        height: '1080px',
-        backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        fontSize: '36px',
-        fontFamily: 'Arial, sans-serif',
-      }}>
-        {renderBoard(state.board, profileImage)}
-        <div style={{ 
-          marginTop: '40px', 
-          maxWidth: '900px', 
-          textAlign: 'center', 
-          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-          padding: '20px', 
-          borderRadius: '10px', 
-          color: 'black' 
-        }}>
-          {message}
-        </div>
-      </div>
-    ),
-    intents: intents,
-  })
-})
 
 function renderBoard(board: (string | null)[], profileImage: string | null) {
   console.log('Rendering board with profile image:', profileImage);
@@ -506,64 +320,6 @@ function renderBoard(board: (string | null)[], profileImage: string | null) {
     </div>
   )
 }
-
-
-app.frame('/share', async (c) => {
-  const { frameData } = c;
-  const fid = frameData?.fid;
-
-  let profileImage: string | null = null;
-  let userRecord = { wins: 0, losses: 0 };
-
-  if (fid) {
-    try {
-      profileImage = await getUserProfilePicture(fid.toString());
-      userRecord = await getUserRecord(fid.toString());
-      console.log(`Profile image URL for FID ${fid}:`, profileImage);
-      console.log(`User record for FID ${fid}:`, userRecord);
-    } catch (error) {
-      console.error(`Error fetching data for FID ${fid}:`, error);
-    }
-  }
-
-  return c.res({
-    image: (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column' as const,
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '1080px',
-        height: '1080px',
-        backgroundImage: 'url(https://bafybeigp3dkqr7wqgvp7wmycpg6axhgmc42pljkzmhdbnrsnxehoieqeri.ipfs.w3s.link/Frame%209.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        fontFamily: 'Arial, sans-serif',
-      }}>
-        {profileImage && (
-          <img 
-            src={profileImage} 
-            alt="User profile"
-            style={{
-              width: '100px',
-              height: '100px',
-              borderRadius: '50%',
-              border: '3px solid white',
-              marginBottom: '20px',
-            }}
-          />
-        )}
-        <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>Thanks for Playing!</h1>
-        <p style={{ fontSize: '24px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L</p>
-        <p style={{ fontSize: '18px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
-      </div>
-    ),
-    intents: [
-      <Button action="/">Back to Game</Button>
-    ],
-  });
-});
 
 // Initial route
 app.frame('/', () => {
@@ -632,157 +388,131 @@ app.frame('/howtoplay', () => {
 
 app.frame('/game', async (c) => {
   console.log('Entering /game route');
-  try {
-    const { buttonValue, status, frameData } = c;
-    console.log('Request details:', { buttonValue, status, frameData });
-    const fid = frameData?.fid;
+  const { buttonValue, status, frameData } = c;
+  console.log('Request details:', { buttonValue, status, frameData });
+  const fid = frameData?.fid;
 
-    let username = 'Player';
-    let profileImage: string | null = null;
-    if (fid) {
-      try {
-        [username, profileImage] = await Promise.all([
-          getUsername(fid.toString()),
-          getUserProfilePicture(fid.toString())
-        ]);
-        console.log(`User info fetched - Username: ${username}, Profile Image: ${profileImage}`);
-      } catch (error) {
-        console.error('Error getting user info:', error);
-      }
+  let username = 'Player';
+  let profileImage: string | null = null;
+  if (fid) {
+    try {
+      [username, profileImage] = await Promise.all([
+        getUsername(fid.toString()),
+        getUserProfilePicture(fid.toString())
+      ]);
+      console.log(`User info fetched - Username: ${username}, Profile Image: ${profileImage}`);
+    } catch (error) {
+      console.error('Error getting user info:', error);
     }
+  }
 
-    let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
-    let message = `New game started! Your turn, ${username}`;
+  let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
+  let message = `New game started! Your turn, ${username}`;
 
-    if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
-      console.log('Processing move');
-      try {
-        // Temporarily use a simpler state passing method
-        const [, moveIndex] = buttonValue.split(':');
-        const move = parseInt(moveIndex);
-        console.log('Move details:', { move, currentBoard: state.board });
+  if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
+    console.log('Processing move');
+    try {
+      const [, encodedState, moveIndex] = buttonValue.split(':');
+      state = decodeState(encodedState);
+      const move = parseInt(moveIndex);
+      console.log('Move details:', { move, currentBoard: state.board });
 
-        if (state.board[move] === null && !state.isGameOver) {
-          state.board[move] = 'O';
-          message = `${username} moved at ${COORDINATES[move]}.`;
+      if (state.board[move] === null && !state.isGameOver) {
+        state.board[move] = 'O';
+        message = `${username} moved at ${COORDINATES[move]}.`;
+        
+        if (checkWin(state.board)) {
+          message = `${username} wins! Game over.`;
+          state.isGameOver = true;
+          if (fid) {
+            await updateUserRecord(fid.toString(), true);
+          }
+        } else if (state.board.every((cell) => cell !== null)) {
+          message = "Game over! It's a draw.";
+          state.isGameOver = true;
+        } else {
+          const computerMove = getBestMove(state.board, 'X');
+          state.board[computerMove] = 'X';
+          message += ` Computer moved at ${COORDINATES[computerMove]}.`;
           
           if (checkWin(state.board)) {
-            message = `${username} wins! Game over.`;
+            message += ` Computer wins! Game over.`;
             state.isGameOver = true;
             if (fid) {
-              await updateUserRecord(fid.toString(), true);
+              await updateUserRecord(fid.toString(), false);
             }
           } else if (state.board.every((cell) => cell !== null)) {
-            message = "Game over! It's a draw.";
+            message += " It's a draw. Game over.";
             state.isGameOver = true;
           } else {
-            const computerMove = getBestMove(state.board, 'X');
-            state.board[computerMove] = 'X';
-            message += ` Computer moved at ${COORDINATES[computerMove]}.`;
-            
-            if (checkWin(state.board)) {
-              message += ` Computer wins! Game over.`;
-              state.isGameOver = true;
-              if (fid) {
-                await updateUserRecord(fid.toString(), false);
-              }
-            } else if (state.board.every((cell) => cell !== null)) {
-              message += " It's a draw. Game over.";
-              state.isGameOver = true;
-            } else {
-              message += ` Your turn, ${username}.`;
-            }
+            message += ` Your turn, ${username}.`;
           }
-        } else if (state.isGameOver) {
-          message = "Game is over. Start a new game!";
-        } else {
-          message = "That spot is already taken! Choose another.";
         }
-      } catch (error) {
-        console.error('Error processing move:', error);
-        message = "An error occurred while processing your move. Please try again.";
+      } else if (state.isGameOver) {
+        message = "Game is over. Start a new game!";
+      } else {
+        message = "That spot is already taken! Choose another.";
       }
+    } catch (error) {
+      console.error('Error processing move:', error);
+      message = "An error occurred while processing your move. Please try again.";
     }
-
-    console.log('Final game state:', state);
-    console.log('Message:', message);
-
-    const availableMoves = state.board.reduce((acc, cell, index) => {
-      if (cell === null) acc.push(index);
-      return acc;
-    }, [] as number[]);
-
-    const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
-
-    const intents = state.isGameOver
-      ? [
-          <Button value="newgame">New Game</Button>,
-          <Button action="/share">Share Game</Button>
-        ]
-      : shuffledMoves.map((index) => 
-          <Button value={`move:${index}`}>
-            {COORDINATES[index]}
-          </Button>
-        );
-
-    console.log('Rendering response');
-    return c.res({
-      image: (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column' as const,
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '1080px',
-          height: '1080px',
-          backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          color: 'white',
-          fontSize: '36px',
-          fontFamily: 'Arial, sans-serif',
-        }}>
-          {renderBoard(state.board, profileImage)}
-          <div style={{ 
-            marginTop: '40px', 
-            maxWidth: '900px', 
-            textAlign: 'center', 
-            backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-            padding: '20px', 
-            borderRadius: '10px', 
-            color: 'black' 
-          }}>
-            {message}
-          </div>
-        </div>
-      ),
-      intents: intents,
-    });
-  } catch (error) {
-    console.error('Unexpected error in /game route:', error);
-    return c.res({
-      image: (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column' as const,
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '1080px',
-          height: '1080px',
-          backgroundColor: 'black',
-          color: 'white',
-          fontSize: '36px',
-          fontFamily: 'Arial, sans-serif',
-        }}>
-          <h1>Oops! Something went wrong.</h1>
-          <p>Please try again later.</p>
-        </div>
-      ),
-      intents: [
-        <Button action="/">Back to Start</Button>
-      ],
-    });
   }
+
+  console.log('Final game state:', state);
+  console.log('Message:', message);
+
+  const encodedState = encodeState(state);
+  const availableMoves = state.board.reduce((acc, cell, index) => {
+    if (cell === null) acc.push(index);
+    return acc;
+  }, [] as number[]);
+
+  const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
+
+  const intents = state.isGameOver
+    ? [
+        <Button value="newgame">New Game</Button>,
+        <Button action="/share">Share Game</Button>
+      ]
+    : shuffledMoves.map((index) => 
+        <Button value={`move:${encodedState}:${index}`}>
+          {COORDINATES[index]}
+        </Button>
+      );
+
+  return c.res({
+    image: (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontSize: '36px',
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        {renderBoard(state.board, profileImage)}
+        <div style={{ 
+          marginTop: '40px', 
+          maxWidth: '900px', 
+          textAlign: 'center', 
+          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+          padding: '20px', 
+          borderRadius: '10px', 
+          color: 'black' 
+        }}>
+          {message}
+        </div>
+      </div>
+    ),
+    intents: intents,
+  });
 });
 
 app.frame('/share', async (c) => {
