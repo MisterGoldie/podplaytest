@@ -189,13 +189,11 @@ app.frame('/game', async (c) => {
   const fid = frameData?.fid;
 
   let username = 'Player';
-  let profilePicture = null;
   if (fid) {
     try {
       username = await getUsername(fid.toString());
-      profilePicture = await getUserProfilePicture(username);
     } catch (error) {
-      console.error('Error getting user info:', error);
+      console.error('Error getting username:', error);
     }
   }
 
@@ -284,23 +282,7 @@ app.frame('/game', async (c) => {
         color: 'white',
         fontSize: '36px',
         fontFamily: 'Arial, sans-serif',
-        position: 'relative', // Added to allow absolute positioning of child elements
       }}>
-        {profilePicture && (
-          <img 
-            src={profilePicture} 
-            alt={`${username}'s profile`} 
-            style={{
-              position: 'absolute',
-              top: '20px',
-              left: '20px',
-              width: '80px',
-              height: '80px',
-              borderRadius: '50%',
-              border: '3px solid white',
-            }}
-          />
-        )}
         {renderBoard(state.board)}
         <div style={{ 
           marginTop: '40px', 
