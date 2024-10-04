@@ -336,10 +336,16 @@ function renderBoard(board: (string | null)[]) {
 }
 
 
-app.frame('/share', (c) => {
+app.frame('/share', async (c) => {
   const { searchParams } = new URL(c.req.url);
   const username = searchParams.get('username') || 'Player';
-  const profilePicture = searchParams.get('profilePicture') || null;
+  
+  let profilePicture = null;
+  try {
+    profilePicture = await getUserProfilePicture(username);
+  } catch (error) {
+    console.error('Error fetching profile picture:', error);
+  }
 
   const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
   const baseUrl = 'https://podplaytest.vercel.app'; // Update this to your actual domain
