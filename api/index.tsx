@@ -200,51 +200,6 @@ function shuffleArray<T>(array: T[]): T[] {
   return array;
 }
 
-function renderBoard(board: (string | null)[], profileImage: string | null) {
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '20px',
-    }}>
-      {[0, 1, 2].map(row => (
-        <div key={row} style={{ display: 'flex', gap: '20px' }}>
-          {[0, 1, 2].map(col => {
-            const index = row * 3 + col;
-            return (
-              <div key={index} style={{
-                width: '200px',
-                height: '200px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '120px',
-                background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
-                border: '4px solid black',
-              }}>
-                {board[index] === 'O' && profileImage ? (
-                  <img 
-                    src={profileImage} 
-                    alt="Player"
-                    style={{
-                      width: '120px',
-                      height: '120px',
-                      borderRadius: '50%',
-                      border: '3px solid white',
-                    }}
-                  />
-                ) : (
-                  <span style={{ color: 'white' }}>{board[index]}</span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </div>
-  )
-}
-
 function getBestMove(board: (string | null)[], player: string): number {
   const opponent = player === 'X' ? 'O' : 'X'
 
@@ -385,97 +340,95 @@ app.frame('/howtoplay', () => {
 })
 
 app.frame('/game', async (c) => {
-  const { buttonValue, status, frameData } = c;
+  const { buttonValue, status, frameData } = c
   const fid = frameData?.fid;
 
   let username = 'Player';
   let profileImage: string | null = null;
   if (fid) {
     try {
-      [username, profileImage] = await Promise.all([
-        getUsername(fid.toString()),
-        getUserProfilePicture(fid.toString())
-      ]);
-      console.log(`Username: ${username}, Profile Image: ${profileImage}`);
+      username = await getUsername(fid.toString());
+      profileImage = await getUserProfilePicture(fid.toString());
     } catch (error) {
       console.error('Error getting user info:', error);
     }
   }
 
-  let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
-  let message = `New game started! Your turn, ${username}`;
+  // Always initialize a new game state when entering this route
+  let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false }
+  let message = `New game started! Your turn, ${username}`
 
   if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
-    state = decodeState(buttonValue.split(':')[1]);
-    let { board, isGameOver } = state;
+    state = decodeState(buttonValue.split(':')[1])
+    let { board, currentPlayer, isGameOver } = state
 
-    const move = parseInt(buttonValue.split(':')[2]);
+    const move = parseInt(buttonValue.split(':')[2])
     if (board[move] === null && !isGameOver) {
       // Player's move
-      board[move] = 'O';
-      message = `${username} moved at ${COORDINATES[move]}.`;
+      board[move] = 'O'
+      message = `${username} moved at ${COORDINATES[move]}.`
       
       if (checkWin(board)) {
-        message = `${username} wins! Game over.`;
-        isGameOver = true;
-        if (fid) {
-          updateUserRecord(fid.toString(), true);
-        }
-      } else if (board.every((cell) => cell !== null)) {
-        message = "Game over! It's a draw.";
-        isGameOver = true;
+        message = `${username} wins! Game over.`
+        isGameOver = true
+      } else if (board.every((cell: string | null) => cell !== null)) {
+        message = "Game over! It's a draw."
+        isGameOver = true
       } else {
         // Computer's move
-        const computerMove = getBestMove(board, 'X');
-        board[computerMove] = 'X';
-        message += ` Computer moved at ${COORDINATES[computerMove]}.`;
-        
-        if (checkWin(board)) {
-          message += ` Computer wins! Game over.`;
-          isGameOver = true;
-          if (fid) {
-            updateUserRecord(fid.toString(), false);
+        const computerMove = getBestMove(board, 'X')
+        if (computerMove !== -1) {
+          board[computerMove] = 'X'
+          message += ` Computer moved at ${COORDINATES[computerMove]}.`
+          
+          if (checkWin(board)) {
+            message += ` Computer wins! Game over.`
+            isGameOver = true
+          } else if (board.every((cell: string | null) => cell !== null)) {
+            message += " It's a draw. Game over."
+            isGameOver = true
+          } else {
+            message += ` Your turn, ${username}.`
           }
-        } else if (board.every((cell) => cell !== null)) {
-          message += " It's a draw. Game over.";
-          isGameOver = true;
-        } else {
-          message += ` Your turn, ${username}.`;
         }
       }
     } else if (isGameOver) {
-      message = "Game is over. Start a new game!";
+      message = "Game is over. Start a new game!"
     } else {
-      message = "That spot is already taken! Choose another.";
+      message = "That spot is already taken! Choose another."
     }
 
-    state = { ...state, board, isGameOver };
+    state = { board, currentPlayer, isGameOver }
   }
 
-  const encodedState = encodeState(state);
-  const availableMoves = state.board.reduce((acc, cell, index) => {
-    if (cell === null) acc.push(index);
-    return acc;
-  }, [] as number[]);
+  // Encode the state in the button values
+  const encodedState = encodeState(state)
 
-  const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
+  // Get available moves
+  const availableMoves = state.board.reduce((acc, cell, index) => {
+    if (cell === null) acc.push(index)
+    return acc
+  }, [] as number[])
+
+  // Shuffle available moves and take the first 4 (or less if fewer are available)
+  const shuffledMoves = shuffleArray([...availableMoves]).slice(0, 4)
 
   const intents = state.isGameOver
     ? [
         <Button value="newgame">New Game</Button>,
-        <Button action={`/share?username=${encodeURIComponent(username)}`}>Share Game</Button>
+        <Button action="/share">Share Game</Button>
       ]
     : shuffledMoves.map((index) => 
         <Button value={`move:${encodedState}:${index}`}>
           {COORDINATES[index]}
         </Button>
-      );
+      )
 
   return c.res({
     image: (
       <div style={{
         display: 'flex',
-        flexDirection: 'column' as const,
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         width: '1080px',
@@ -502,8 +455,52 @@ app.frame('/game', async (c) => {
       </div>
     ),
     intents: intents,
-  });
-});
+  })
+})
+
+function renderBoard(board: (string | null)[], profileImage: string | null) {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '20px',
+    }}>
+      {[0, 1, 2].map(row => (
+        <div key={row} style={{ display: 'flex', gap: '20px' }}>
+          {[0, 1, 2].map(col => {
+            const index = row * 3 + col;
+            return (
+              <div key={index} style={{
+                width: '200px',
+                height: '200px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '120px',
+                background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
+                border: '4px solid black',
+              }}>
+                {board[index] === 'O' && profileImage ? (
+                  <img 
+                    src={profileImage} 
+                    alt="Player"
+                    style={{
+                      width: '120px',
+                      height: '120px',
+                      borderRadius: '50%',
+                    }}
+                  />
+                ) : (
+                  board[index]
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 
 app.frame('/share', async (c) => {
