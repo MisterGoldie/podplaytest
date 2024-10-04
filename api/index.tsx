@@ -631,124 +631,155 @@ app.frame('/howtoplay', () => {
 })
 
 app.frame('/game', async (c) => {
-  const { buttonValue, status, frameData } = c;
-  const fid = frameData?.fid;
+  try {
+    const { buttonValue, status, frameData } = c;
+    const fid = frameData?.fid;
 
-  let username = 'Player';
-  let profileImage: string | null = null;
-  if (fid) {
-    try {
-      [username, profileImage] = await Promise.all([
-        getUsername(fid.toString()),
-        getUserProfilePicture(fid.toString())
-      ]);
-      console.log(`Username: ${username}, Profile Image: ${profileImage}`);
-    } catch (error) {
-      console.error('Error getting user info:', error);
-    }
-  }
-
-  let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
-  let message = `New game started! Your turn, ${username}`;
-
-  if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
-    state = decodeState(buttonValue.split(':')[1]);
-    let { board, isGameOver } = state;
-
-    const move = parseInt(buttonValue.split(':')[2]);
-    if (board[move] === null && !isGameOver) {
-      // Player's move
-      board[move] = 'O';
-      message = `${username} moved at ${COORDINATES[move]}.`;
-      
-      if (checkWin(board)) {
-        message = `${username} wins! Game over.`;
-        isGameOver = true;
-        if (fid) {
-          updateUserRecord(fid.toString(), true);
-        }
-      } else if (board.every((cell) => cell !== null)) {
-        message = "Game over! It's a draw.";
-        isGameOver = true;
-      } else {
-        // Computer's moves
-        const computerMove = getBestMove(board, 'X');
-        board[computerMove] = 'X';
-        message += ` Computer moved at ${COORDINATES[computerMove]}.`;
-        
-        if (checkWin(board)) {
-          message += ` Computer wins! Game over.`;
-          isGameOver = true;
-          if (fid) {
-            updateUserRecord(fid.toString(), false);
-          }
-        } else if (board.every((cell) => cell !== null)) {
-          message += " It's a draw. Game over.";
-          isGameOver = true;
-        } else {
-          message += ` Your turn, ${username}.`;
-        }
+    let username = 'Player';
+    let profileImage: string | null = null;
+    if (fid) {
+      try {
+        [username, profileImage] = await Promise.all([
+          getUsername(fid.toString()),
+          getUserProfilePicture(fid.toString())
+        ]);
+        console.log(`Username: ${username}, Profile Image: ${profileImage}`);
+      } catch (error) {
+        console.error('Error getting user info:', error);
       }
-    } else if (isGameOver) {
-      message = "Game is over. Start a new game!";
-    } else {
-      message = "That spot is already taken! Choose another.";
     }
 
-    state = { ...state, board, isGameOver };
-  }
+    let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
+    let message = `New game started! Your turn, ${username}`;
 
-  const encodedState = encodeState(state);
-  const availableMoves = state.board.reduce((acc, cell, index) => {
-    if (cell === null) acc.push(index);
-    return acc;
-  }, [] as number[]);
+    if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
+      try {
+        state = decodeState(buttonValue.split(':')[1]);
+        let { board, isGameOver } = state;
 
-  const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
+        const move = parseInt(buttonValue.split(':')[2]);
+        if (board[move] === null && !isGameOver) {
+          // Player's move
+          board[move] = 'O';
+          message = `${username} moved at ${COORDINATES[move]}.`;
+          
+          if (checkWin(board)) {
+            message = `${username} wins! Game over.`;
+            isGameOver = true;
+            if (fid) {
+              await updateUserRecord(fid.toString(), true);
+            }
+          } else if (board.every((cell) => cell !== null)) {
+            message = "Game over! It's a draw.";
+            isGameOver = true;
+          } else {
+            // Computer's move
+            const computerMove = getBestMove(board, 'X');
+            board[computerMove] = 'X';
+            message += ` Computer moved at ${COORDINATES[computerMove]}.`;
+            
+            if (checkWin(board)) {
+              message += ` Computer wins! Game over.`;
+              isGameOver = true;
+              if (fid) {
+                await updateUserRecord(fid.toString(), false);
+              }
+            } else if (board.every((cell) => cell !== null)) {
+              message += " It's a draw. Game over.";
+              isGameOver = true;
+            } else {
+              message += ` Your turn, ${username}.`;
+            }
+          }
+        } else if (isGameOver) {
+          message = "Game is over. Start a new game!";
+        } else {
+          message = "That spot is already taken! Choose another.";
+        }
 
-  const intents = state.isGameOver
-    ? [
-        <Button value="newgame">New Game</Button>,
-        <Button action={`/share?username=${encodeURIComponent(username)}`}>Share Game</Button>
-      ]
-    : shuffledMoves.map((index) => 
-        <Button value={`move:${encodedState}:${index}`}>
-          {COORDINATES[index]}
-        </Button>
-      );
+        state = { ...state, board, isGameOver };
+      } catch (error) {
+        console.error('Error processing move:', error);
+        message = "An error occurred while processing your move. Please try again.";
+      }
+    }
 
-  return c.res({
-    image: (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column' as const,
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '1080px',
-        height: '1080px',
-        backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        fontSize: '36px',
-        fontFamily: 'Arial, sans-serif',
-      }}>
-        {renderBoard(state.board, profileImage)}
-        <div style={{ 
-          marginTop: '40px', 
-          maxWidth: '900px', 
-          textAlign: 'center', 
-          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-          padding: '20px', 
-          borderRadius: '10px', 
-          color: 'black' 
+    const encodedState = encodeState(state);
+    const availableMoves = state.board.reduce((acc, cell, index) => {
+      if (cell === null) acc.push(index);
+      return acc;
+    }, [] as number[]);
+
+    const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
+
+    const intents = state.isGameOver
+      ? [
+          <Button value="newgame">New Game</Button>,
+          <Button action="/share">Share Game</Button>
+        ]
+      : shuffledMoves.map((index) => 
+          <Button value={`move:${encodedState}:${index}`}>
+            {COORDINATES[index]}
+          </Button>
+        );
+
+    return c.res({
+      image: (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column' as const,
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '1080px',
+          height: '1080px',
+          backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          color: 'white',
+          fontSize: '36px',
+          fontFamily: 'Arial, sans-serif',
         }}>
-          {message}
+          {renderBoard(state.board, profileImage)}
+          <div style={{ 
+            marginTop: '40px', 
+            maxWidth: '900px', 
+            textAlign: 'center', 
+            backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+            padding: '20px', 
+            borderRadius: '10px', 
+            color: 'black' 
+          }}>
+            {message}
+          </div>
         </div>
-      </div>
-    ),
-    intents: intents,
-  });
+      ),
+      intents: intents,
+    });
+  } catch (error) {
+    console.error('Unexpected error in /game route:', error);
+    return c.res({
+      image: (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column' as const,
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '1080px',
+          height: '1080px',
+          backgroundColor: 'black',
+          color: 'white',
+          fontSize: '36px',
+          fontFamily: 'Arial, sans-serif',
+        }}>
+          <h1>Oops! Something went wrong.</h1>
+          <p>Please try again later.</p>
+        </div>
+      ),
+      intents: [
+        <Button action="/">Back to Start</Button>
+      ],
+    });
+  }
 });
 
 app.frame('/share', async (c) => {
