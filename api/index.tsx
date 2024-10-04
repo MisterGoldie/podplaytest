@@ -157,67 +157,33 @@ app.frame('/', () => {
 })
 
 // How to Play route
-app.frame('/howtoplay', async (c) => {
-  console.log("Entering /howtoplay route");
-  
-  try {
-    const imageUrl = 'https://bafybeifzk7uojcicnh6yhnqvoldkpzuf32sullm34ela266xthbidca6ny.ipfs.w3s.link/HowToPlay%20(1).png'
+app.frame('/howtoplay', () => {
+  const imageUrl = 'https://bafybeifzk7uojcicnh6yhnqvoldkpzuf32sullm34ela266xthbidca6ny.ipfs.w3s.link/HowToPlay%20(1).png'
+  const baseUrl = 'https://podplaytest.vercel.app' // Update this to your actual domain
 
-    // Verify image accessibility
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      throw new Error(`Image not accessible: ${imageResponse.status} ${imageResponse.statusText}`);
-    }
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>How to Play Tic-Tac-Toe</title>
+      <meta property="fc:frame" content="vNext">
+      <meta property="fc:frame:image" content="${imageUrl}">
+      <meta property="fc:frame:image:aspect_ratio" content="1:1">
+      <meta property="fc:frame:button:1" content="Start Game">
+      <meta property="fc:frame:button:1:action" content="post">
+      <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
+    </head>
+    <body>
+    </body>
+    </html>
+  `
 
-    console.log("Returning response from /howtoplay route");
-    return c.res({
-      image: (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '1080px',
-          height: '1080px',
-          backgroundColor: '#f0f0f0',
-          color: 'black',
-          fontSize: '36px',
-          fontFamily: 'Arial, sans-serif',
-        }}>
-          <img src={imageUrl} alt="How to Play" style={{ maxWidth: '100%', maxHeight: '80%' }} />
-          <h1>How to Play Tic-Tac-Toe</h1>
-        </div>
-      ),
-      intents: [
-        <Button action="/game">Start Game</Button>
-      ],
-    });
-  } catch (error) {
-    console.error("Error in /howtoplay route:", error);
-    return c.res({
-      image: (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '1080px',
-          height: '1080px',
-          backgroundColor: '#f0f0f0',
-          color: 'black',
-          fontSize: '36px',
-          fontFamily: 'Arial, sans-serif',
-        }}>
-          <img src="https://http.cat/500.jpg" alt="Error" style={{ maxWidth: '100%', maxHeight: '80%' }} />
-          <p>An error occurred. Please try again.</p>
-        </div>
-      ),
-      intents: [
-        <Button action="/howtoplay">Try Again</Button>
-      ],
-    });
-  }
-});
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html' },
+  })
+})
 
 
 app.frame('/game', async (c) => {
