@@ -54,7 +54,7 @@ async function getUsername(fid: string): Promise<string> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': AIRSTACK_API_KEY, // Using the primary API key
+        'Authorization': AIRSTACK_API_KEY,
       },
       body: JSON.stringify({ query, variables: { fid } }),
     });
@@ -76,7 +76,7 @@ async function getUsername(fid: string): Promise<string> {
 
 async function getUserProfilePicture(username: string): Promise<string | null> {
   const query = `
-    query GetUserProfilePicture {
+    query GetUserProfileImage {
       Socials(input: {filter: {profileName: {_eq: "${username}"}}, blockchain: ethereum, limit: 50}) {
         Social {
           profileImage
@@ -96,16 +96,16 @@ async function getUserProfilePicture(username: string): Promise<string | null> {
     });
 
     const data = await response.json();
-    console.log('Profile picture API response:', JSON.stringify(data));
+    console.log('Profile image API response:', JSON.stringify(data));
 
     if (data && data.data && data.data.Socials && Array.isArray(data.data.Socials.Social) && data.data.Socials.Social.length > 0) {
       return data.data.Socials.Social[0]?.profileImage || null;
     } else {
-      console.log('No profile picture found or unexpected API response structure');
+      console.log('No profile image found or unexpected API response structure');
       return null;
     }
   } catch (error) {
-    console.error('Error fetching profile picture:', error);
+    console.error('Error fetching profile image:', error);
     return null;
   }
 }
@@ -339,12 +339,12 @@ app.frame('/share', async (c) => {
   const username = searchParams.get('username') || 'Player';
   console.log(`Received username in /share route: ${username}`);
   
-  let profilePicture: string | null = null;
+  let profileImage: string | null = null;
   try {
-    profilePicture = await getUserProfilePicture(username);
-    console.log(`Profile picture URL for ${username}:`, profilePicture);
+    profileImage = await getUserProfilePicture(username);
+    console.log(`Profile image URL for ${username}:`, profileImage);
   } catch (error) {
-    console.error(`Error fetching profile picture for ${username}:`, error);
+    console.error(`Error fetching profile image for ${username}:`, error);
   }
 
   const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
@@ -371,9 +371,9 @@ app.frame('/share', async (c) => {
         textAlign: 'center',
         position: 'relative',
       }}>
-        {profilePicture && (
+        {profileImage && (
           <img 
-            src={profilePicture} 
+            src={profileImage} 
             alt={`${username}'s profile`} 
             style={{
               position: 'absolute',
