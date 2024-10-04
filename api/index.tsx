@@ -191,11 +191,13 @@ app.frame('/game', async (c) => {
   const fid = frameData?.fid;
 
   let username = 'Player';
+  let profilePicture = null;
   if (fid) {
     try {
       username = await getUsername(fid.toString());
+      profilePicture = await getUserProfilePicture(username);
     } catch (error) {
-      console.error('Error getting username:', error);
+      console.error('Error getting user info:', error);
     }
   }
 
@@ -261,7 +263,7 @@ app.frame('/game', async (c) => {
   const intents = state.isGameOver
     ? [
         <Button value="newgame">New Game</Button>,
-        <Button action="/share">Share Game</Button>
+        <Button action={`/share?username=${encodeURIComponent(username)}&profilePicture=${encodeURIComponent(profilePicture || '')}`}>Share Game</Button>
       ]
     : shuffledMoves.map((index) => 
         <Button value={`move:${encodedState}:${index}`}>
@@ -284,7 +286,24 @@ app.frame('/game', async (c) => {
         color: 'white',
         fontSize: '36px',
         fontFamily: 'Arial, sans-serif',
+        position: 'relative',
       }}>
+        {profilePicture && (
+          <img 
+            src={profilePicture} 
+            alt={`${username}'s profile`} 
+            style={{
+              position: 'absolute',
+              bottom: '20px',
+              left: '20px',
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              border: '3px solid white',
+              zIndex: 10,
+            }}
+          />
+        )}
         {renderBoard(state.board)}
         <div style={{ 
           marginTop: '40px', 
@@ -337,6 +356,10 @@ function renderBoard(board: (string | null)[]) {
 
 
 app.frame('/share', (c) => {
+  const { searchParams } = new URL(c.req.url);
+  const username = searchParams.get('username') || 'Player';
+  const profilePicture = searchParams.get('profilePicture') || null;
+
   const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
   const baseUrl = 'https://podplaytest.vercel.app'; // Update this to your actual domain
   const originalFramesLink = `${baseUrl}/api`;
@@ -360,8 +383,24 @@ app.frame('/share', (c) => {
         fontSize: '48px',
         fontFamily: 'Arial, sans-serif',
         textAlign: 'center',
+        position: 'relative',
       }}>
-        <h1 style={{ marginBottom: '20px' }}>Thanks for Playing!</h1>
+        {profilePicture && (
+          <img 
+            src={profilePicture} 
+            alt={`${username}'s profile`} 
+            style={{
+              position: 'absolute',
+              top: '20px',
+              left: '20px',
+              width: '100px',
+              height: '100px',
+              borderRadius: '50%',
+              border: '3px solid white',
+            }}
+          />
+        )}
+        <h1 style={{ marginBottom: '20px' }}>Thanks for Playing, {username}!</h1>
         <p style={{ fontSize: '30px', marginTop: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
