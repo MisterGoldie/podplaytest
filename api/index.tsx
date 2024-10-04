@@ -74,13 +74,11 @@ async function getUsername(fid: string): Promise<string> {
   }
 }
 
-async function getUserProfilePicture(username: string) {
+async function getUserProfilePicture(username: string): Promise<string | null> {
   const query = `
     query GetUserProfilePicture {
       Socials(input: {filter: {profileName: {_eq: "${username}"}}, blockchain: ethereum, limit: 50}) {
         Social {
-          dappName
-          profileName
           profileImage
         }
       }
@@ -100,13 +98,12 @@ async function getUserProfilePicture(username: string) {
     const data = await response.json();
     console.log('Profile picture API response:', JSON.stringify(data));
 
-    // Check if the Social field is null
-    if (data.data.Socials.Social === null) {
-      console.log('No social data found for the user');
+    if (data && data.data && data.data.Socials && Array.isArray(data.data.Socials.Social) && data.data.Socials.Social.length > 0) {
+      return data.data.Socials.Social[0]?.profileImage || null;
+    } else {
+      console.log('No profile picture found or unexpected API response structure');
       return null;
     }
-
-    return data;
   } catch (error) {
     console.error('Error fetching profile picture:', error);
     return null;
@@ -192,11 +189,13 @@ app.frame('/game', async (c) => {
   const fid = frameData?.fid;
 
   let username = 'Player';
+  let profilePicture = null;
   if (fid) {
     try {
       username = await getUsername(fid.toString());
+      profilePicture = await getUserProfilePicture(username);
     } catch (error) {
-      console.error('Error getting username:', error);
+      console.error('Error getting user info:', error);
     }
   }
 
@@ -262,7 +261,7 @@ app.frame('/game', async (c) => {
   const intents = state.isGameOver
     ? [
         <Button value="newgame">New Game</Button>,
-        <Button action="/share">Share Game</Button>
+        <Button action={`/share?username=${encodeURIComponent(username)}&profilePicture=${encodeURIComponent(profilePicture || '')}`}>Share Game</Button>
       ]
     : shuffledMoves.map((index) => 
         <Button value={`move:${encodedState}:${index}`}>
@@ -337,24 +336,10 @@ function renderBoard(board: (string | null)[]) {
 }
 
 
-app.frame('/share', async (c) => {
+app.frame('/share', (c) => {
   const { searchParams } = new URL(c.req.url);
   const username = searchParams.get('username') || 'Player';
-
-  let profilePicture = null;
-  try {
-    const profileData = await getUserProfilePicture(username);
-    if (profileData && profileData.data && profileData.data.Socials && profileData.data.Socials.Social) {
-      // Check if Social is an array and has at least one element
-      if (Array.isArray(profileData.data.Socials.Social) && profileData.data.Socials.Social.length > 0) {
-        profilePicture = profileData.data.Socials.Social[0].profileImage;
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching profile picture:', error);
-  }
-
-  console.log('Profile picture URL:', profilePicture);
+  const profilePicture = searchParams.get('profilePicture') || null;
 
   const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
   const baseUrl = 'https://podplaytest.vercel.app'; // Update this to your actual domain
