@@ -92,7 +92,7 @@ async function getUserProfilePicture(username: string): Promise<string | null> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': AIRSTACK_API_KEY_SECONDARY, // Using the secondary API key
+        'Authorization': AIRSTACK_API_KEY_SECONDARY,
       },
       body: JSON.stringify({ query }),
     });
@@ -103,7 +103,7 @@ async function getUserProfilePicture(username: string): Promise<string | null> {
     if (data && data.data && data.data.Socials && Array.isArray(data.data.Socials.Social) && data.data.Socials.Social.length > 0) {
       return data.data.Socials.Social[0]?.profileImage || null;
     } else {
-      console.log('Unexpected API response structure:', JSON.stringify(data));
+      console.log('No profile picture found or unexpected API response structure');
       return null;
     }
   } catch (error) {
@@ -345,6 +345,7 @@ app.frame('/share', async (c) => {
     profilePicture = await getUserProfilePicture(username);
   } catch (error) {
     console.error('Error fetching profile picture:', error);
+    // Don't set profilePicture if there's an error
   }
 
   const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
