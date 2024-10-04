@@ -631,8 +631,10 @@ app.frame('/howtoplay', () => {
 })
 
 app.frame('/game', async (c) => {
+  console.log('Entering /game route');
   try {
     const { buttonValue, status, frameData } = c;
+    console.log('Request details:', { buttonValue, status, frameData });
     const fid = frameData?.fid;
 
     let username = 'Player';
@@ -643,7 +645,7 @@ app.frame('/game', async (c) => {
           getUsername(fid.toString()),
           getUserProfilePicture(fid.toString())
         ]);
-        console.log(`Username: ${username}, Profile Image: ${profileImage}`);
+        console.log(`User info fetched - Username: ${username}, Profile Image: ${profileImage}`);
       } catch (error) {
         console.error('Error getting user info:', error);
       }
@@ -653,58 +655,58 @@ app.frame('/game', async (c) => {
     let message = `New game started! Your turn, ${username}`;
 
     if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
+      console.log('Processing move');
       try {
-        state = decodeState(buttonValue.split(':')[1]);
-        let { board, isGameOver } = state;
+        // Temporarily use a simpler state passing method
+        const [, moveIndex] = buttonValue.split(':');
+        const move = parseInt(moveIndex);
+        console.log('Move details:', { move, currentBoard: state.board });
 
-        const move = parseInt(buttonValue.split(':')[2]);
-        if (board[move] === null && !isGameOver) {
-          // Player's move
-          board[move] = 'O';
+        if (state.board[move] === null && !state.isGameOver) {
+          state.board[move] = 'O';
           message = `${username} moved at ${COORDINATES[move]}.`;
           
-          if (checkWin(board)) {
+          if (checkWin(state.board)) {
             message = `${username} wins! Game over.`;
-            isGameOver = true;
+            state.isGameOver = true;
             if (fid) {
               await updateUserRecord(fid.toString(), true);
             }
-          } else if (board.every((cell) => cell !== null)) {
+          } else if (state.board.every((cell) => cell !== null)) {
             message = "Game over! It's a draw.";
-            isGameOver = true;
+            state.isGameOver = true;
           } else {
-            // Computer's move
-            const computerMove = getBestMove(board, 'X');
-            board[computerMove] = 'X';
+            const computerMove = getBestMove(state.board, 'X');
+            state.board[computerMove] = 'X';
             message += ` Computer moved at ${COORDINATES[computerMove]}.`;
             
-            if (checkWin(board)) {
+            if (checkWin(state.board)) {
               message += ` Computer wins! Game over.`;
-              isGameOver = true;
+              state.isGameOver = true;
               if (fid) {
                 await updateUserRecord(fid.toString(), false);
               }
-            } else if (board.every((cell) => cell !== null)) {
+            } else if (state.board.every((cell) => cell !== null)) {
               message += " It's a draw. Game over.";
-              isGameOver = true;
+              state.isGameOver = true;
             } else {
               message += ` Your turn, ${username}.`;
             }
           }
-        } else if (isGameOver) {
+        } else if (state.isGameOver) {
           message = "Game is over. Start a new game!";
         } else {
           message = "That spot is already taken! Choose another.";
         }
-
-        state = { ...state, board, isGameOver };
       } catch (error) {
         console.error('Error processing move:', error);
         message = "An error occurred while processing your move. Please try again.";
       }
     }
 
-    const encodedState = encodeState(state);
+    console.log('Final game state:', state);
+    console.log('Message:', message);
+
     const availableMoves = state.board.reduce((acc, cell, index) => {
       if (cell === null) acc.push(index);
       return acc;
@@ -718,11 +720,12 @@ app.frame('/game', async (c) => {
           <Button action="/share">Share Game</Button>
         ]
       : shuffledMoves.map((index) => 
-          <Button value={`move:${encodedState}:${index}`}>
+          <Button value={`move:${index}`}>
             {COORDINATES[index]}
           </Button>
         );
 
+    console.log('Rendering response');
     return c.res({
       image: (
         <div style={{
