@@ -62,8 +62,8 @@ async function getUsername(fid: string): Promise<string> {
     const data = await response.json();
     console.log('Username API response:', JSON.stringify(data));
     
-    if (data && data.data && data.data.Socials && Array.isArray(data.data.Socials.Social) && data.data.Socials.Social.length > 0) {
-      return data.data.Socials.Social[0]?.profileName || 'Player';
+    if (data?.data?.Socials?.Social?.[0]?.profileName) {
+      return data.data.Socials.Social[0].profileName;
     } else {
       console.log('Unexpected API response structure:', JSON.stringify(data));
       return 'Player';
@@ -76,8 +76,10 @@ async function getUsername(fid: string): Promise<string> {
 
 async function getUserProfilePicture(username: string): Promise<string | null> {
   const query = `
-    query GetUserProfileImage {
-      Socials(input: {filter: {profileName: {_eq: "${username}"}}, blockchain: ethereum, limit: 50}) {
+    query GetUserProfilePicture($username: String!) {
+      Socials(
+        input: {filter: {profileName: {_eq: $username}}, blockchain: ethereum}
+      ) {
         Social {
           profileImage
         }
@@ -92,14 +94,14 @@ async function getUserProfilePicture(username: string): Promise<string | null> {
         'Content-Type': 'application/json',
         'Authorization': AIRSTACK_API_KEY_SECONDARY,
       },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ query, variables: { username } }),
     });
 
     const data = await response.json();
     console.log('Profile image API response:', JSON.stringify(data));
 
-    if (data && data.data && data.data.Socials && Array.isArray(data.data.Socials.Social) && data.data.Socials.Social.length > 0) {
-      return data.data.Socials.Social[0]?.profileImage || null;
+    if (data?.data?.Socials?.Social?.[0]?.profileImage) {
+      return data.data.Socials.Social[0].profileImage;
     } else {
       console.log('No profile image found or unexpected API response structure');
       return null;
@@ -338,10 +340,9 @@ function renderBoard(board: (string | null)[]) {
 }
 
 
-
 app.frame('/share', async (c) => {
   const { searchParams } = new URL(c.req.url);
-  const username = searchParams.get('username') || 'Player';
+  const username = decodeURIComponent(searchParams.get('username') || 'Player');
   console.log(`Received username in /share route: ${username}`);
   
   let profileImage: string | null = null;
@@ -353,7 +354,7 @@ app.frame('/share', async (c) => {
   }
 
   const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
-  const baseUrl = 'https://podplaytest.vercel.app'; // Update this to your actual domain
+  const baseUrl = 'https://podplaytest.vercel.app';
   const originalFramesLink = `${baseUrl}/api`;
   
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
@@ -361,14 +362,33 @@ app.frame('/share', async (c) => {
   return c.res({
     image: (
       <div style={{
-        // ... (styles remain the same)
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: 'url(https://bafybeigp3dkqr7wqgvp7wmycpg6axhgmc42pljkzmhdbnrsnxehoieqeri.ipfs.w3s.link/Frame%209.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontSize: '48px',
+        fontFamily: 'Arial, sans-serif',
+        textAlign: 'center',
+        position: 'relative',
       }}>
         {profileImage && (
           <img 
             src={profileImage} 
             alt={`${username}'s profile`} 
             style={{
-              // ... (styles remain the same)
+              position: 'absolute',
+              top: '20px',
+              left: '20px',
+              width: '100px',
+              height: '100px',
+              borderRadius: '50%',
+              border: '3px solid white',
             }}
           />
         )}
@@ -382,6 +402,7 @@ app.frame('/share', async (c) => {
     ],
   });
 });
+
 
 
 function getBestMove(board: (string | null)[], player: string): number {
