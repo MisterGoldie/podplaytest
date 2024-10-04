@@ -211,6 +211,8 @@ async function updateUserRecord(fid: string, isWin: boolean) {
         }
       }
     });
+
+
     console.log(`User record updated successfully for FID: ${fid}`);
   } catch (error) {
     console.error(`Error updating user record for FID ${fid}:`, error);
@@ -402,83 +404,78 @@ app.frame('/howtoplay', () => {
 })
 
 app.frame('/game', async (c) => {
-  const { buttonValue, status, frameData } = c
+  const { buttonValue, status, frameData } = c;
   const fid = frameData?.fid;
 
   let username = 'Player';
   if (fid) {
     try {
-      username = await getUsername(fid.toString());
-      console.log(`Username retrieved in /game route: ${username}`);
+      username = await Promise.race([
+        getUsername(fid.toString()),
+        new Promise<string>((_, reject) => setTimeout(() => reject(new Error('Username fetch timeout')), 3000))
+      ]);
     } catch (error) {
-      console.error('Error getting username:', error);
+      console.error('Error or timeout getting username:', error);
     }
   }
 
-  // Always initialize a new game state when entering this route
-  let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false }
-  let message = `New game started! Your turn, ${username}`
+  let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
+  let message = `New game started! Your turn, ${username}`;
 
   if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
-    state = decodeState(buttonValue.split(':')[1])
-    let { board, currentPlayer, isGameOver } = state
+    state = decodeState(buttonValue.split(':')[1]);
+    let { board, isGameOver } = state;
 
-    const move = parseInt(buttonValue.split(':')[2])
+    const move = parseInt(buttonValue.split(':')[2]);
     if (board[move] === null && !isGameOver) {
       // Player's move
-      board[move] = 'O'
-      message = `${username} moved at ${COORDINATES[move]}.`
+      board[move] = 'O';
+      message = `${username} moved at ${COORDINATES[move]}.`;
       
       if (checkWin(board)) {
-        message = `${username} wins! Game over.`
-        isGameOver = true
+        message = `${username} wins! Game over.`;
+        isGameOver = true;
         if (fid) {
-          await updateUserRecord(fid.toString(), true);
+          updateUserRecord(fid.toString(), true);
         }
-      } else if (board.every((cell: string | null) => cell !== null)) {
-        message = "Game over! It's a draw."
-        isGameOver = true
+      } else if (board.every((cell) => cell !== null)) {
+        message = "Game over! It's a draw.";
+        isGameOver = true;
       } else {
         // Computer's move
-        const computerMove = getBestMove(board, 'X')
-        if (computerMove !== -1) {
-          board[computerMove] = 'X'
-          message += ` Computer moved at ${COORDINATES[computerMove]}.`
-          
-          if (checkWin(board)) {
-            message += ` Computer wins! Game over.`
-            isGameOver = true
-            if (fid) {
-              await updateUserRecord(fid.toString(), false);
-            }
-          } else if (board.every((cell: string | null) => cell !== null)) {
-            message += " It's a draw. Game over."
-            isGameOver = true
-          } else {
-            message += ` Your turn, ${username}.`
+        const computerMove = getBestMove(board, 'X');
+        board[computerMove] = 'X';
+        message += ` Computer moved at ${COORDINATES[computerMove]}.`;
+        
+        if (checkWin(board)) {
+          message += ` Computer wins! Game over.`;
+          isGameOver = true;
+          if (fid) {
+            updateUserRecord(fid.toString(), false);
           }
+        } else if (board.every((cell) => cell !== null)) {
+          message += " It's a draw. Game over.";
+          isGameOver = true;
+        } else {
+          message += ` Your turn, ${username}.`;
         }
       }
     } else if (isGameOver) {
-      message = "Game is over. Start a new game!"
+      message = "Game is over. Start a new game!";
     } else {
-      message = "That spot is already taken! Choose another."
+      message = "That spot is already taken! Choose another.";
     }
 
-    state = { board, currentPlayer, isGameOver }
+    state = { ...state, board, isGameOver };
   }
 
-  // Encode the state in the button values
-  const encodedState = encodeState(state)
-
-  // Get available moves
+  const encodedState = encodeState(state);
   const availableMoves = state.board.reduce((acc, cell, index) => {
-    if (cell === null) acc.push(index)
-    return acc
-  }, [] as number[])
+    if (cell === null) acc.push(index);
+    return acc;
+  }, [] as number[]);
 
-  // Shuffle available moves and take the first 4 (or less if fewer are available)
-  const shuffledMoves = shuffleArray([...availableMoves]).slice(0, 4)
+  const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
 
   const intents = state.isGameOver
     ? [
@@ -489,11 +486,7 @@ app.frame('/game', async (c) => {
         <Button value={`move:${encodedState}:${index}`}>
           {COORDINATES[index]}
         </Button>
-      )
-
-  console.log(`Rendering /game route for username: ${username}`);
-  console.log(`Game state: ${JSON.stringify(state)}`);
-  console.log(`Intents: ${JSON.stringify(intents)}`);
+      );
 
   return c.res({
     image: (
@@ -526,8 +519,8 @@ app.frame('/game', async (c) => {
       </div>
     ),
     intents: intents,
-  })
-})
+  });
+});
 
 app.frame('/share', async (c) => {
   const { frameData } = c;
