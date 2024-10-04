@@ -74,11 +74,11 @@ async function getUsername(fid: string): Promise<string> {
   }
 }
 
-async function getUserProfilePicture(username: string): Promise<string | null> {
+async function getUserProfilePicture(fid: string): Promise<string | null> {
   const query = `
-    query GetUserProfilePicture($username: String!) {
+    query GetUserProfilePicture($fid: String!) {
       Socials(
-        input: {filter: {profileName: {_eq: $username}}, blockchain: ethereum}
+        input: {filter: {dappName: {_eq: farcaster}, userId: {_eq: $fid}}, blockchain: ethereum}
       ) {
         Social {
           profileImage
@@ -94,7 +94,7 @@ async function getUserProfilePicture(username: string): Promise<string | null> {
         'Content-Type': 'application/json',
         'Authorization': AIRSTACK_API_KEY_SECONDARY,
       },
-      body: JSON.stringify({ query, variables: { username } }),
+      body: JSON.stringify({ query, variables: { fid } }),
     });
 
     const data = await response.json();
@@ -341,67 +341,52 @@ function renderBoard(board: (string | null)[]) {
 
 
 app.frame('/share', async (c) => {
-  const { searchParams } = new URL(c.req.url);
-  const username = decodeURIComponent(searchParams.get('username') || 'Player');
-  console.log(`Received username in /share route: ${username}`);
-  
-  let profileImage: string | null = null;
-  try {
-    profileImage = await getUserProfilePicture(username);
-    console.log(`Profile image URL for ${username}:`, profileImage);
-  } catch (error) {
-    console.error(`Error fetching profile image for ${username}:`, error);
-  }
+  const { frameData } = c;
+  const fid = frameData?.fid;
 
-  const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
-  const baseUrl = 'https://podplaytest.vercel.app';
-  const originalFramesLink = `${baseUrl}/api`;
-  
-  const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
+  let profileImage: string | null = null;
+  if (fid) {
+    try {
+      profileImage = await getUserProfilePicture(fid.toString());
+      console.log(`Profile image URL for FID ${fid}:`, profileImage);
+    } catch (error) {
+      console.error(`Error fetching profile image for FID ${fid}:`, error);
+    }
+  }
 
   return c.res({
     image: (
       <div style={{
         display: 'flex',
-        flexDirection: 'column' as const,
-        alignItems: 'center',
         justifyContent: 'center',
+        alignItems: 'center',
         width: '1080px',
         height: '1080px',
-        backgroundImage: 'url(https://bafybeigp3dkqr7wqgvp7wmycpg6axhgmc42pljkzmhdbnrsnxehoieqeri.ipfs.w3s.link/Frame%209.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        fontSize: '48px',
-        fontFamily: 'Arial, sans-serif',
-        textAlign: 'center',
-        position: 'relative',
+        backgroundColor: 'black',
       }}>
-        {profileImage && (
+        {profileImage ? (
           <img 
             src={profileImage} 
-            alt={`${username}'s profile`} 
+            alt="User profile"
             style={{
-              position: 'absolute',
-              top: '20px',
-              left: '20px',
-              width: '100px',
-              height: '100px',
+              width: '400px',
+              height: '400px',
               borderRadius: '50%',
-              border: '3px solid white',
+              border: '5px solid white',
             }}
           />
+        ) : (
+          <p style={{ color: 'white', fontSize: '48px' }}>No profile picture found</p>
         )}
-        <h1 style={{ marginBottom: '20px' }}>Thanks for Playing, {username}!</h1>
-        <p style={{ fontSize: '30px', marginTop: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
     intents: [
-      <Button action="/">Play Again</Button>,
-      <Button.Link href={farcasterShareURL}>Share</Button.Link>
+      <Button action="/">Back to Game</Button>
     ],
   });
 });
+
+
 
 
 
