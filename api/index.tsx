@@ -54,13 +54,13 @@ async function getUsername(fid: string): Promise<string> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': AIRSTACK_API_KEY_SECONDARY,
+        'Authorization': AIRSTACK_API_KEY, // Using the primary API key
       },
       body: JSON.stringify({ query, variables: { fid } }),
     });
 
     const data = await response.json();
-    console.log('Full API response:', JSON.stringify(data));
+    console.log('Username API response:', JSON.stringify(data));
     
     if (data && data.data && data.data.Socials && Array.isArray(data.data.Socials.Social) && data.data.Socials.Social.length > 0) {
       return data.data.Socials.Social[0]?.profileName || 'Player';
@@ -92,7 +92,7 @@ async function getUserProfilePicture(username: string): Promise<string | null> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': AIRSTACK_API_KEY_SECONDARY,
+        'Authorization': AIRSTACK_API_KEY_SECONDARY, // Using the secondary API key
       },
       body: JSON.stringify({ query }),
     });
