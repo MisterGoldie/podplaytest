@@ -340,11 +340,20 @@ app.frame('/share', async (c) => {
   const { searchParams } = new URL(c.req.url);
   const username = searchParams.get('username') || 'Player';
   
-  let profilePicture = null;
+  let profilePicture: string | null = null;
   try {
     profilePicture = await getUserProfilePicture(username);
+    
+    // Log the API response for debugging
+    console.log(`Profile picture URL for ${username}:`, profilePicture);
+    
+    // Check if the response is a non-empty string
+    if (!profilePicture || typeof profilePicture !== 'string' || profilePicture.trim() === '') {
+      console.log(`No valid profile picture URL found for ${username}`);
+      profilePicture = null;
+    }
   } catch (error) {
-    console.error('Error fetching profile picture:', error);
+    console.error(`Error fetching profile picture for ${username}:`, error);
   }
 
   const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
