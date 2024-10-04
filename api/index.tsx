@@ -671,7 +671,7 @@ app.frame('/game', async (c) => {
         message = "Game over! It's a draw.";
         isGameOver = true;
       } else {
-        // Computer's move
+        // Computer's moves
         const computerMove = getBestMove(board, 'X');
         board[computerMove] = 'X';
         message += ` Computer moved at ${COORDINATES[computerMove]}.`;
