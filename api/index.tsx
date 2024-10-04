@@ -261,7 +261,7 @@ app.frame('/game', async (c) => {
   const intents = state.isGameOver
     ? [
         <Button value="newgame">New Game</Button>,
-        <Button action={`/share?username=${encodeURIComponent(username)}&profilePicture=${encodeURIComponent(profilePicture || '')}`}>Share Game</Button>
+        <Button action={`/share?username=${encodeURIComponent(username)}`}>Share Game</Button>
       ]
     : shuffledMoves.map((index) => 
         <Button value={`move:${encodedState}:${index}`}>
@@ -284,7 +284,23 @@ app.frame('/game', async (c) => {
         color: 'white',
         fontSize: '36px',
         fontFamily: 'Arial, sans-serif',
+        position: 'relative', // Added to allow absolute positioning of child elements
       }}>
+        {profilePicture && (
+          <img 
+            src={profilePicture} 
+            alt={`${username}'s profile`} 
+            style={{
+              position: 'absolute',
+              top: '20px',
+              left: '20px',
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              border: '3px solid white',
+            }}
+          />
+        )}
         {renderBoard(state.board)}
         <div style={{ 
           marginTop: '40px', 
@@ -339,19 +355,12 @@ function renderBoard(board: (string | null)[]) {
 app.frame('/share', async (c) => {
   const { searchParams } = new URL(c.req.url);
   const username = searchParams.get('username') || 'Player';
+  console.log(`Received username in /share route: ${username}`);
   
   let profilePicture: string | null = null;
   try {
     profilePicture = await getUserProfilePicture(username);
-    
-    // Log the API response for debugging
     console.log(`Profile picture URL for ${username}:`, profilePicture);
-    
-    // Check if the response is a non-empty string
-    if (!profilePicture || typeof profilePicture !== 'string' || profilePicture.trim() === '') {
-      console.log(`No valid profile picture URL found for ${username}`);
-      profilePicture = null;
-    }
   } catch (error) {
     console.error(`Error fetching profile picture for ${username}:`, error);
   }
