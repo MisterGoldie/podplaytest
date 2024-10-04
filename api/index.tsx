@@ -191,13 +191,11 @@ app.frame('/game', async (c) => {
   const fid = frameData?.fid;
 
   let username = 'Player';
-  let profilePicture = null;
   if (fid) {
     try {
       username = await getUsername(fid.toString());
-      profilePicture = await getUserProfilePicture(username);
     } catch (error) {
-      console.error('Error getting user info:', error);
+      console.error('Error getting username:', error);
     }
   }
 
@@ -286,24 +284,7 @@ app.frame('/game', async (c) => {
         color: 'white',
         fontSize: '36px',
         fontFamily: 'Arial, sans-serif',
-        position: 'relative', // Add this to position the profile picture absolutely within this container
       }}>
-        {profilePicture && (
-          <img 
-            src={profilePicture} 
-            alt={`${username}'s profile`} 
-            style={{
-              position: 'absolute',
-              bottom: '20px',
-              left: '20px',
-              width: '80px',
-              height: '80px',
-              borderRadius: '50%',
-              border: '3px solid white',
-              zIndex: 10,
-            }}
-          />
-        )}
         {renderBoard(state.board)}
         <div style={{ 
           marginTop: '40px', 
