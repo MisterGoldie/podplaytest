@@ -74,7 +74,7 @@ async function getUsername(fid: string): Promise<string> {
   }
 }
 
-async function getUserProfilePicture(username: string): Promise<string | null> {
+async function getUserProfilePicture(username: string) {
   const query = `
     query GetUserProfilePicture {
       Socials(input: {filter: {profileName: {_eq: "${username}"}}, blockchain: ethereum, limit: 50}) {
@@ -99,13 +99,7 @@ async function getUserProfilePicture(username: string): Promise<string | null> {
 
     const data = await response.json();
     console.log('Profile picture API response:', JSON.stringify(data));
-
-    if (data && data.data && data.data.Socials && Array.isArray(data.data.Socials.Social) && data.data.Socials.Social.length > 0) {
-      return data.data.Socials.Social[0]?.profileImage || null;
-    } else {
-      console.log('No profile picture found or unexpected API response structure');
-      return null;
-    }
+    return data;
   } catch (error) {
     console.error('Error fetching profile picture:', error);
     return null;
@@ -342,17 +336,20 @@ app.frame('/share', async (c) => {
 
   let profilePicture = null;
   try {
-    profilePicture = await getUserProfilePicture(username);
+    const profileData = await getUserProfilePicture(username);
+    if (profileData && profileData.data && profileData.data.Socials && profileData.data.Socials.Social && profileData.data.Socials.Social[0]) {
+      profilePicture = profileData.data.Socials.Social[0].profileImage;
+    }
   } catch (error) {
     console.error('Error fetching profile picture:', error);
-    // Don't set profilePicture if there's an error
   }
+
+  console.log('Profile picture URL:', profilePicture);
 
   const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
   const baseUrl = 'https://podplaytest.vercel.app'; // Update this to your actual domain
   const originalFramesLink = `${baseUrl}/api`;
   
-  // Construct the Farcaster share URL with both text and the embedded link
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
 
   return c.res({
