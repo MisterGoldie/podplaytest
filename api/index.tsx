@@ -28,7 +28,11 @@ try {
     throw new Error('Missing Firebase configuration environment variables');
   }
 
-  if (!admin.apps.length) {
+  console.log('Firebase Admin SDK imported successfully:', !!admin);
+  console.log('admin.apps:', admin.apps);
+
+  if (!admin.apps || admin.apps.length === 0) {
+    console.log('Initializing new Firebase app');
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId,
@@ -37,11 +41,14 @@ try {
       }),
     });
     console.log('Firebase Admin SDK initialized successfully');
+  } else {
+    console.log('Firebase app already initialized');
   }
+
   db = admin.firestore();
   console.log('Firestore instance created successfully');
 } catch (error) {
-  console.error('Error initializing Firebase Admin SDK:', error);
+  console.error('Error in Firebase initialization:', error);
   if (error instanceof Error) {
     console.error('Error name:', error.name);
     console.error('Error message:', error.message);
@@ -322,7 +329,6 @@ function renderBoard(board: (string | null)[]) {
   )
 }
 
-// Routes will be defined here...
 
 // Initial route
 app.frame('/', () => {
