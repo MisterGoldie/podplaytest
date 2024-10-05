@@ -170,7 +170,6 @@ async function getUserProfilePicture(fid: string): Promise<string | null> {
   }
 }
 
-
 async function getUserRecord(fid: string): Promise<{ wins: number; losses: number; ties: number }> {
   console.log(`Attempting to get user record for FID: ${fid}`);
   try {
@@ -184,37 +183,33 @@ async function getUserRecord(fid: string): Promise<{ wins: number; losses: numbe
     console.log(`User data for FID ${fid}:`, userData);
     return { 
       wins: userData?.wins || 0, 
-      losses: userData?.losses || 0, // Ensure we're using 'losses', not 'losss'
+      losses: userData?.losses || 0,
       ties: userData?.ties || 0
     };
   } catch (error) {
     console.error(`Error getting user record for FID ${fid}:`, error);
+    // Return default record in case of error
     return { wins: 0, losses: 0, ties: 0 };
   }
 }
 
-async function updateUserRecord(fid: string, result: 'win' | 'loss' | 'tie') {
-  console.log(`Attempting to update user record for FID: ${fid}, result: ${result}`);
+async function updateUserRecord(fid: string, isWin: boolean) {
+  console.log(`Attempting to update user record for FID: ${fid}, isWin: ${isWin}`);
   try {
     const database = getDb();
     const userRef = database.collection('users').doc(fid);
-    
-    // Correctly format the field name
-    const updateField = `${result}s`; // This will be 'wins', 'losses', or 'ties'
-    
     await userRef.set({
-      [updateField]: admin.firestore.FieldValue.increment(1)
+      [isWin ? 'wins' : 'losses']: admin.firestore.FieldValue.increment(1)
     }, { merge: true });
-    
     console.log(`User record updated successfully for FID: ${fid}`);
   } catch (error) {
     console.error(`Error updating user record for FID ${fid}:`, error);
   }
 }
 
-async function updateUserRecordAsync(fid: string, result: 'win' | 'loss' | 'tie') {
+async function updateUserRecordAsync(fid: string, isWin: boolean) {
   try {
-    await updateUserRecord(fid, result);
+    await updateUserRecord(fid, isWin);
     console.log(`User record updated asynchronously for FID: ${fid}`);
   } catch (error) {
     console.error(`Error updating user record asynchronously for FID ${fid}:`, error);
@@ -435,14 +430,11 @@ app.frame('/game', async (c) => {
           message = `${username} wins! Game over.`;
           state.isGameOver = true;
           if (fid) {
-            updateUserRecordAsync(fid.toString(), 'win');
+            updateUserRecordAsync(fid.toString(), true);
           }
         } else if (state.board.every((cell) => cell !== null)) {
           message = "Game over! It's a draw.";
           state.isGameOver = true;
-          if (fid) {
-            updateUserRecordAsync(fid.toString(), 'tie');
-          }
         } else {
           const computerMove = getBestMove(state.board, 'X');
           state.board[computerMove] = 'X';
@@ -452,14 +444,11 @@ app.frame('/game', async (c) => {
             message += ` Computer wins! Game over.`;
             state.isGameOver = true;
             if (fid) {
-              updateUserRecordAsync(fid.toString(), 'loss');
+              updateUserRecordAsync(fid.toString(), false);
             }
           } else if (state.board.every((cell) => cell !== null)) {
             message += " It's a draw. Game over.";
             state.isGameOver = true;
-            if (fid) {
-              updateUserRecordAsync(fid.toString(), 'tie');
-            }
           } else {
             message += ` Your turn, ${username}.`;
           }
@@ -544,7 +533,7 @@ app.frame('/share', async (c) => {
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
 
   let profileImage: string | null = null;
-  let userRecord = { wins: 0, losses: 0, ties: 0 }; // Initialize with all fields
+  let userRecord = { wins: 0, losses: 0 };
 
   if (fid) {
     try {
@@ -554,7 +543,7 @@ app.frame('/share', async (c) => {
       ]);
 
       profileImage = profileImageResult;
-      userRecord = userRecordResult; // This now correctly includes 'losses'
+      userRecord = userRecordResult;
 
       console.log(`Profile image URL for FID ${fid}:`, profileImage);
       console.log(`User record for FID ${fid}:`, userRecord);
@@ -597,9 +586,7 @@ app.frame('/share', async (c) => {
           />
         )}
         <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Thanks for Playing!</h1>
-        <p style={{ fontSize: '36px', marginBottom: '20px' }}>
-          Your Record: {userRecord.wins}W - {userRecord.losses}L - {userRecord.ties}T
-        </p>
+        <p style={{ fontSize: '36px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L</p>
         <p style={{ fontSize: '28px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
