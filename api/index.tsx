@@ -4,52 +4,30 @@ import { Button, Frog } from 'frog'
 import { handle } from 'frog/vercel'
 import { neynar } from 'frog/middlewares'
 import { NeynarVariables } from 'frog/middlewares'
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import * as admin from 'firebase-admin';
 
 const AIRSTACK_API_URL = 'https://api.airstack.xyz/gql';
 const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
 const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as string;
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 
-
-
-let db: FirebaseFirestore.Firestore;
-
-if (getApps().length === 0) {
+// Initialize Firebase Admin SDK
+if (!admin.apps.length) {
   try {
-    const app = initializeApp({
-      credential: cert({
+    admin.initializeApp({
+      credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
       }),
     });
-    console.log('Firebase app initialized successfully');
-    db = getFirestore(app);
-    console.log('Firestore instance created successfully');
+    console.log('Firebase Admin SDK initialized successfully');
   } catch (error) {
-    console.error('Error initializing Firebase:', error);
-    throw error;
+    console.error('Error initializing Firebase Admin SDK:', error);
   }
 }
 
-if (getApps().length === 0) {
-  try {
-    initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-    });
-    console.log('Firebase app initialized successfully');
-    console.log('Firestore instance created successfully');
-  } catch (error) {
-    console.error('Error initializing Firebase:', error);
-    throw error;
-  }
-}
+const db = admin.firestore();
 
 export const app = new Frog<{ Variables: NeynarVariables }>({
   basePath: '/api',
@@ -60,8 +38,7 @@ export const app = new Frog<{ Variables: NeynarVariables }>({
     apiUrl: "https://hubs.airstack.xyz",
     fetchOptions: {
       headers: {
-        "x-airstack-hubs": AIRSTACK_API_KEY_SECONDARY,
-        
+        "x-airstack-hubs": AIRSTACK_API_KEY_SECONDARY, 
       }
     }
   }
@@ -170,6 +147,11 @@ async function getUserRecord(fid: string): Promise<{ wins: number; losses: numbe
     };
   } catch (error) {
     console.error(`Error getting user record for FID ${fid}:`, error);
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     return { wins: 0, losses: 0 };
   }
 }
@@ -179,11 +161,16 @@ async function updateUserRecord(fid: string, isWin: boolean) {
   try {
     const userRef = db.collection('users').doc(fid);
     await userRef.set({
-      [isWin ? 'wins' : 'losses']: firebase.firestore.FieldValue.increment(1)
+      [isWin ? 'wins' : 'losses']: admin.firestore.FieldValue.increment(1)
     }, { merge: true });
     console.log(`User record updated successfully for FID: ${fid}`);
   } catch (error) {
     console.error(`Error updating user record for FID ${fid}:`, error);
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
   }
 }
 
@@ -245,6 +232,19 @@ function getBestMove(board: (string | null)[], player: string): number {
   return availableMoves[Math.floor(Math.random() * availableMoves.length)]
 }
 
+function checkWin(board: (string | null)[]) {
+  const winPatterns = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+    [0, 4, 8], [2, 4, 6] // Diagonals
+  ]
+
+  return winPatterns.some(pattern =>
+    board[pattern[0]] &&
+    board[pattern[0]] === board[pattern[1]] &&
+    board[pattern[0]] === board[pattern[2]]
+  )
+}
 
 function encodeState(state: GameState): string {
   return Buffer.from(JSON.stringify(state)).toString('base64');
@@ -285,6 +285,8 @@ function renderBoard(board: (string | null)[]) {
     </div>
   )
 }
+
+// Routes will be defined here...
 
 // Initial route
 app.frame('/', () => {
@@ -482,22 +484,6 @@ async function updateUserRecordAsync(fid: string, isWin: boolean) {
   } catch (error) {
     console.error(`Error updating user record asynchronously for FID ${fid}:`, error);
   }
-}
-
-// Optimized checkWin function
-function checkWin(board: (string | null)[]) {
-  const lines = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-    [0, 4, 8], [2, 4, 6] // Diagonals
-  ];
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
-    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-      return true;
-    }
-  }
-  return false;
 }
 
 
