@@ -32,6 +32,23 @@ if (getApps().length === 0) {
 const db = getFirestore();
 console.log('Firestore instance created');
 
+if (getApps().length === 0) {
+  try {
+    initializeApp({
+      credential: cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      }),
+    });
+    console.log('Firebase app initialized successfully');
+    console.log('Firestore instance created successfully');
+  } catch (error) {
+    console.error('Error initializing Firebase:', error);
+    throw error;
+  }
+}
+
 export const app = new Frog<{ Variables: NeynarVariables }>({
   basePath: '/api',
   imageOptions: { width: 1080, height: 1080 },
@@ -166,7 +183,9 @@ async function updateUserRecord(fid: string, isWin: boolean) {
   
   try {
     await db.runTransaction(async (transaction) => {
+      console.log(`Starting transaction for FID: ${fid}`);
       const userDoc = await transaction.get(userRef);
+      console.log(`User document retrieved for FID ${fid}:`, userDoc.exists);
       if (!userDoc.exists) {
         console.log(`Creating new record for FID: ${fid}`);
         transaction.set(userRef, { wins: isWin ? 1 : 0, losses: isWin ? 0 : 1 });
@@ -179,6 +198,7 @@ async function updateUserRecord(fid: string, isWin: boolean) {
           transaction.update(userRef, { losses: (userData!.losses || 0) + 1 });
         }
       }
+      console.log(`Transaction completed for FID: ${fid}`);
     });
 
     console.log(`User record updated successfully for FID: ${fid}`);
