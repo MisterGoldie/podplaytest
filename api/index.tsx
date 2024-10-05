@@ -96,6 +96,28 @@ type GameState = {
   isGameOver: boolean;
 }
 
+async function getTotalGamesPlayed(fid: string): Promise<number> {
+  console.log(`Attempting to get total games played for FID: ${fid}`);
+  try {
+    const database = getDb();
+    const userDoc = await database.collection('users').doc(fid).get();
+    if (!userDoc.exists) {
+      console.log(`No record found for FID: ${fid}. Returning 0 total games.`);
+      return 0;
+    }
+    const userData = userDoc.data();
+    const wins = userData?.wins || 0;
+    const losses = userData?.losses || 0;
+    const ties = userData?.ties || 0;
+    const totalGames = wins + losses + ties;
+    console.log(`Total games played for FID ${fid}:`, totalGames);
+    return totalGames;
+  } catch (error) {
+    console.error(`Error getting total games played for FID ${fid}:`, error);
+    return 0;
+  }
+}
+
 async function getUsername(fid: string): Promise<string> {
   const query = `
     query ($fid: String!) {
@@ -563,19 +585,23 @@ app.frame('/share', async (c) => {
 
   let profileImage: string | null = null;
   let userRecord = { wins: 0, losses: 0 };
+  let totalGamesPlayed = 0;
 
   if (fid) {
     try {
-      const [profileImageResult, userRecordResult] = await Promise.all([
+      const [profileImageResult, userRecordResult, totalGamesResult] = await Promise.all([
         getUserProfilePicture(fid.toString()),
-        getUserRecord(fid.toString())
+        getUserRecord(fid.toString()),
+        getTotalGamesPlayed(fid.toString())
       ]);
 
       profileImage = profileImageResult;
       userRecord = userRecordResult;
+      totalGamesPlayed = totalGamesResult;
 
       console.log(`Profile image URL for FID ${fid}:`, profileImage);
       console.log(`User record for FID ${fid}:`, userRecord);
+      console.log(`Total games played for FID ${fid}:`, totalGamesPlayed);
     } catch (error) {
       console.error(`Error fetching data for FID ${fid}:`, error);
       if (error instanceof Error) {
@@ -616,6 +642,7 @@ app.frame('/share', async (c) => {
         )}
         <h1 style={{ fontSize: '56px', marginBottom: '20px' }}>Thanks for Playing!</h1>
         <p style={{ fontSize: '40px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L</p>
+        <p style={{ fontSize: '36px', marginBottom: '20px' }}>Total Games Played: {totalGamesPlayed}</p>
         <p style={{ fontSize: '30px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
