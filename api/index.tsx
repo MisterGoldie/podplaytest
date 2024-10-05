@@ -577,17 +577,17 @@ app.frame('/share', async (c) => {
             src={profileImage} 
             alt="User profile"
             style={{
-              width: '120px',
-              height: '120px',
+              width: '200px',
+              height: '200px',
               borderRadius: '50%',
               border: '3px solid white',
               marginBottom: '20px',
             }}
           />
         )}
-        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Thanks for Playing!</h1>
-        <p style={{ fontSize: '36px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L</p>
-        <p style={{ fontSize: '28px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
+        <h1 style={{ fontSize: '56px', marginBottom: '20px' }}>Thanks for Playing!</h1>
+        <p style={{ fontSize: '40px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L</p>
+        <p style={{ fontSize: '30px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
     intents: [
