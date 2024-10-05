@@ -38,7 +38,8 @@ export const app = new Frog<{ Variables: NeynarVariables }>({
     apiUrl: "https://hubs.airstack.xyz",
     fetchOptions: {
       headers: {
-        "x-airstack-hubs": AIRSTACK_API_KEY_SECONDARY, 
+        "x-airstack-hubs": AIRSTACK_API_KEY,
+        "x-airstack-hubs-secondary": AIRSTACK_API_KEY_SECONDARY
       }
     }
   }
@@ -387,8 +388,9 @@ app.frame('/game', async (c) => {
         if (checkWin(state.board)) {
           message = `${username} wins! Game over.`;
           state.isGameOver = true;
-          // Move this to a background task
-          if (fid) updateUserRecordAsync(fid.toString(), true);
+          if (fid) {
+            updateUserRecordAsync(fid.toString(), true);
+          }
         } else if (state.board.every((cell) => cell !== null)) {
           message = "Game over! It's a draw.";
           state.isGameOver = true;
@@ -400,8 +402,9 @@ app.frame('/game', async (c) => {
           if (checkWin(state.board)) {
             message += ` Computer wins! Game over.`;
             state.isGameOver = true;
-            // Move this to a background task
-            if (fid) updateUserRecordAsync(fid.toString(), false);
+            if (fid) {
+              updateUserRecordAsync(fid.toString(), false);
+            }
           } else if (state.board.every((cell) => cell !== null)) {
             message += " It's a draw. Game over.";
             state.isGameOver = true;
@@ -496,12 +499,23 @@ app.frame('/share', async (c) => {
 
   if (fid) {
     try {
-      profileImage = await getUserProfilePicture(fid.toString());
-      userRecord = await getUserRecord(fid.toString());
+      const [profileImageResult, userRecordResult] = await Promise.all([
+        getUserProfilePicture(fid.toString()),
+        getUserRecord(fid.toString())
+      ]);
+
+      profileImage = profileImageResult;
+      userRecord = userRecordResult;
+
       console.log(`Profile image URL for FID ${fid}:`, profileImage);
       console.log(`User record for FID ${fid}:`, userRecord);
     } catch (error) {
       console.error(`Error fetching data for FID ${fid}:`, error);
+      if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
     }
   }
 
