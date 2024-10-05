@@ -76,8 +76,7 @@ export const app = new Frog<{ Variables: NeynarVariables }>({
     apiUrl: "https://hubs.airstack.xyz",
     fetchOptions: {
       headers: {
-        "x-airstack-hubs": AIRSTACK_API_KEY_SECONDARY,
-        "x-airstack-hubs-secondary": AIRSTACK_API_KEY
+        "x-airstack-hubs": `${AIRSTACK_API_KEY},${AIRSTACK_API_KEY_SECONDARY}`
       }
     }
   }
