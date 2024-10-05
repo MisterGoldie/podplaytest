@@ -170,26 +170,26 @@ async function getUserProfilePicture(fid: string): Promise<string | null> {
   }
 }
 
-async function getUserRecord(fid: string): Promise<{ wins: number; losses: number; ties: number }> {
+async function getUserRecord(fid: string): Promise<{ wins: number; losses: number; ties: number; totalGames: number }> {
   console.log(`Attempting to get user record for FID: ${fid}`);
   try {
     const database = getDb();
     const userDoc = await database.collection('users').doc(fid).get();
     if (!userDoc.exists) {
       console.log(`No record found for FID: ${fid}. Returning default record.`);
-      return { wins: 0, losses: 0, ties: 0 };
+      return { wins: 0, losses: 0, ties: 0, totalGames: 0 };
     }
     const userData = userDoc.data();
     console.log(`User data for FID ${fid}:`, userData);
-    return { 
-      wins: userData?.wins || 0, 
-      losses: userData?.losses || 0,
-      ties: userData?.ties || 0
-    };
+    const wins = userData?.wins || 0;
+    const losses = userData?.losses || 0;
+    const ties = userData?.ties || 0;
+    const totalGames = wins + losses + ties;
+    return { wins, losses, ties, totalGames };
   } catch (error) {
     console.error(`Error getting user record for FID ${fid}:`, error);
     // Return default record in case of error
-    return { wins: 0, losses: 0, ties: 0 };
+    return { wins: 0, losses: 0, ties: 0, totalGames: 0 };
   }
 }
 
