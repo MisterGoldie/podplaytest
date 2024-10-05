@@ -60,7 +60,8 @@ export const app = new Frog<{ Variables: NeynarVariables }>({
     apiUrl: "https://hubs.airstack.xyz",
     fetchOptions: {
       headers: {
-        "x-airstack-hubs": AIRSTACK_API_KEY, 
+        "x-airstack-hubs": AIRSTACK_API_KEY_SECONDARY,
+        
       }
     }
   }
@@ -157,7 +158,6 @@ async function getUserRecord(fid: string): Promise<{ wins: number; losses: numbe
   console.log(`Attempting to get user record for FID: ${fid}`);
   try {
     const userDoc = await db.collection('users').doc(fid).get();
-    console.log(`User document retrieved for FID ${fid}:`, userDoc.exists);
     if (!userDoc.exists) {
       console.log(`No record found for FID: ${fid}. Returning default record.`);
       return { wins: 0, losses: 0 };
@@ -170,47 +170,20 @@ async function getUserRecord(fid: string): Promise<{ wins: number; losses: numbe
     };
   } catch (error) {
     console.error(`Error getting user record for FID ${fid}:`, error);
-    if (error instanceof Error) {
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
     return { wins: 0, losses: 0 };
   }
 }
 
 async function updateUserRecord(fid: string, isWin: boolean) {
   console.log(`Attempting to update user record for FID: ${fid}, isWin: ${isWin}`);
-  const userRef = db.collection('users').doc(fid);
-  
   try {
-    await db.runTransaction(async (transaction) => {
-      console.log(`Starting transaction for FID: ${fid}`);
-      const userDoc = await transaction.get(userRef);
-      console.log(`User document retrieved for FID ${fid}:`, userDoc.exists);
-      if (!userDoc.exists) {
-        console.log(`Creating new record for FID: ${fid}`);
-        transaction.set(userRef, { wins: isWin ? 1 : 0, losses: isWin ? 0 : 1 });
-      } else {
-        const userData = userDoc.data();
-        console.log(`Existing data for FID ${fid}:`, userData);
-        if (isWin) {
-          transaction.update(userRef, { wins: (userData!.wins || 0) + 1 });
-        } else {
-          transaction.update(userRef, { losses: (userData!.losses || 0) + 1 });
-        }
-      }
-      console.log(`Transaction completed for FID: ${fid}`);
-    });
-
+    const userRef = db.collection('users').doc(fid);
+    await userRef.set({
+      [isWin ? 'wins' : 'losses']: firebase.firestore.FieldValue.increment(1)
+    }, { merge: true });
     console.log(`User record updated successfully for FID: ${fid}`);
   } catch (error) {
     console.error(`Error updating user record for FID ${fid}:`, error);
-    if (error instanceof Error) {
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
   }
 }
 
