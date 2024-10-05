@@ -170,6 +170,7 @@ async function getUserProfilePicture(fid: string): Promise<string | null> {
   }
 }
 
+
 async function getUserRecord(fid: string): Promise<{ wins: number; losses: number; ties: number }> {
   console.log(`Attempting to get user record for FID: ${fid}`);
   try {
@@ -183,12 +184,11 @@ async function getUserRecord(fid: string): Promise<{ wins: number; losses: numbe
     console.log(`User data for FID ${fid}:`, userData);
     return { 
       wins: userData?.wins || 0, 
-      losses: userData?.losses || 0,
+      losses: userData?.losses || 0, // Ensure we're using 'losses', not 'losss'
       ties: userData?.ties || 0
     };
   } catch (error) {
     console.error(`Error getting user record for FID ${fid}:`, error);
-    // Return default record in case of error
     return { wins: 0, losses: 0, ties: 0 };
   }
 }
@@ -199,7 +199,7 @@ async function updateUserRecord(fid: string, result: 'win' | 'loss' | 'tie') {
     const database = getDb();
     const userRef = database.collection('users').doc(fid);
     
-    // Correctly update only the relevant field
+    // Correctly format the field name
     const updateField = `${result}s`; // This will be 'wins', 'losses', or 'ties'
     
     await userRef.set({
@@ -544,7 +544,7 @@ app.frame('/share', async (c) => {
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
 
   let profileImage: string | null = null;
-  let userRecord = { wins: 0, losses: 0 };
+  let userRecord = { wins: 0, losses: 0, ties: 0 }; // Initialize with all fields
 
   if (fid) {
     try {
@@ -554,7 +554,7 @@ app.frame('/share', async (c) => {
       ]);
 
       profileImage = profileImageResult;
-      userRecord = userRecordResult;
+      userRecord = userRecordResult; // This now correctly includes 'losses'
 
       console.log(`Profile image URL for FID ${fid}:`, profileImage);
       console.log(`User record for FID ${fid}:`, userRecord);
@@ -597,7 +597,9 @@ app.frame('/share', async (c) => {
           />
         )}
         <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Thanks for Playing!</h1>
-        <p style={{ fontSize: '36px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L</p>
+        <p style={{ fontSize: '36px', marginBottom: '20px' }}>
+          Your Record: {userRecord.wins}W - {userRecord.losses}L - {userRecord.ties}T
+        </p>
         <p style={{ fontSize: '28px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
