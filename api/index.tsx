@@ -96,6 +96,15 @@ async function getUsername(fid: string): Promise<string> {
   }
 }
 
+function constructUrl(path: string, params?: Record<string, string>): string {
+  let url = new URL(path, 'https://example.com').pathname; // Use a dummy base URL
+  if (params) {
+    const searchParams = new URLSearchParams(params);
+    url += '?' + searchParams.toString();
+  }
+  return url;
+}
+
 async function getUserProfilePicture(fid: string): Promise<string | null> {
   const query = `
     query GetUserProfilePicture($fid: String!) {
@@ -470,17 +479,56 @@ app.frame('/game', async (c) => {
 
   const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
 
-  const intents = state.isGameOver
+  const buttons = state.isGameOver
     ? [
-        <Button value="newgame">New Game</Button>,
-        <Button action="/share">Share Game</Button>
+        { title: "New Game", action: "post" },
+        { title: "Share Game", action: "post", target: "/share" }
       ]
-    : shuffledMoves.map((index) => 
-        <Button value={`move:${encodedState}:${index}`}>
-          {COORDINATES[index]}
-        </Button>
-      );
+    : shuffledMoves.map((index) => ({
+        title: COORDINATES[index],
+        action: "post",
+        value: `move:${encodedState}:${index}`
+      }));
 
+  const imageUrl = constructUrl('/api/game/image', {
+    state: encodedState,
+    profileImage: profileImage || ''
+  });
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Tic-Tac-Toe Game</title>
+      <meta property="fc:frame" content="vNext">
+      <meta property="fc:frame:image" content="${imageUrl}">
+      <meta property="fc:frame:image:aspect_ratio" content="1:1">
+      ${buttons.map((button, index) => `
+        <meta property="fc:frame:button:${index + 1}" content="${button.title}">
+        <meta property="fc:frame:button:${index + 1}:action" content="${button.action}">
+        ${('target' in button && button.target) ? `<meta property="fc:frame:button:${index + 1}:target" content="${button.target}">` : ''}
+        ${('value' in button && button.value) ? `<meta property="fc:frame:button:${index + 1}:value" content="${button.value}">` : ''}
+      `).join('')}
+      <meta property="fc:frame:post_url" content="${constructUrl('/api/game')}">
+    </head>
+    <body>
+      <p>${message}</p>
+    </body>
+    </html>
+  `;
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html' },
+  });
+});
+
+// Separate route for rendering the game image
+app.frame('/game/image', async (c) => {
+  const { state: encodedState, profileImage } = c.req.query();
+  const state = decodeState(encodedState as string);
+  
   return c.res({
     image: (
       <div style={{
@@ -497,21 +545,9 @@ app.frame('/game', async (c) => {
         fontSize: '36px',
         fontFamily: 'Arial, sans-serif',
       }}>
-        {renderBoard(state.board, profileImage)}
-        <div style={{ 
-          marginTop: '40px', 
-          maxWidth: '900px', 
-          textAlign: 'center', 
-          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-          padding: '20px', 
-          borderRadius: '10px', 
-          color: 'black' 
-        }}>
-          {message}
-        </div>
+        {renderBoard(state.board, profileImage as string)}
       </div>
     ),
-    intents: intents,
   });
 });
 
