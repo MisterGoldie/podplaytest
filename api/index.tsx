@@ -12,10 +12,13 @@ const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
 const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as string;
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 
-// Enhanced Firebase Initialization
+
+
+let db: FirebaseFirestore.Firestore;
+
 if (getApps().length === 0) {
   try {
-    initializeApp({
+    const app = initializeApp({
       credential: cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
@@ -23,14 +26,13 @@ if (getApps().length === 0) {
       }),
     });
     console.log('Firebase app initialized successfully');
+    db = getFirestore(app);
+    console.log('Firestore instance created successfully');
   } catch (error) {
     console.error('Error initializing Firebase:', error);
     throw error;
   }
 }
-
-const db = getFirestore();
-console.log('Firestore instance created');
 
 if (getApps().length === 0) {
   try {
