@@ -577,8 +577,8 @@ app.frame('/share', async (c) => {
             src={profileImage} 
             alt="User profile"
             style={{
-              width: '200px',
-              height: '200px',
+              width: '250px',
+              height: '250px',
               borderRadius: '50%',
               border: '3px solid white',
               marginBottom: '20px',
