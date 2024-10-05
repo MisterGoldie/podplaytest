@@ -12,6 +12,7 @@ const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as str
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 
 let db: admin.firestore.Firestore | null = null;
+let initializationError: Error | null = null;
 
 try {
   const projectId = process.env.FIREBASE_PROJECT_ID;
@@ -45,15 +46,20 @@ try {
     console.error('Error name:', error.name);
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
+    initializationError = error;
   }
   db = null;
 }
 
 const getDb = () => {
-  if (!db) {
-    throw new Error('Firestore is not initialized');
+  if (db) {
+    return db;
   }
-  return db;
+  if (initializationError) {
+    console.error('Firestore initialization failed earlier:', initializationError);
+    throw initializationError;
+  }
+  throw new Error('Firestore is not initialized and no initialization error was caught');
 };
 
 export const app = new Frog<{ Variables: NeynarVariables }>({
@@ -162,8 +168,8 @@ async function getUserProfilePicture(fid: string): Promise<string | null> {
 async function getUserRecord(fid: string): Promise<{ wins: number; losses: number }> {
   console.log(`Attempting to get user record for FID: ${fid}`);
   try {
-    const db = getDb();
-    const userDoc = await db.collection('users').doc(fid).get();
+    const database = getDb();
+    const userDoc = await database.collection('users').doc(fid).get();
     if (!userDoc.exists) {
       console.log(`No record found for FID: ${fid}. Returning default record.`);
       return { wins: 0, losses: 0 };
@@ -184,8 +190,8 @@ async function getUserRecord(fid: string): Promise<{ wins: number; losses: numbe
 async function updateUserRecord(fid: string, isWin: boolean) {
   console.log(`Attempting to update user record for FID: ${fid}, isWin: ${isWin}`);
   try {
-    const db = getDb();
-    const userRef = db.collection('users').doc(fid);
+    const database = getDb();
+    const userRef = database.collection('users').doc(fid);
     await userRef.set({
       [isWin ? 'wins' : 'losses']: admin.firestore.FieldValue.increment(1)
     }, { merge: true });
@@ -315,6 +321,8 @@ function renderBoard(board: (string | null)[]) {
     </div>
   )
 }
+
+// Routes will be defined here...
 
 // Initial route
 app.frame('/', () => {
