@@ -340,6 +340,8 @@ function renderBoard(board: (string | null)[]) {
   )
 }
 
+// Routes will be defined here...
+
 
 // Initial route
 app.frame('/', () => {
