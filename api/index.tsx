@@ -158,7 +158,7 @@ async function getUserRecord(fid: string): Promise<{ wins: number; losses: numbe
     };
   } catch (error) {
     console.error(`Error getting user record for FID ${fid}:`, error);
-    // Return default record in case of error
+    // Return default record in the case of error
     return { wins: 0, losses: 0 };
   }
 }
