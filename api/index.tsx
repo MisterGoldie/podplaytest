@@ -11,9 +11,10 @@ const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
 const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as string;
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 
-// Initialize Firebase Admin SDK
-if (!admin.apps.length) {
-  try {
+let db: admin.firestore.Firestore;
+
+try {
+  if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
@@ -22,12 +23,20 @@ if (!admin.apps.length) {
       }),
     });
     console.log('Firebase Admin SDK initialized successfully');
-  } catch (error) {
-    console.error('Error initializing Firebase Admin SDK:', error);
   }
+  db = admin.firestore();
+  console.log('Firestore instance created successfully');
+} catch (error) {
+  console.error('Error initializing Firebase Admin SDK:', error);
+  db = null as any;
 }
 
-const db = admin.firestore();
+const getDb = () => {
+  if (!db) {
+    throw new Error('Firestore is not initialized');
+  }
+  return db;
+};
 
 export const app = new Frog<{ Variables: NeynarVariables }>({
   basePath: '/api',
@@ -38,7 +47,8 @@ export const app = new Frog<{ Variables: NeynarVariables }>({
     apiUrl: "https://hubs.airstack.xyz",
     fetchOptions: {
       headers: {
-        "x-airstack-hubs": AIRSTACK_API_KEY_SECONDARY, 
+        "x-airstack-hubs": AIRSTACK_API_KEY,
+        "x-airstack-hubs-secondary": AIRSTACK_API_KEY_SECONDARY
       }
     }
   }
@@ -134,7 +144,7 @@ async function getUserProfilePicture(fid: string): Promise<string | null> {
 async function getUserRecord(fid: string): Promise<{ wins: number; losses: number }> {
   console.log(`Attempting to get user record for FID: ${fid}`);
   try {
-    const userDoc = await db.collection('users').doc(fid).get();
+    const userDoc = await getDb().collection('users').doc(fid).get();
     if (!userDoc.exists) {
       console.log(`No record found for FID: ${fid}. Returning default record.`);
       return { wins: 0, losses: 0 };
@@ -159,7 +169,7 @@ async function getUserRecord(fid: string): Promise<{ wins: number; losses: numbe
 async function updateUserRecord(fid: string, isWin: boolean) {
   console.log(`Attempting to update user record for FID: ${fid}, isWin: ${isWin}`);
   try {
-    const userRef = db.collection('users').doc(fid);
+    const userRef = getDb().collection('users').doc(fid);
     await userRef.set({
       [isWin ? 'wins' : 'losses']: admin.firestore.FieldValue.increment(1)
     }, { merge: true });
@@ -171,6 +181,15 @@ async function updateUserRecord(fid: string, isWin: boolean) {
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
     }
+  }
+}
+
+async function updateUserRecordAsync(fid: string, isWin: boolean) {
+  try {
+    await updateUserRecord(fid, isWin);
+    console.log(`User record updated asynchronously for FID: ${fid}`);
+  } catch (error) {
+    console.error(`Error updating user record asynchronously for FID ${fid}:`, error);
   }
 }
 
@@ -477,16 +496,6 @@ app.frame('/game', async (c) => {
     intents: intents,
   });
 });
-
-// Asynchronous function to update user record
-async function updateUserRecordAsync(fid: string, isWin: boolean) {
-  try {
-    await updateUserRecord(fid, isWin);
-    console.log(`User record updated asynchronously for FID: ${fid}`);
-  } catch (error) {
-    console.error(`Error updating user record asynchronously for FID ${fid}:`, error);
-  }
-}
 
 
 app.frame('/share', async (c) => {
