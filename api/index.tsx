@@ -170,6 +170,29 @@ async function getUserProfilePicture(fid: string): Promise<string | null> {
   }
 }
 
+async function updateUserTie(fid: string) {
+  console.log(`Attempting to update tie for FID: ${fid}`);
+  try {
+    const database = getDb();
+    const userRef = database.collection('users').doc(fid);
+    await userRef.set({
+      ties: admin.firestore.FieldValue.increment(1)
+    }, { merge: true });
+    console.log(`User tie updated successfully for FID: ${fid}`);
+  } catch (error) {
+    console.error(`Error updating user tie for FID ${fid}:`, error);
+  }
+}
+
+async function updateUserTieAsync(fid: string) {
+  try {
+    await updateUserTie(fid);
+    console.log(`User tie updated asynchronously for FID: ${fid}`);
+  } catch (error) {
+    console.error(`Error updating user tie asynchronously for FID ${fid}:`, error);
+  }
+}
+
 async function getUserRecord(fid: string): Promise<{ wins: number; losses: number; ties: number }> {
   console.log(`Attempting to get user record for FID: ${fid}`);
   try {
@@ -435,6 +458,9 @@ app.frame('/game', async (c) => {
         } else if (state.board.every((cell) => cell !== null)) {
           message = "Game over! It's a draw.";
           state.isGameOver = true;
+          if (fid) {
+            updateUserTieAsync(fid.toString());
+          }
         } else {
           const computerMove = getBestMove(state.board, 'X');
           state.board[computerMove] = 'X';
@@ -449,6 +475,9 @@ app.frame('/game', async (c) => {
           } else if (state.board.every((cell) => cell !== null)) {
             message += " It's a draw. Game over.";
             state.isGameOver = true;
+            if (fid) {
+              updateUserTieAsync(fid.toString());
+            }
           } else {
             message += ` Your turn, ${username}.`;
           }
