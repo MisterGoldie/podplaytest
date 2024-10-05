@@ -579,8 +579,8 @@ app.frame('/share', async (c) => {
           />
         )}
         <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>Thanks for Playing!</h1>
-        <p style={{ fontSize: '24px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L</p>
-        <p style={{ fontSize: '18px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
+        <p style={{ fontSize: '30px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L</p>
+        <p style={{ fontSize: '24px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
     intents: [
