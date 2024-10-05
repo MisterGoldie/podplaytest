@@ -193,13 +193,13 @@ async function getUserRecord(fid: string): Promise<{ wins: number; losses: numbe
   }
 }
 
-async function updateUserRecord(fid: string, result: 'win' | 'loss' | 'tie') {
-  console.log(`Attempting to update user record for FID: ${fid}, result: ${result}`);
+async function updateUserRecord(fid: string, isWin: boolean) {
+  console.log(`Attempting to update user record for FID: ${fid}, isWin: ${isWin}`);
   try {
     const database = getDb();
     const userRef = database.collection('users').doc(fid);
     await userRef.set({
-      [result + 's']: admin.firestore.FieldValue.increment(1)
+      [isWin ? 'wins' : 'losses']: admin.firestore.FieldValue.increment(1)
     }, { merge: true });
     console.log(`User record updated successfully for FID: ${fid}`);
   } catch (error) {
@@ -207,9 +207,9 @@ async function updateUserRecord(fid: string, result: 'win' | 'loss' | 'tie') {
   }
 }
 
-async function updateUserRecordAsync(fid: string, result: 'win' | 'loss' | 'tie') {
+async function updateUserRecordAsync(fid: string, isWin: boolean) {
   try {
-    await updateUserRecord(fid, result);
+    await updateUserRecord(fid, isWin);
     console.log(`User record updated asynchronously for FID: ${fid}`);
   } catch (error) {
     console.error(`Error updating user record asynchronously for FID ${fid}:`, error);
@@ -430,14 +430,11 @@ app.frame('/game', async (c) => {
           message = `${username} wins! Game over.`;
           state.isGameOver = true;
           if (fid) {
-            updateUserRecordAsync(fid.toString(), 'win');
+            updateUserRecordAsync(fid.toString(), true);
           }
         } else if (state.board.every((cell) => cell !== null)) {
           message = "Game over! It's a draw.";
           state.isGameOver = true;
-          if (fid) {
-            updateUserRecordAsync(fid.toString(), 'tie');
-          }
         } else {
           const computerMove = getBestMove(state.board, 'X');
           state.board[computerMove] = 'X';
@@ -447,14 +444,11 @@ app.frame('/game', async (c) => {
             message += ` Computer wins! Game over.`;
             state.isGameOver = true;
             if (fid) {
-              updateUserRecordAsync(fid.toString(), 'loss');
+              updateUserRecordAsync(fid.toString(), false);
             }
           } else if (state.board.every((cell) => cell !== null)) {
             message += " It's a draw. Game over.";
             state.isGameOver = true;
-            if (fid) {
-              updateUserRecordAsync(fid.toString(), 'tie');
-            }
           } else {
             message += ` Your turn, ${username}.`;
           }
