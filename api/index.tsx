@@ -499,6 +499,7 @@ app.frame('/game', async (c) => {
 
 
 app.frame('/share', async (c) => {
+  console.log('Entering /share route');
   const { frameData } = c;
   const fid = frameData?.fid;
 
