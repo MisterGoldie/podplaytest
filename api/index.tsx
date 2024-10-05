@@ -4,7 +4,7 @@ import { Button, Frog } from 'frog'
 import { handle } from 'frog/vercel'
 import { neynar } from 'frog/middlewares'
 import { NeynarVariables } from 'frog/middlewares'
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 
 const AIRSTACK_API_URL = 'https://api.airstack.xyz/gql';
 const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
@@ -16,6 +16,7 @@ let initializationError: Error | null = null;
 
 try {
   console.log('Starting Firebase initialization...');
+
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
@@ -29,13 +30,8 @@ try {
     throw new Error('Missing Firebase configuration environment variables');
   }
 
-  console.log('Firebase Admin SDK import status:', !!admin);
-  console.log('admin.credential status:', !!admin.credential);
-  console.log('admin.credential.cert status:', !!admin.credential?.cert);
-
   if (!admin.apps.length) {
-    console.log('Initializing new Firebase app...');
-    const app = admin.initializeApp({
+    admin.initializeApp({
       credential: admin.credential.cert({
         projectId,
         clientEmail,
@@ -43,11 +39,11 @@ try {
       }),
     });
     console.log('Firebase Admin SDK initialized successfully');
-    db = app.firestore();
   } else {
     console.log('Firebase app already initialized');
-    db = admin.firestore();
   }
+
+  db = admin.firestore();
   console.log('Firestore instance created successfully');
 } catch (error) {
   console.error('Error in Firebase initialization:', error);
@@ -200,22 +196,13 @@ async function updateUserRecord(fid: string, isWin: boolean) {
   console.log(`Attempting to update user record for FID: ${fid}, isWin: ${isWin}`);
   try {
     const database = getDb();
-    console.log('Retrieved database instance');
     const userRef = database.collection('users').doc(fid);
-    console.log(`Created reference to user document: ${fid}`);
-    const updateData = {
+    await userRef.set({
       [isWin ? 'wins' : 'losses']: admin.firestore.FieldValue.increment(1)
-    };
-    console.log('Update data:', updateData);
-    await userRef.set(updateData, { merge: true });
+    }, { merge: true });
     console.log(`User record updated successfully for FID: ${fid}`);
   } catch (error) {
     console.error(`Error updating user record for FID ${fid}:`, error);
-    if (error instanceof Error) {
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
   }
 }
 
@@ -341,7 +328,6 @@ function renderBoard(board: (string | null)[]) {
 }
 
 // Routes will be defined here...
-
 
 // Initial route
 app.frame('/', () => {
