@@ -198,9 +198,14 @@ async function updateUserRecord(fid: string, result: 'win' | 'loss' | 'tie') {
   try {
     const database = getDb();
     const userRef = database.collection('users').doc(fid);
+    
+    // Correctly update only the relevant field
+    const updateField = `${result}s`; // This will be 'wins', 'losses', or 'ties'
+    
     await userRef.set({
-      [result + 's']: admin.firestore.FieldValue.increment(1)
+      [updateField]: admin.firestore.FieldValue.increment(1)
     }, { merge: true });
+    
     console.log(`User record updated successfully for FID: ${fid}`);
   } catch (error) {
     console.error(`Error updating user record for FID ${fid}:`, error);
