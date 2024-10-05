@@ -272,9 +272,7 @@ function decodeState(encodedState: string): GameState {
   return JSON.parse(Buffer.from(encodedState, 'base64').toString());
 }
 
-function renderBoard(board: (string | null)[], profileImage: string | null) {
-  console.log('Rendering board with profile image:', profileImage);
-
+function renderBoard(board: (string | null)[]) {
   return (
     <div style={{
       display: 'flex',
@@ -296,22 +294,7 @@ function renderBoard(board: (string | null)[], profileImage: string | null) {
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
               }}>
-                {board[index] === 'O' ? (
-                  profileImage ? (
-                    <img 
-                      src={profileImage} 
-                      alt="Player"
-                      style={{
-                        width: '100px',
-                        height: '100px',
-                        borderRadius: '50%',
-                      }}
-                      onerror="this.onerror=null; this.src='https://example.com/placeholder.png';"
-                    />
-                  ) : (
-                    'O'
-                  )
-                ) : board[index]}
+                {board[index]}
               </div>
             );
           })}
@@ -393,16 +376,12 @@ app.frame('/game', async (c) => {
   const fid = frameData?.fid;
 
   let username = 'Player';
-  let profileImage: string | null = null;
   if (fid) {
     try {
-      [username, profileImage] = await Promise.all([
-        getUsername(fid.toString()),
-        getUserProfilePicture(fid.toString())
-      ]);
-      console.log(`User info fetched - Username: ${username}, Profile Image: ${profileImage}`);
+      username = await getUsername(fid.toString());
+      console.log(`Username fetched: ${username}`);
     } catch (error) {
-      console.error('Error getting user info:', error);
+      console.error('Error getting username:', error);
     }
   }
 
@@ -497,7 +476,7 @@ app.frame('/game', async (c) => {
         fontSize: '36px',
         fontFamily: 'Arial, sans-serif',
       }}>
-        {renderBoard(state.board, profileImage)}
+        {renderBoard(state.board)}
         <div style={{ 
           marginTop: '40px', 
           maxWidth: '900px', 
@@ -514,6 +493,7 @@ app.frame('/game', async (c) => {
     intents: intents,
   });
 });
+
 
 app.frame('/share', async (c) => {
   const { frameData } = c;
