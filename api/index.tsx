@@ -15,25 +15,26 @@ let db: admin.firestore.Firestore | null = null;
 let initializationError: Error | null = null;
 
 try {
+  console.log('Starting Firebase initialization...');
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-  console.log('Firebase Admin SDK import status:', !!admin);
-  console.log('admin.credential status:', !!admin.credential);
-  console.log('Initializing Firebase with:');
+  console.log('Environment variables loaded:');
   console.log('Project ID:', projectId);
   console.log('Client Email:', clientEmail);
-  console.log('Private Key (first 20 chars):', privateKey?.substring(0, 20));
+  console.log('Private Key exists:', !!privateKey);
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error('Missing Firebase configuration environment variables');
   }
 
+  console.log('Firebase Admin SDK import status:', !!admin);
+  console.log('admin.credential status:', !!admin.credential);
+  console.log('admin.credential.cert status:', !!admin.credential?.cert);
+
   if (!admin.apps.length) {
-    if (!admin.credential || typeof admin.credential.cert !== 'function') {
-      throw new Error('admin.credential.cert is not a function');
-    }
+    console.log('Initializing new Firebase app...');
     const app = admin.initializeApp({
       credential: admin.credential.cert({
         projectId,
@@ -199,13 +200,22 @@ async function updateUserRecord(fid: string, isWin: boolean) {
   console.log(`Attempting to update user record for FID: ${fid}, isWin: ${isWin}`);
   try {
     const database = getDb();
+    console.log('Retrieved database instance');
     const userRef = database.collection('users').doc(fid);
-    await userRef.set({
+    console.log(`Created reference to user document: ${fid}`);
+    const updateData = {
       [isWin ? 'wins' : 'losses']: admin.firestore.FieldValue.increment(1)
-    }, { merge: true });
+    };
+    console.log('Update data:', updateData);
+    await userRef.set(updateData, { merge: true });
     console.log(`User record updated successfully for FID: ${fid}`);
   } catch (error) {
     console.error(`Error updating user record for FID ${fid}:`, error);
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
   }
 }
 
@@ -329,9 +339,6 @@ function renderBoard(board: (string | null)[]) {
     </div>
   )
 }
-
-// Routes will be defined here...
-
 
 
 // Initial route
