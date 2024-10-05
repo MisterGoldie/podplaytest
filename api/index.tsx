@@ -524,6 +524,12 @@ app.frame('/share', async (c) => {
   console.log('Entering /share route');
   const { frameData } = c;
   const fid = frameData?.fid;
+  const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
+  const baseUrl = 'https://podplaytest.vercel.app'; // Update this to your actual domain
+  const originalFramesLink = `${baseUrl}/api`;
+  
+  // Construct the Farcaster share URL with both text and the embedded link
+  const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
 
   let profileImage: string | null = null;
   let userRecord = { wins: 0, losses: 0 };
@@ -570,21 +576,22 @@ app.frame('/share', async (c) => {
             src={profileImage} 
             alt="User profile"
             style={{
-              width: '100px',
-              height: '100px',
+              width: '120px',
+              height: '120px',
               borderRadius: '50%',
               border: '3px solid white',
               marginBottom: '20px',
             }}
           />
         )}
-        <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>Thanks for Playing!</h1>
-        <p style={{ fontSize: '30px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L</p>
-        <p style={{ fontSize: '24px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
+        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Thanks for Playing!</h1>
+        <p style={{ fontSize: '36px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L</p>
+        <p style={{ fontSize: '28px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
     intents: [
-      <Button action="/">Back to Game</Button>
+      <Button action="/">Play Again</Button>,
+      <Button.Link href={farcasterShareURL}>Share</Button.Link>
     ],
   });
 });
