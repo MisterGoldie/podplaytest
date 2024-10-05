@@ -270,19 +270,6 @@ function getBestMove(board: (string | null)[], player: string): number {
   return availableMoves[Math.floor(Math.random() * availableMoves.length)]
 }
 
-function checkWin(board: (string | null)[]) {
-  const winPatterns = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-    [0, 4, 8], [2, 4, 6] // Diagonals
-  ]
-
-  return winPatterns.some(pattern =>
-    board[pattern[0]] &&
-    board[pattern[0]] === board[pattern[1]] &&
-    board[pattern[0]] === board[pattern[2]]
-  )
-}
 
 function encodeState(state: GameState): string {
   return Buffer.from(JSON.stringify(state)).toString('base64');
@@ -423,9 +410,8 @@ app.frame('/game', async (c) => {
         if (checkWin(state.board)) {
           message = `${username} wins! Game over.`;
           state.isGameOver = true;
-          if (fid) {
-            await updateUserRecord(fid.toString(), true);
-          }
+          // Move this to a background task
+          if (fid) updateUserRecordAsync(fid.toString(), true);
         } else if (state.board.every((cell) => cell !== null)) {
           message = "Game over! It's a draw.";
           state.isGameOver = true;
@@ -437,9 +423,8 @@ app.frame('/game', async (c) => {
           if (checkWin(state.board)) {
             message += ` Computer wins! Game over.`;
             state.isGameOver = true;
-            if (fid) {
-              await updateUserRecord(fid.toString(), false);
-            }
+            // Move this to a background task
+            if (fid) updateUserRecordAsync(fid.toString(), false);
           } else if (state.board.every((cell) => cell !== null)) {
             message += " It's a draw. Game over.";
             state.isGameOver = true;
@@ -513,6 +498,32 @@ app.frame('/game', async (c) => {
     intents: intents,
   });
 });
+
+// Asynchronous function to update user record
+async function updateUserRecordAsync(fid: string, isWin: boolean) {
+  try {
+    await updateUserRecord(fid, isWin);
+    console.log(`User record updated asynchronously for FID: ${fid}`);
+  } catch (error) {
+    console.error(`Error updating user record asynchronously for FID ${fid}:`, error);
+  }
+}
+
+// Optimized checkWin function
+function checkWin(board: (string | null)[]) {
+  const lines = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+    [0, 4, 8], [2, 4, 6] // Diagonals
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+      return true;
+    }
+  }
+  return false;
+}
 
 
 app.frame('/share', async (c) => {
