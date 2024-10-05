@@ -14,12 +14,25 @@ const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 let db: admin.firestore.Firestore | null = null;
 
 try {
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+  console.log('Initializing Firebase with:');
+  console.log('Project ID:', projectId);
+  console.log('Client Email:', clientEmail);
+  console.log('Private Key (first 20 chars):', privateKey?.substring(0, 20));
+
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error('Missing Firebase configuration environment variables');
+  }
+
   if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        projectId,
+        clientEmail,
+        privateKey: privateKey.replace(/\\n/g, '\n'),
       }),
     });
     console.log('Firebase Admin SDK initialized successfully');
@@ -28,6 +41,11 @@ try {
   console.log('Firestore instance created successfully');
 } catch (error) {
   console.error('Error initializing Firebase Admin SDK:', error);
+  if (error instanceof Error) {
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+  }
   db = null;
 }
 
@@ -158,7 +176,7 @@ async function getUserRecord(fid: string): Promise<{ wins: number; losses: numbe
     };
   } catch (error) {
     console.error(`Error getting user record for FID ${fid}:`, error);
-    // Return default record in the case of error
+    // Return default record in case of error
     return { wins: 0, losses: 0 };
   }
 }
