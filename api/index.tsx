@@ -11,7 +11,7 @@ const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
 const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as string;
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 
-let db: admin.firestore.Firestore;
+let db: admin.firestore.Firestore | null = null;
 
 try {
   if (!admin.apps.length) {
@@ -28,7 +28,7 @@ try {
   console.log('Firestore instance created successfully');
 } catch (error) {
   console.error('Error initializing Firebase Admin SDK:', error);
-  db = null as any;
+  db = null;
 }
 
 const getDb = () => {
@@ -144,7 +144,8 @@ async function getUserProfilePicture(fid: string): Promise<string | null> {
 async function getUserRecord(fid: string): Promise<{ wins: number; losses: number }> {
   console.log(`Attempting to get user record for FID: ${fid}`);
   try {
-    const userDoc = await getDb().collection('users').doc(fid).get();
+    const db = getDb();
+    const userDoc = await db.collection('users').doc(fid).get();
     if (!userDoc.exists) {
       console.log(`No record found for FID: ${fid}. Returning default record.`);
       return { wins: 0, losses: 0 };
@@ -157,11 +158,7 @@ async function getUserRecord(fid: string): Promise<{ wins: number; losses: numbe
     };
   } catch (error) {
     console.error(`Error getting user record for FID ${fid}:`, error);
-    if (error instanceof Error) {
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
+    // Return default record in case of error
     return { wins: 0, losses: 0 };
   }
 }
@@ -169,18 +166,14 @@ async function getUserRecord(fid: string): Promise<{ wins: number; losses: numbe
 async function updateUserRecord(fid: string, isWin: boolean) {
   console.log(`Attempting to update user record for FID: ${fid}, isWin: ${isWin}`);
   try {
-    const userRef = getDb().collection('users').doc(fid);
+    const db = getDb();
+    const userRef = db.collection('users').doc(fid);
     await userRef.set({
       [isWin ? 'wins' : 'losses']: admin.firestore.FieldValue.increment(1)
     }, { merge: true });
     console.log(`User record updated successfully for FID: ${fid}`);
   } catch (error) {
     console.error(`Error updating user record for FID ${fid}:`, error);
-    if (error instanceof Error) {
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
   }
 }
 
