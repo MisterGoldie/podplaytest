@@ -99,10 +99,11 @@ type GameState = {
   isGameOver: boolean;
 }
 
-function calculatePODScore(wins: number, ties: number, losses: number, totalGames: number): number {
+function calculatePODScore(wins: number, ties: number, losses: number, totalGames: number, tokenBalance: number): number {
   const baseScore = (wins * 2) + ties + (losses * 0.5);
-  const bonusScore = totalGames >= 25 ? 10 : 0;
-  const totalScore = baseScore + bonusScore;
+  const gamesBonusScore = totalGames >= 25 ? 10 : 0;
+  const tokenBonusScore = Math.floor(tokenBalance) * 25; // 25 points for each whole token
+  const totalScore = baseScore + gamesBonusScore + tokenBonusScore;
   return Math.round(totalScore * 10) / 10; // Round to one decimal place
 }
 
@@ -234,40 +235,37 @@ async function getOwnedFanTokens(addresses: string[]): Promise<TokenHolding[] | 
   }
 }
 
-async function checkFanTokenOwnership(fid: string): Promise<boolean> {
+async function checkFanTokenOwnership(fid: string): Promise<{ ownsToken: boolean; balance: number }> {
   try {
-    // Step 1: Get all associated addresses for the FID
     const addresses = await getFarcasterAddressesFromFID(fid);
     console.log(`Associated addresses for FID ${fid}:`, addresses);
 
-    // Step 2: Check for a vesting contract
     const vestingContractAddress = await getVestingContractAddress(addresses);
     if (vestingContractAddress) {
       addresses.push(vestingContractAddress);
       console.log(`Added vesting contract address:`, vestingContractAddress);
     }
 
-    // Step 3: Get owned fan tokens for all addresses
     const ownedTokens = await getOwnedFanTokens(addresses);
     if (!ownedTokens) {
-      return false;
+      return { ownsToken: false, balance: 0 };
     }
 
-    // Step 4: Check if any of the owned tokens is the "thepod" token
     const thepodToken = ownedTokens.find(token => 
       token.subjectToken.symbol.toLowerCase() === "cid:thepod"
     );
 
     if (thepodToken && parseFloat(thepodToken.balance) > 0) {
-      console.log(`User owns ${thepodToken.balance} of the thepod token`);
-      return true;
+      const formattedBalance = parseFloat(thepodToken.balance) / 1e18; // Convert from wei to whole tokens
+      console.log(`User owns ${formattedBalance} of the thepod token`);
+      return { ownsToken: true, balance: formattedBalance };
     } else {
       console.log(`User does not own any thepod tokens`);
-      return false;
+      return { ownsToken: false, balance: 0 };
     }
   } catch (error) {
     console.error('Error in checkFanTokenOwnership:', error);
-    return false;
+    return { ownsToken: false, balance: 0 };
   }
 }
 
@@ -758,7 +756,6 @@ app.frame('/share', async (c) => {
   const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
   const originalFramesLink = `${baseUrl}/api`;
   
-  // Construct the Farcaster share URL with both text and the embedded link
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
 
   let profileImage: string | null = null;
@@ -766,6 +763,7 @@ app.frame('/share', async (c) => {
   let totalGamesPlayed = 0;
   let podScore = 0;
   let ownsThepodToken = false;
+  let thepodTokenBalance = 0;
 
   if (fid) {
     try {
@@ -779,14 +777,16 @@ app.frame('/share', async (c) => {
       profileImage = profileImageResult;
       userRecord = userRecordResult;
       totalGamesPlayed = totalGamesResult;
-      podScore = calculatePODScore(userRecord.wins, userRecord.ties, userRecord.losses, totalGamesPlayed);
-      ownsThepodToken = fanTokenResult;
+      ownsThepodToken = fanTokenResult.ownsToken;
+      thepodTokenBalance = fanTokenResult.balance;
+      podScore = calculatePODScore(userRecord.wins, userRecord.ties, userRecord.losses, totalGamesPlayed, thepodTokenBalance);
 
       console.log(`Profile image URL for FID ${fid}:`, profileImage);
       console.log(`User record for FID ${fid}:`, userRecord);
       console.log(`Total games played for FID ${fid}:`, totalGamesPlayed);
       console.log(`POD Score for FID ${fid}:`, podScore);
       console.log(`Owns 'thepod' fan token for FID ${fid}:`, ownsThepodToken);
+      console.log(`'thepod' fan token balance for FID ${fid}:`, thepodTokenBalance);
     } catch (error) {
       console.error(`Error fetching data for FID ${fid}:`, error);
       if (error instanceof Error) {
@@ -830,7 +830,7 @@ app.frame('/share', async (c) => {
         <p style={{ fontSize: '40px', marginBottom: '20px' }}>POD Score: {podScore}</p>
         <p style={{ fontSize: '36px', marginBottom: '20px' }}>Total Games Played: {totalGamesPlayed}</p>
         <p style={{ fontSize: '32px', marginBottom: '20px' }}>
-          {ownsThepodToken ? '🏆 Thepod Fan Token Holder!' : '👀 Get your Thepod Fan Token!'}
+          {ownsThepodToken ? `🏆 Thepod Fan Token Holder (${thepodTokenBalance.toFixed(2)} tokens)!` : '👀 Get your Thepod Fan Token!'}
         </p>
         <p style={{ fontSize: '28px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
