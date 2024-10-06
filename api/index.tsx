@@ -830,7 +830,7 @@ app.frame('/share', async (c) => {
         <p style={{ fontSize: '40px', marginBottom: '20px' }}>POD Score: {podScore}</p>
         <p style={{ fontSize: '36px', marginBottom: '20px' }}>Total Games Played: {totalGamesPlayed}</p>
         <p style={{ fontSize: '32px', marginBottom: '20px' }}>
-          {ownsThepodToken ? `🐳 Thepod Fan Token Holder (${thepodTokenBalance.toFixed(2)} tokens)!` : '👀 Get your Thepod Fan Token!'}
+          {ownsThepodToken ? `You hold (${thepodTokenBalance.toFixed(2)} Fan tokens)!` : '👀 Get your /Thepod Fan Token!'}
         </p>
         <p style={{ fontSize: '28px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
