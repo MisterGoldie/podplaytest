@@ -96,6 +96,11 @@ type GameState = {
   isGameOver: boolean;
 }
 
+function calculatePODScore(wins: number, ties: number, losses: number): number {
+  const score = (wins * 2) + ties + (losses * 0.5);
+  return Math.round(score * 10) / 10; // Round to one decimal place
+}
+
 async function getTotalGamesPlayed(fid: string): Promise<number> {
   console.log(`Attempting to get total games played for FID: ${fid}`);
   try {
@@ -584,8 +589,9 @@ app.frame('/share', async (c) => {
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
 
   let profileImage: string | null = null;
-  let userRecord = { wins: 0, losses: 0 };
+  let userRecord = { wins: 0, losses: 0, ties: 0 };
   let totalGamesPlayed = 0;
+  let podScore = 0;
 
   if (fid) {
     try {
@@ -598,10 +604,12 @@ app.frame('/share', async (c) => {
       profileImage = profileImageResult;
       userRecord = userRecordResult;
       totalGamesPlayed = totalGamesResult;
+      podScore = calculatePODScore(userRecord.wins, userRecord.ties, userRecord.losses);
 
       console.log(`Profile image URL for FID ${fid}:`, profileImage);
       console.log(`User record for FID ${fid}:`, userRecord);
       console.log(`Total games played for FID ${fid}:`, totalGamesPlayed);
+      console.log(`POD Score for FID ${fid}:`, podScore);
     } catch (error) {
       console.error(`Error fetching data for FID ${fid}:`, error);
       if (error instanceof Error) {
@@ -641,8 +649,9 @@ app.frame('/share', async (c) => {
           />
         )}
         <h1 style={{ fontSize: '60px', marginBottom: '20px' }}>Thanks for Playing!</h1>
-        <p style={{ fontSize: '44px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L</p>
-        <p style={{ fontSize: '36px', marginBottom: '20px' }}>Total Games Played Including Ties: {totalGamesPlayed}</p>
+        <p style={{ fontSize: '44px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L - {userRecord.ties}T</p>
+        <p style={{ fontSize: '40px', marginBottom: '20px' }}>POD Score: {podScore}</p>
+        <p style={{ fontSize: '36px', marginBottom: '20px' }}>Total Games Played: {totalGamesPlayed}</p>
         <p style={{ fontSize: '32px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
