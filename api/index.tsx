@@ -836,7 +836,7 @@ app.frame('/share', async (c) => {
       </div>
     ),
     intents: [
-      <Button action="/">Play Again</Button>,
+      <Button action="/game">Play Again</Button>,
       <Button.Link href="https://moxie-frames.airstack.xyz/stim?t=cid_thepod">POD FT</Button.Link>,
       <Button.Link href={farcasterShareURL}>Share</Button.Link>
     ],
