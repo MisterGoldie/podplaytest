@@ -109,6 +109,9 @@ async function checkFanTokenOwnership(fid: string): Promise<boolean> {
       MoxieUserPortfolios(
         input: {
           filter: {
+            userAddress: {
+              _eq: $fid
+            },
             fanTokenSymbol: {
               _eq: "thepod"
             }
@@ -116,7 +119,6 @@ async function checkFanTokenOwnership(fid: string): Promise<boolean> {
         }
       ) {
         MoxieUserPortfolio {
-          fid
           amount: totalUnlockedAmount
         }
       }
@@ -139,12 +141,9 @@ async function checkFanTokenOwnership(fid: string): Promise<boolean> {
     const data = await response.json();
     console.log('Fan token ownership API response:', JSON.stringify(data));
     
-    if (data?.data?.MoxieUserPortfolios?.MoxieUserPortfolio) {
-      const portfolios = data.data.MoxieUserPortfolios.MoxieUserPortfolio;
-      const userPortfolio = portfolios.find((p: any) => p.fid === fid);
-      if (userPortfolio && parseFloat(userPortfolio.amount) > 0) {
-        return true;
-      }
+    if (data?.data?.MoxieUserPortfolios?.MoxieUserPortfolio?.[0]?.amount) {
+      const amount = parseFloat(data.data.MoxieUserPortfolios.MoxieUserPortfolio[0].amount);
+      return amount > 0;
     }
     return false;
   } catch (error) {
