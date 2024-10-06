@@ -5,11 +5,14 @@ import { handle } from 'frog/vercel'
 import { neynar } from 'frog/middlewares'
 import { NeynarVariables } from 'frog/middlewares'
 import admin from 'firebase-admin';
+import { gql, GraphQLClient } from "graphql-request";
 
 const AIRSTACK_API_URL = 'https://api.airstack.xyz/gql';
 const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
 const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as string;
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
+const MOXIE_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_protocol_stats_mainnet/version/latest";
+const graphQLClient = new GraphQLClient(MOXIE_API_URL);
 
 let db: admin.firestore.Firestore | null = null;
 let initializationError: Error | null = null;
@@ -103,47 +106,51 @@ function calculatePODScore(wins: number, ties: number, losses: number, totalGame
   return Math.round(totalScore * 10) / 10; // Round to one decimal place
 }
 
+interface User {
+  id: string;
+}
+
+interface PortfolioItem {
+  balance: string;
+  user: User;
+}
+
+interface SubjectToken {
+  portfolio: PortfolioItem[];
+}
+
+interface QueryResponse {
+  subjectTokens: SubjectToken[];
+}
+
 async function checkFanTokenOwnership(fid: string): Promise<boolean> {
-  const query = `
-    query GetPortfolioInfo($fid: String!) {
-      MoxieUserPortfolios(
-        input: {
-          filter: {
-            userAddress: {
-              _eq: $fid
-            },
-            fanTokenSymbol: {
-              _eq: "/thepod"
-            }
+  const query = gql`
+    query MyQuery($symbol: String, $blockNumber: Int) {
+      subjectTokens(where: {symbol: $symbol}, block: {number: $blockNumber}) {
+        portfolio(where: {balance_gt: 0}) {
+          balance
+          user {
+            id
           }
-        }
-      ) {
-        MoxieUserPortfolio {
-          amount: totalUnlockedAmount
         }
       }
     }
   `;
 
-  try {
-    const response = await fetch(AIRSTACK_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': AIRSTACK_API_KEY,
-      },
-      body: JSON.stringify({ 
-        query, 
-        variables: { fid: `fid:${fid}` }
-      }),
-    });
+  const variables = {
+    symbol: "cid:thepod",
+    blockNumber: 17895057 // You might want to update this or make it dynamic
+  };
 
-    const data = await response.json();
+  try {
+    const data = await graphQLClient.request<QueryResponse>(query, variables);
     console.log('Fan token ownership API response:', JSON.stringify(data));
     
-    if (data?.data?.MoxieUserPortfolios?.MoxieUserPortfolio?.[0]?.amount) {
-      const amount = parseFloat(data.data.MoxieUserPortfolios.MoxieUserPortfolio[0].amount);
-      return amount > 0;
+    if (data.subjectTokens[0]?.portfolio) {
+      const userPortfolio = data.subjectTokens[0].portfolio.find(
+        (p) => p.user.id.toLowerCase() === fid.toLowerCase()
+      );
+      return userPortfolio ? parseFloat(userPortfolio.balance) > 0 : false;
     }
     return false;
   } catch (error) {
@@ -151,6 +158,9 @@ async function checkFanTokenOwnership(fid: string): Promise<boolean> {
     return false;
   }
 }
+
+
+
 
 async function getTotalGamesPlayed(fid: string): Promise<number> {
   console.log(`Attempting to get total games played for FID: ${fid}`);
@@ -636,7 +646,6 @@ app.frame('/share', async (c) => {
   const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
   const originalFramesLink = `${baseUrl}/api`;
   
-  // Construct the Farcaster share URL with both text and the embedded link
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
 
   let profileImage: string | null = null;

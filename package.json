@@ -11,10 +11,12 @@
     "@farcaster/hub-nodejs": "^0.12.4",
     "firebase-admin": "^12.6.0",
     "frog": "latest",
+    "graphql-request": "^7.1.0",
     "hono": "^4",
     "neynar-next": "^0.3.3"
   },
   "devDependencies": {
+    "@types/graphql": "^14.5.0",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3",
     "vercel": "^32.4.1"
