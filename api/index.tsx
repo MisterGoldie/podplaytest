@@ -103,6 +103,55 @@ function calculatePODScore(wins: number, ties: number, losses: number, totalGame
   return Math.round(totalScore * 10) / 10; // Round to one decimal place
 }
 
+async function checkFanTokenOwnership(fid: string): Promise<boolean> {
+  const query = `
+    query GetPortfolioInfo($fid: String!) {
+      MoxieUserPortfolios(
+        input: {
+          filter: {
+            walletAddress: {
+              _eq: $fid
+            },
+            fanTokenSymbol: {
+              _eq: "thepod"
+            }
+          }
+        }
+      ) {
+        MoxieUserPortfolio {
+          amount: totalUnlockedAmount
+        }
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch(AIRSTACK_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': AIRSTACK_API_KEY,
+      },
+      body: JSON.stringify({ 
+        query, 
+        variables: { fid: `fid:${fid}` }
+      }),
+    });
+
+    const data = await response.json();
+    console.log('Fan token ownership API response:', JSON.stringify(data));
+    
+    if (data?.data?.MoxieUserPortfolios?.MoxieUserPortfolio?.[0]?.amount) {
+      const amount = parseFloat(data.data.MoxieUserPortfolios.MoxieUserPortfolio[0].amount);
+      return amount > 0;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error checking fan token ownership:', error);
+    return false;
+  }
+}
+
 async function getTotalGamesPlayed(fid: string): Promise<number> {
   console.log(`Attempting to get total games played for FID: ${fid}`);
   try {
@@ -587,31 +636,34 @@ app.frame('/share', async (c) => {
   const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
   const originalFramesLink = `${baseUrl}/api`;
   
-  // Construct the Farcaster share URL with both text and the embedded link
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
 
   let profileImage: string | null = null;
   let userRecord = { wins: 0, losses: 0, ties: 0 };
   let totalGamesPlayed = 0;
   let podScore = 0;
+  let ownsThepodToken = false;
 
   if (fid) {
     try {
-      const [profileImageResult, userRecordResult, totalGamesResult] = await Promise.all([
+      const [profileImageResult, userRecordResult, totalGamesResult, fanTokenResult] = await Promise.all([
         getUserProfilePicture(fid.toString()),
         getUserRecord(fid.toString()),
-        getTotalGamesPlayed(fid.toString())
+        getTotalGamesPlayed(fid.toString()),
+        checkFanTokenOwnership(fid.toString())
       ]);
 
       profileImage = profileImageResult;
       userRecord = userRecordResult;
       totalGamesPlayed = totalGamesResult;
       podScore = calculatePODScore(userRecord.wins, userRecord.ties, userRecord.losses, totalGamesPlayed);
+      ownsThepodToken = fanTokenResult;
 
       console.log(`Profile image URL for FID ${fid}:`, profileImage);
       console.log(`User record for FID ${fid}:`, userRecord);
       console.log(`Total games played for FID ${fid}:`, totalGamesPlayed);
       console.log(`POD Score for FID ${fid}:`, podScore);
+      console.log(`Owns 'thepod' fan token for FID ${fid}:`, ownsThepodToken);
     } catch (error) {
       console.error(`Error fetching data for FID ${fid}:`, error);
       if (error instanceof Error) {
@@ -654,7 +706,10 @@ app.frame('/share', async (c) => {
         <p style={{ fontSize: '44px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L - {userRecord.ties}T</p>
         <p style={{ fontSize: '40px', marginBottom: '20px' }}>POD Score: {podScore}</p>
         <p style={{ fontSize: '36px', marginBottom: '20px' }}>Total Games Played: {totalGamesPlayed}</p>
-        <p style={{ fontSize: '32px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
+        <p style={{ fontSize: '32px', marginBottom: '20px' }}>
+          {ownsThepodToken ? '🏆 Thepod Fan Token Holder!' : '👀 Get your Thepod Fan Token!'}
+        </p>
+        <p style={{ fontSize: '28px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
     intents: [
