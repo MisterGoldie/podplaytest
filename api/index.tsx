@@ -806,7 +806,7 @@ app.frame('/share', async (c) => {
         alignItems: 'center',
         width: '1080px',
         height: '1080px',
-        backgroundImage: 'url(https://bafybeigp3dkqr7wqgvp7wmycpg6axhgmc42pljkzmhdbnrsnxehoieqeri.ipfs.w3s.link/Frame%209.png)',
+        backgroundImage: 'url(https://bafybeif3bsctffk2zdeg4ydyqyfhhmvlazbbm7cuwxcsbx5wtql7i5rwwe.ipfs.w3s.link/Frame%2025%20(6).png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
