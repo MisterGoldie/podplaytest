@@ -826,11 +826,11 @@ app.frame('/share', async (c) => {
           />
         )}
         <h1 style={{ fontSize: '60px', marginBottom: '20px' }}>Thanks for Playing!</h1>
-        <p style={{ fontSize: '44px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L - {userRecord.ties}T</p>
-        <p style={{ fontSize: '40px', marginBottom: '20px' }}>POD Score: {podScore}</p>
-        <p style={{ fontSize: '36px', marginBottom: '20px' }}>Total Games Played: {totalGamesPlayed}</p>
-        <p style={{ fontSize: '32px', marginBottom: '20px' }}>
-          {ownsThepodToken ? `You hold ${thepodTokenBalance.toFixed(2)} /Thepod Fan tokens!` : '👀 Get your /Thepod Fan Token!'}
+        <p style={{ fontSize: '46px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L - {userRecord.ties}T</p>
+        <p style={{ fontSize: '42px', marginBottom: '20px' }}>POD Score: {podScore}</p>
+        <p style={{ fontSize: '38px', marginBottom: '20px' }}>Total Games Played: {totalGamesPlayed}</p>
+        <p style={{ fontSize: '34px', marginBottom: '20px' }}>
+          {ownsThepodToken ? `You hold ${thepodTokenBalance.toFixed(2)} Thepod Fan tokens 🐳!` : '👀 Get your /Thepod Fan Token!'}
         </p>
         <p style={{ fontSize: '28px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
