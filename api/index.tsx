@@ -12,7 +12,7 @@ const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
 const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as string;
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 const MOXIE_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_protocol_stats_mainnet/version/latest";
-const graphQLClient = new GraphQLClient(MOXIE_API_URL);
+const MOXIE_VESTING_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_vesting_mainnet/version/latest";
 
 let db: admin.firestore.Firestore | null = null;
 let initializationError: Error | null = null;
@@ -106,31 +106,108 @@ function calculatePODScore(wins: number, ties: number, losses: number, totalGame
   return Math.round(totalScore * 10) / 10; // Round to one decimal place
 }
 
-interface User {
-  id: string;
-}
 
-interface PortfolioItem {
+interface TokenHolding {
   balance: string;
-  user: User;
+  buyVolume: string;
+  sellVolume: string;
+  subjectToken: {
+    name: string;
+    symbol: string;
+    currentPriceInMoxie: string;
+  };
 }
 
-interface SubjectToken {
-  portfolio: PortfolioItem[];
-}
+async function getFarcasterAddressesFromFID(fid: string): Promise<string[]> {
+  const graphQLClient = new GraphQLClient(AIRSTACK_API_URL, {
+    headers: {
+      'Authorization': AIRSTACK_API_KEY,
+    },
+  });
 
-interface QueryResponse {
-  subjectTokens: SubjectToken[];
-}
-
-async function checkFanTokenOwnership(fid: string): Promise<boolean> {
   const query = gql`
-    query MyQuery($symbol: String, $blockNumber: Int) {
-      subjectTokens(where: {symbol: $symbol}, block: {number: $blockNumber}) {
-        portfolio(where: {balance_gt: 0}) {
+    query MyQuery($identity: Identity!) {
+      Socials(
+        input: {
+          filter: { dappName: { _eq: farcaster }, identity: { _eq: $identity } }
+          blockchain: ethereum
+        }
+      ) {
+        Social {
+          userAddress
+          userAssociatedAddresses
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    identity: `fc_fid:${fid}`
+  };
+
+  try {
+    const data = await graphQLClient.request<any>(query, variables);
+    console.log('Airstack API response:', JSON.stringify(data, null, 2));
+
+    if (!data.Socials || !data.Socials.Social || data.Socials.Social.length === 0) {
+      throw new Error(`No Farcaster profile found for FID: ${fid}`);
+    }
+
+    const social = data.Socials.Social[0];
+    const addresses = [social.userAddress, ...(social.userAssociatedAddresses || [])];
+    return [...new Set(addresses)]; // Remove duplicates
+  } catch (error) {
+    console.error('Error fetching Farcaster addresses from Airstack:', error);
+    throw error;
+  }
+}
+
+async function getVestingContractAddress(beneficiaryAddresses: string[]): Promise<string | null> {
+  const graphQLClient = new GraphQLClient(MOXIE_VESTING_API_URL);
+
+  const query = gql`
+    query MyQuery($beneficiaries: [Bytes!]) {
+      tokenLockWallets(where: {beneficiary_in: $beneficiaries}) {
+        address: id
+        beneficiary
+      }
+    }
+  `;
+
+  const variables = {
+    beneficiaries: beneficiaryAddresses.map(address => address.toLowerCase())
+  };
+
+  try {
+    const data = await graphQLClient.request<any>(query, variables);
+    console.log('Vesting contract data:', JSON.stringify(data, null, 2));
+
+    if (data.tokenLockWallets && data.tokenLockWallets.length > 0) {
+      return data.tokenLockWallets[0].address;
+    } else {
+      console.log(`No vesting contract found for addresses: ${beneficiaryAddresses.join(', ')}`);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching vesting contract address:', error);
+    return null;
+  }
+}
+
+async function getOwnedFanTokens(addresses: string[]): Promise<TokenHolding[] | null> {
+  const graphQLClient = new GraphQLClient(MOXIE_API_URL);
+
+  const query = gql`
+    query MyQuery($userAddresses: [ID!]) {
+      users(where: { id_in: $userAddresses }) {
+        portfolio {
           balance
-          user {
-            id
+          buyVolume
+          sellVolume
+          subjectToken {
+            name
+            symbol
+            currentPriceInMoxie
           }
         }
       }
@@ -138,23 +215,58 @@ async function checkFanTokenOwnership(fid: string): Promise<boolean> {
   `;
 
   const variables = {
-    symbol: "cid:thepod",
-    blockNumber: 17895057 // You might want to update this or make it dynamic
+    userAddresses: addresses.map(address => address.toLowerCase())
   };
 
   try {
-    const data = await graphQLClient.request<QueryResponse>(query, variables);
-    console.log('Fan token ownership API response:', JSON.stringify(data));
-    
-    if (data.subjectTokens[0]?.portfolio) {
-      const userPortfolio = data.subjectTokens[0].portfolio.find(
-        (p) => p.user.id.toLowerCase() === fid.toLowerCase()
-      );
-      return userPortfolio ? parseFloat(userPortfolio.balance) > 0 : false;
+    const data = await graphQLClient.request<any>(query, variables);
+    console.log('Moxie API response for owned tokens:', JSON.stringify(data, null, 2));
+
+    if (!data.users || data.users.length === 0) {
+      console.log(`No fan tokens found for addresses: ${addresses.join(', ')}`);
+      return null;
     }
-    return false;
+
+    return data.users.flatMap((user: { portfolio: TokenHolding[] }) => user.portfolio);
   } catch (error) {
-    console.error('Error checking fan token ownership:', error);
+    console.error('Error fetching owned fan tokens from Moxie API:', error);
+    return null;
+  }
+}
+
+async function checkFanTokenOwnership(fid: string): Promise<boolean> {
+  try {
+    // Step 1: Get all associated addresses for the FID
+    const addresses = await getFarcasterAddressesFromFID(fid);
+    console.log(`Associated addresses for FID ${fid}:`, addresses);
+
+    // Step 2: Check for a vesting contract
+    const vestingContractAddress = await getVestingContractAddress(addresses);
+    if (vestingContractAddress) {
+      addresses.push(vestingContractAddress);
+      console.log(`Added vesting contract address:`, vestingContractAddress);
+    }
+
+    // Step 3: Get owned fan tokens for all addresses
+    const ownedTokens = await getOwnedFanTokens(addresses);
+    if (!ownedTokens) {
+      return false;
+    }
+
+    // Step 4: Check if any of the owned tokens is the "thepod" token
+    const thepodToken = ownedTokens.find(token => 
+      token.subjectToken.symbol.toLowerCase() === "cid:thepod"
+    );
+
+    if (thepodToken && parseFloat(thepodToken.balance) > 0) {
+      console.log(`User owns ${thepodToken.balance} of the thepod token`);
+      return true;
+    } else {
+      console.log(`User does not own any thepod tokens`);
+      return false;
+    }
+  } catch (error) {
+    console.error('Error in checkFanTokenOwnership:', error);
     return false;
   }
 }
@@ -646,6 +758,7 @@ app.frame('/share', async (c) => {
   const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
   const originalFramesLink = `${baseUrl}/api`;
   
+  // Construct the Farcaster share URL with both text and the embedded link
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
 
   let profileImage: string | null = null;
