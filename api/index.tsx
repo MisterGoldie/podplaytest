@@ -848,7 +848,7 @@ app.frame('/share', async (c) => {
             <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{totalGamesPlayed}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
-            <span style={{ fontSize: '36px' }}>/thepod Tokens:</span>
+            <span style={{ fontSize: '36px' }}>/thepod Fan Tokens owned:</span>
             <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{thepodTokenBalance.toFixed(2)}</span>
           </div>
         </div>
