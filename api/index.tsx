@@ -96,9 +96,11 @@ type GameState = {
   isGameOver: boolean;
 }
 
-function calculatePODScore(wins: number, ties: number, losses: number): number {
-  const score = (wins * 2) + ties + (losses * 0.5);
-  return Math.round(score * 10) / 10; // Round to one decimal place
+function calculatePODScore(wins: number, ties: number, losses: number, totalGames: number): number {
+  const baseScore = (wins * 2) + ties + (losses * 0.5);
+  const bonusScore = totalGames >= 25 ? 10 : 0;
+  const totalScore = baseScore + bonusScore;
+  return Math.round(totalScore * 10) / 10; // Round to one decimal place
 }
 
 async function getTotalGamesPlayed(fid: string): Promise<number> {
@@ -604,7 +606,7 @@ app.frame('/share', async (c) => {
       profileImage = profileImageResult;
       userRecord = userRecordResult;
       totalGamesPlayed = totalGamesResult;
-      podScore = calculatePODScore(userRecord.wins, userRecord.ties, userRecord.losses);
+      podScore = calculatePODScore(userRecord.wins, userRecord.ties, userRecord.losses, totalGamesPlayed);
 
       console.log(`Profile image URL for FID ${fid}:`, profileImage);
       console.log(`User record for FID ${fid}:`, userRecord);
@@ -651,7 +653,7 @@ app.frame('/share', async (c) => {
         <h1 style={{ fontSize: '60px', marginBottom: '20px' }}>Thanks for Playing!</h1>
         <p style={{ fontSize: '44px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L - {userRecord.ties}T</p>
         <p style={{ fontSize: '40px', marginBottom: '20px' }}>POD Score: {podScore}</p>
-        <p style={{ fontSize: '36px', marginBottom: '20px' }}>Total Games Played Including Ties: {totalGamesPlayed}</p>
+        <p style={{ fontSize: '36px', marginBottom: '20px' }}>Total Games Played: {totalGamesPlayed}</p>
         <p style={{ fontSize: '32px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
