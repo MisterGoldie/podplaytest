@@ -830,14 +830,14 @@ app.frame('/share', async (c) => {
         <p style={{ fontSize: '42px', marginBottom: '20px' }}>POD Score: {podScore}</p>
         <p style={{ fontSize: '38px', marginBottom: '20px' }}>Total Games Played: {totalGamesPlayed}</p>
         <p style={{ fontSize: '34px', marginBottom: '20px' }}>
-          {ownsThepodToken ? `You hold ${thepodTokenBalance.toFixed(2)} /thepod Fan tokens 🐳!` : 'Get some /thepod Fan Tokens for more points!'}
+          {ownsThepodToken ? `You own ${thepodTokenBalance.toFixed(2)} /thepod Fan tokens 🐳!` : 'Get some /thepod Fan Tokens for a higher score!'}
         </p>
         <p style={{ fontSize: '28px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
     intents: [
       <Button action="/game">Play Again</Button>,
-      <Button.Link href="https://moxie-frames.airstack.xyz/stim?t=cid_thepod">POD FT</Button.Link>,
+      <Button.Link href="https://moxie-frames.airstack.xyz/stim?t=cid_thepod">/thepod FT</Button.Link>,
       <Button.Link href={farcasterShareURL}>Share Game</Button.Link>
     ],
   });
