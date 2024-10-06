@@ -113,7 +113,7 @@ async function checkFanTokenOwnership(fid: string): Promise<boolean> {
               _eq: $fid
             },
             fanTokenSymbol: {
-              _eq: "thepod"
+              _eq: "/thepod"
             }
           }
         }
