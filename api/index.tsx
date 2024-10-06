@@ -478,7 +478,7 @@ app.frame('/game', async (c) => {
             updateUserRecordAsync(fid.toString(), true);
           }
         } else if (state.board.every((cell) => cell !== null)) {
-          message = "Game over! It's a draw.";
+          message = "Game over! It's a tie.";
           state.isGameOver = true;
           if (fid) {
             updateUserTieAsync(fid.toString());
@@ -642,7 +642,7 @@ app.frame('/share', async (c) => {
         )}
         <h1 style={{ fontSize: '60px', marginBottom: '20px' }}>Thanks for Playing!</h1>
         <p style={{ fontSize: '44px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L</p>
-        <p style={{ fontSize: '36px', marginBottom: '20px' }}>Total Games Played Including Draw: {totalGamesPlayed}</p>
+        <p style={{ fontSize: '36px', marginBottom: '20px' }}>Total Games Played Including Ties: {totalGamesPlayed}</p>
         <p style={{ fontSize: '32px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
