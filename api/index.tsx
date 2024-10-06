@@ -817,22 +817,42 @@ app.frame('/share', async (c) => {
             src={profileImage} 
             alt="User profile"
             style={{
-              width: '250px',
-              height: '250px',
+              width: '200px',
+              height: '200px',
               borderRadius: '50%',
               border: '3px solid white',
               marginBottom: '20px',
             }}
           />
         )}
-        <h1 style={{ fontSize: '60px', marginBottom: '20px' }}>Thanks for Playing!</h1>
-        <p style={{ fontSize: '46px', marginBottom: '20px' }}>Your Record: {userRecord.wins}W - {userRecord.losses}L - {userRecord.ties}T</p>
-        <p style={{ fontSize: '42px', marginBottom: '20px' }}>POD Score: {podScore}</p>
-        <p style={{ fontSize: '38px', marginBottom: '20px' }}>Total Games Played: {totalGamesPlayed}</p>
-        <p style={{ fontSize: '34px', marginBottom: '20px' }}>
-          {ownsThepodToken ? `You own ${thepodTokenBalance.toFixed(2)} /thepod Fan tokens 🐳!` : 'Get some /thepod Fan Tokens for a higher score!'}
-        </p>
-        <p style={{ fontSize: '28px', marginBottom: '20px' }}>Frame by @goldie & @themrsazon</p>
+        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Player Stats</h1>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column' as const,
+          alignItems: 'flex-start',
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          padding: '20px',
+          borderRadius: '10px',
+          width: '80%',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+            <span style={{ fontSize: '36px' }}>POD Score:</span>
+            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{podScore}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+            <span style={{ fontSize: '36px' }}>Record:</span>
+            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{userRecord.wins}W - {userRecord.losses}L - {userRecord.ties}T</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+            <span style={{ fontSize: '36px' }}>Total Games:</span>
+            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{totalGamesPlayed}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+            <span style={{ fontSize: '36px' }}>/thepod Tokens:</span>
+            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{thepodTokenBalance.toFixed(2)}</span>
+          </div>
+        </div>
+        <p style={{ fontSize: '28px', marginTop: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
     intents: [
