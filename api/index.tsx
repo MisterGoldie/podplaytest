@@ -844,7 +844,7 @@ app.frame('/share', async (c) => {
             <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{userRecord.wins}W - {userRecord.losses}L - {userRecord.ties}T</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
-            <span style={{ fontSize: '36px' }}>Total Games:</span>
+            <span style={{ fontSize: '36px' }}>Total Games Played:</span>
             <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{totalGamesPlayed}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
