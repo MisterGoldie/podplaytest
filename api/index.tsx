@@ -838,7 +838,7 @@ app.frame('/share', async (c) => {
     intents: [
       <Button action="/game">Play Again</Button>,
       <Button.Link href="https://warpcast.com/~/developers/frames?url=https%3A%2F%2Fmoxie-frames.airstack.xyz%2Fstim%3Ft%3Dcid_thepod">POD FT</Button.Link>,
-      <Button.Link href={farcasterShareURL}>Share</Button.Link>
+      <Button.Link href={farcasterShareURL}>Share Game</Button.Link>
     ],
   });
 });
