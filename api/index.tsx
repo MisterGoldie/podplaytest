@@ -109,16 +109,14 @@ async function checkFanTokenOwnership(fid: string): Promise<boolean> {
       MoxieUserPortfolios(
         input: {
           filter: {
-            walletAddress: {
-              _eq: $fid
-            },
             fanTokenSymbol: {
-              _eq: "/thepod"
+              _eq: "thepod"
             }
           }
         }
       ) {
         MoxieUserPortfolio {
+          fid
           amount: totalUnlockedAmount
         }
       }
@@ -141,9 +139,12 @@ async function checkFanTokenOwnership(fid: string): Promise<boolean> {
     const data = await response.json();
     console.log('Fan token ownership API response:', JSON.stringify(data));
     
-    if (data?.data?.MoxieUserPortfolios?.MoxieUserPortfolio?.[0]?.amount) {
-      const amount = parseFloat(data.data.MoxieUserPortfolios.MoxieUserPortfolio[0].amount);
-      return amount > 0;
+    if (data?.data?.MoxieUserPortfolios?.MoxieUserPortfolio) {
+      const portfolios = data.data.MoxieUserPortfolios.MoxieUserPortfolio;
+      const userPortfolio = portfolios.find((p: any) => p.fid === fid);
+      if (userPortfolio && parseFloat(userPortfolio.amount) > 0) {
+        return true;
+      }
     }
     return false;
   } catch (error) {
@@ -636,6 +637,7 @@ app.frame('/share', async (c) => {
   const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
   const originalFramesLink = `${baseUrl}/api`;
   
+  // Construct the Farcaster share URL with both text and the embedded link
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
 
   let profileImage: string | null = null;
