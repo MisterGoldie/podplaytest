@@ -478,7 +478,7 @@ app.frame('/game', async (c) => {
             updateUserRecordAsync(fid.toString(), true);
           }
         } else if (state.board.every((cell) => cell !== null)) {
-          message = "Game over! It's a tie.";
+          message = "Game over! It's a Tie.";
           state.isGameOver = true;
           if (fid) {
             updateUserTieAsync(fid.toString());
