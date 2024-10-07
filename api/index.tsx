@@ -761,7 +761,6 @@ app.frame('/game', async (c) => {
 app.frame('/next', (c) => {
   const result = c.req.query('result');
   console.log('Received result:', result);
-  console.log('Full query string:', c.req.url.search);
 
   let gifUrl;
   let resultText;
@@ -770,52 +769,42 @@ app.frame('/next', (c) => {
     case 'win':
       gifUrl = WIN_GIF_URL;
       resultText = 'You won!';
-      console.log('Selected win GIF');
       break;
     case 'lose':
       gifUrl = LOSE_GIF_URL;
       resultText = 'You lost!';
-      console.log('Selected lose GIF');
       break;
     case 'draw':
       gifUrl = DRAW_GIF_URL;
       resultText = "It's a draw!";
-      console.log('Selected draw GIF');
       break;
     default:
       gifUrl = DRAW_GIF_URL;
       resultText = 'Game over!';
-      console.log('Default to draw GIF. Unexpected result:', result);
   }
 
-  console.log('Final GIF URL:', gifUrl);
-
-  const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
-
-  const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Tic-Tac-Toe Result</title>
-      <meta property="fc:frame" content="vNext">
-      <meta property="fc:frame:image" content="${gifUrl}">
-      <meta property="fc:frame:image:aspect_ratio" content="1:1">
-      <meta property="fc:frame:button:1" content="Play Again">
-      <meta property="fc:frame:button:2" content="Your Stats">
-      <meta property="fc:frame:button:1:action" content="post">
-      <meta property="fc:frame:button:2:action" content="post">
-      <meta property="fc:frame:post_url" content="${baseUrl}/api/next">
-    </head>
-    <body>
-      <h1>${resultText}</h1>
-    </body>
-    </html>
-  `;
-
-  return new Response(html, {
-    headers: { 'Content-Type': 'text/html' },
+  return c.res({
+    image: (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: `url(${gifUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>{resultText}</h1>
+      </div>
+    ),
+    intents: [
+      <Button action="/game">Play Again</Button>,
+      <Button action="/share">Your Stats</Button>
+    ],
   });
 });
 
