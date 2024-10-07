@@ -735,7 +735,7 @@ app.frame('/game', async (c) => {
         </div>
       ),
       intents: [
-        <Button action={`/result?outcome=${encodeURIComponent(result)}`}>See Result</Button>
+        <Button action={`/result?outcome=${result}`}>See Result</Button>
       ],
     });
   }
@@ -831,10 +831,10 @@ app.frame('/result', (c) => {
       <meta property="fc:frame:image" content="${gifUrl}">
       <meta property="fc:frame:button:1" content="Play Again">
       <meta property="fc:frame:button:1:action" content="post">
-      <meta property="fc:frame:button:1:target" content="${baseUrl}/api/game">
+      <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
       <meta property="fc:frame:button:2" content="View Stats">
       <meta property="fc:frame:button:2:action" content="post">
-      <meta property="fc:frame:button:2:target" content="${baseUrl}/api/share">
+      <meta property="fc:frame:post_url" content="${baseUrl}/api/share">
     </head>
     <body></body>
     </html>
