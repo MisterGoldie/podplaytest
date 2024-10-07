@@ -704,6 +704,9 @@ app.frame('/game', async (c) => {
       result = message.includes(username) ? 'win' : 'lose';
     }
     console.log(`Game over. Result: ${result}`);
+    
+    const resultUrl = `/result?outcome=${encodeURIComponent(result)}`;
+    
     return c.res({
       image: (
         <div style={{
@@ -735,7 +738,7 @@ app.frame('/game', async (c) => {
         </div>
       ),
       intents: [
-        <Button value={`result:${result}`}>See Result</Button>
+        <Button action={resultUrl}>See Result</Button>
       ],
     });
   }
@@ -790,13 +793,9 @@ app.frame('/game', async (c) => {
 
 app.frame('/result', (c) => {
   console.log('Entering /result route');
-  console.log('Full request:', c.req);
-  console.log('Button value:', c.buttonValue);
+  console.log('Query parameters:', c.req.query());
 
-  let outcome = 'tie'; // default to tie
-  if (c.buttonValue && c.buttonValue.startsWith('result:')) {
-    outcome = c.buttonValue.split(':')[1];
-  }
+  const outcome = c.req.query('outcome');
   console.log('Outcome:', outcome);
 
   let gifUrl: string;
@@ -822,30 +821,12 @@ app.frame('/result', (c) => {
 
   console.log('Selected GIF URL:', gifUrl);
 
-  const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
-
-  const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Tic-Tac-Toe Result</title>
-      <meta property="fc:frame" content="vNext">
-      <meta property="fc:frame:image" content="${gifUrl}">
-      <meta property="fc:frame:button:1" content="Play Again">
-      <meta property="fc:frame:button:1:action" content="post">
-      <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
-      <meta property="fc:frame:button:2" content="View Stats">
-      <meta property="fc:frame:button:2:action" content="post">
-      <meta property="fc:frame:post_url" content="${baseUrl}/api/share">
-    </head>
-    <body></body>
-    </html>
-  `;
-
-  return new Response(html, {
-    headers: { 'Content-Type': 'text/html' },
+  return c.res({
+    image: gifUrl,
+    intents: [
+      <Button action="/game">Play Again</Button>,
+      <Button action="/share">View Stats</Button>
+    ],
   });
 });
 
