@@ -760,19 +760,22 @@ app.frame('/game', async (c) => {
 // Update the /next route
 app.frame('/next', (c) => {
   const { buttonValue } = c;
-
-  if (buttonValue === '1') {
-    return c.res({
-      image: `https://podplay.vercel.app/api/game`
-    });
-  } else if (buttonValue === '2') {
-    return c.res({
-      image: `https://podplay.vercel.app/api/share`
-    });
-  }
-
   const result = c.req.query('result');
+
   console.log('Received result:', result);
+  console.log('Button pressed:', buttonValue);
+
+  if (buttonValue) {
+    if (buttonValue === '1') {
+      return c.res({
+        image: `https://podplay.vercel.app/api/game`
+      });
+    } else if (buttonValue === '2') {
+      return c.res({
+        image: `https://podplay.vercel.app/api/share`
+      });
+    }
+  }
 
   let gifUrl;
 
@@ -812,7 +815,6 @@ app.frame('/next', (c) => {
       <meta name="fc:frame:button:1:action" content="post">
       <meta name="fc:frame:button:2" content="Your Stats">
       <meta name="fc:frame:button:2:action" content="post">
-      <meta name="frames.js:version" content="0.19.3">
       <title>Game Result</title>
     </head>
     <body>
