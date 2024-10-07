@@ -14,10 +14,6 @@ const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 const MOXIE_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_protocol_stats_mainnet/version/latest";
 const MOXIE_VESTING_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_vesting_mainnet/version/latest";
 
-const WIN_GIF_URL = 'https://bafybeigzvabzxudnvtrzqjqqfsdwhp2l3dw2xpvwi6zmqnidvh4olqlj5i.ipfs.w3s.link/youwin.gif'
-const LOSE_GIF_URL = 'https://bafybeihhfcjryv4l7nyrhfz7tl7iee4nngdcj2zaxc7abltebkf5ofiqam.ipfs.w3s.link/youlose.gif'
-const TIE_GIF_URL = 'https://bafybeih2r2umgzepagp3tqxlyefblsgzvvvifjcg4gkbwekxkqulazn7qu.ipfs.w3s.link/draw.gif'
-
 let db: admin.firestore.Firestore | null = null;
 let initializationError: Error | null = null;
 
@@ -698,51 +694,6 @@ app.frame('/game', async (c) => {
   console.log('Final game state:', state);
   console.log('Message:', message);
 
-  if (state.isGameOver) {
-    let result = 'tie';
-    if (message.includes('wins')) {
-      result = message.includes(username) ? 'win' : 'lose';
-    }
-    console.log(`Game over. Result: ${result}`);
-    
-    const resultUrl = `/result?outcome=${encodeURIComponent(result)}`;
-    
-    return c.res({
-      image: (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column' as const,
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '1080px',
-          height: '1080px',
-          backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          color: 'white',
-          fontSize: '36px',
-          fontFamily: 'Arial, sans-serif',
-        }}>
-          {renderBoard(state.board)}
-          <div style={{ 
-            marginTop: '40px', 
-            maxWidth: '900px', 
-            textAlign: 'center', 
-            backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-            padding: '20px', 
-            borderRadius: '10px', 
-            color: 'black' 
-          }}>
-            {message}
-          </div>
-        </div>
-      ),
-      intents: [
-        <Button action={resultUrl}>See Result</Button>
-      ],
-    });
-  }
-
   const encodedState = encodeState(state);
   const availableMoves = state.board.reduce((acc, cell, index) => {
     if (cell === null) acc.push(index);
@@ -751,11 +702,16 @@ app.frame('/game', async (c) => {
 
   const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
 
-  const intents = shuffledMoves.map((index) => 
-    <Button value={`move:${encodedState}:${index}`}>
-      {COORDINATES[index]}
-    </Button>
-  );
+  const intents = state.isGameOver
+    ? [
+        <Button value="newgame">New Game</Button>,
+        <Button action="/share">Your Stats</Button>
+      ]
+    : shuffledMoves.map((index) => 
+        <Button value={`move:${encodedState}:${index}`}>
+          {COORDINATES[index]}
+        </Button>
+      );
 
   return c.res({
     image: (
@@ -791,44 +747,6 @@ app.frame('/game', async (c) => {
   });
 });
 
-app.frame('/result', (c) => {
-  console.log('Entering /result route');
-  console.log('Query parameters:', c.req.query());
-
-  const outcome = c.req.query('outcome');
-  console.log('Outcome:', outcome);
-
-  let gifUrl: string;
-
-  switch (outcome) {
-    case 'win':
-      gifUrl = WIN_GIF_URL;
-      console.log('Selected win GIF');
-      break;
-    case 'lose':
-      gifUrl = LOSE_GIF_URL;
-      console.log('Selected lose GIF');
-      break;
-    case 'tie':
-      gifUrl = TIE_GIF_URL;
-      console.log('Selected tie GIF');
-      break;
-    default:
-      console.error('Invalid outcome:', outcome);
-      gifUrl = TIE_GIF_URL;
-      console.log('Selected default (tie) GIF');
-  }
-
-  console.log('Selected GIF URL:', gifUrl);
-
-  return c.res({
-    image: gifUrl,
-    intents: [
-      <Button action="/game">Play Again</Button>,
-      <Button action="/share">View Stats</Button>
-    ],
-  });
-});
 
 app.frame('/share', async (c) => {
   console.log('Entering /share route');
@@ -930,7 +848,7 @@ app.frame('/share', async (c) => {
             <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{totalGamesPlayed}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
-            <span style={{ fontSize: '36px' }}>/thepod Fan Tokens Owned:</span>
+            <span style={{ fontSize: '36px' }}>/thepod Fan Tokens owned:</span>
             <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{thepodTokenBalance.toFixed(2)}</span>
           </div>
         </div>
@@ -948,3 +866,4 @@ app.frame('/share', async (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
+
