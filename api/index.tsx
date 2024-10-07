@@ -789,17 +789,23 @@ app.frame('/next', (c) => {
       <div
         style={{
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           width: '1080px',
           height: '1080px',
           backgroundColor: '#000000',
-          backgroundImage: `url(${gifUrl})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
         }}
-      />
+      >
+        <img
+          src={gifUrl}
+          alt="Game Result"
+          style={{
+            maxWidth: '100%',
+            maxHeight: '100%',
+            objectFit: 'contain',
+          }}
+        />
+      </div>
     ),
     intents: [
       <Button action="/game">New Game</Button>,
