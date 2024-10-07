@@ -796,34 +796,59 @@ app.frame('/result', (c) => {
   console.log('Outcome:', outcome);
 
   let gifUrl: string;
+  let resultText: string;
 
   switch (outcome) {
     case 'win':
       gifUrl = WIN_GIF_URL;
+      resultText = 'Congratulations! You won!';
       console.log('Selected win GIF');
       break;
     case 'lose':
       gifUrl = LOSE_GIF_URL;
+      resultText = 'Better luck next time!';
       console.log('Selected lose GIF');
       break;
     case 'tie':
       gifUrl = TIE_GIF_URL;
+      resultText = "It's a tie!";
       console.log('Selected tie GIF');
       break;
     default:
       console.error('Invalid outcome:', outcome);
-      gifUrl = TIE_GIF_URL; // Default to tie if outcome is invalid
+      gifUrl = TIE_GIF_URL;
+      resultText = "Game over!";
       console.log('Selected default (tie) GIF');
   }
 
   console.log('Selected GIF URL:', gifUrl);
 
-  return c.res({
-    image: gifUrl,
-    intents: [
-      <Button action="/game">Play Again</Button>,
-      <Button action="/share">View Stats</Button>
-    ],
+  const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Tic-Tac-Toe Result</title>
+      <meta property="fc:frame" content="vNext">
+      <meta property="fc:frame:image" content="${gifUrl}">
+      <meta property="fc:frame:button:1" content="Play Again">
+      <meta property="fc:frame:button:1:action" content="post">
+      <meta property="fc:frame:button:1:target" content="${baseUrl}/api/game">
+      <meta property="fc:frame:button:2" content="View Stats">
+      <meta property="fc:frame:button:2:action" content="post">
+      <meta property="fc:frame:button:2:target" content="${baseUrl}/api/share">
+    </head>
+    <body>
+      <h1>${resultText}</h1>
+    </body>
+    </html>
+  `;
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html' },
   });
 });
 
