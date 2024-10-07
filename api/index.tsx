@@ -786,7 +786,7 @@ app.frame('/next', (c) => {
       break;
     default:
       console.error('Unexpected result:', result);
-      gifUrl = ''; // Set to empty string or some error image URL
+      gifUrl = DRAW_GIF_URL; // Fallback to draw GIF if result is unexpected
   }
 
   console.log('Final GIF URL:', gifUrl);
@@ -800,10 +800,18 @@ app.frame('/next', (c) => {
         justifyContent: 'center',
         width: '1080px',
         height: '1080px',
-        backgroundImage: `url(${gifUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}/>
+        backgroundColor: '#000000', // Fallback background color
+      }}>
+        <img 
+          src={gifUrl} 
+          alt="Game Result"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+          }}
+        />
+      </div>
     ),
     intents: [
       <Button action="/game">Play Again</Button>,
