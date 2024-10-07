@@ -760,8 +760,7 @@ app.frame('/game', async (c) => {
 // Update the /next route
 app.frame('/next', (c) => {
   const result = c.req.query('result');
-  console.log('Received result:', result);
-  console.log('Full query string:', c.req.url.search);
+  console.log('Received result:', result); // Debugging log
 
   let gifUrl;
 
@@ -780,31 +779,36 @@ app.frame('/next', (c) => {
       break;
     default:
       gifUrl = DRAW_GIF_URL;
-      console.log('Default to draw GIF. Unexpected result:', result);
+      console.log('Default to draw GIF');
   }
 
-  console.log('Final GIF URL:', gifUrl);
+  console.log('Final GIF URL:', gifUrl); // Debugging log
 
   return c.res({
     image: (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '1080px',
-        height: '1080px',
-        backgroundImage: `url(${gifUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        fontFamily: 'Arial, sans-serif',
-      }}>
-        <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>Game Result: {result}</h1>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '1080px',
+          height: '1080px',
+          backgroundColor: '#000000',
+        }}
+      >
+        <img
+          src={gifUrl}
+          alt="Game Result"
+          style={{
+            maxWidth: '100%',
+            maxHeight: '100%',
+            objectFit: 'contain',
+          }}
+        />
       </div>
     ),
     intents: [
-      <Button action="/game">Play Again</Button>,
+      <Button action="/game">New Game</Button>,
       <Button action="/share">Your Stats</Button>
     ],
   });
