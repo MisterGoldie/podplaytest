@@ -18,7 +18,6 @@ const WIN_GIF_URL = 'https://bafybeigzvabzxudnvtrzqjqqfsdwhp2l3dw2xpvwi6zmqnidvh
 const LOSE_GIF_URL = 'https://bafybeihhfcjryv4l7nyrhfz7tl7iee4nngdcj2zaxc7abltebkf5ofiqam.ipfs.w3s.link/youlose.gif'
 const TIE_GIF_URL = 'https://bafybeih2r2umgzepagp3tqxlyefblsgzvvvifjcg4gkbwekxkqulazn7qu.ipfs.w3s.link/draw.gif'
 
-
 let db: admin.firestore.Firestore | null = null;
 let initializationError: Error | null = null;
 
@@ -791,39 +790,20 @@ app.frame('/game', async (c) => {
 app.frame('/result', (c) => {
   const outcome = c.req.query('outcome')
   let gifUrl: string
-  let resultText: string
 
   switch (outcome) {
     case 'win':
       gifUrl = WIN_GIF_URL
-      resultText = 'Congratulations! You won!'
       break
     case 'lose':
       gifUrl = LOSE_GIF_URL
-      resultText = 'Better luck next time!'
       break
     default:
       gifUrl = TIE_GIF_URL
-      resultText = "It's a tie!"
   }
 
   return c.res({
-    image: (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#000000',
-        color: 'white',
-        fontFamily: 'Arial, sans-serif',
-      }}>
-        <img src={gifUrl} alt={`Game result: ${outcome}`} style={{ width: '640px', height: '640px' }} />
-        <h1 style={{ fontSize: '48px', marginTop: '20px' }}>{resultText}</h1>
-      </div>
-    ),
+    image: gifUrl,
     intents: [
       <Button action="/game">Play Again</Button>,
       <Button action="/share">View Stats</Button>
