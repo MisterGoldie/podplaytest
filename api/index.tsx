@@ -796,28 +796,23 @@ app.frame('/result', (c) => {
   console.log('Outcome:', outcome);
 
   let gifUrl: string;
-  let resultText: string;
 
   switch (outcome) {
     case 'win':
       gifUrl = WIN_GIF_URL;
-      resultText = 'Congratulations! You won!';
       console.log('Selected win GIF');
       break;
     case 'lose':
       gifUrl = LOSE_GIF_URL;
-      resultText = 'Better luck next time!';
       console.log('Selected lose GIF');
       break;
     case 'tie':
       gifUrl = TIE_GIF_URL;
-      resultText = "It's a tie!";
       console.log('Selected tie GIF');
       break;
     default:
       console.error('Invalid outcome:', outcome);
       gifUrl = TIE_GIF_URL;
-      resultText = "Game over!";
       console.log('Selected default (tie) GIF');
   }
 
@@ -841,9 +836,7 @@ app.frame('/result', (c) => {
       <meta property="fc:frame:button:2:action" content="post">
       <meta property="fc:frame:button:2:target" content="${baseUrl}/api/share">
     </head>
-    <body>
-      <h1>${resultText}</h1>
-    </body>
+    <body></body>
     </html>
   `;
 
