@@ -788,28 +788,54 @@ app.frame('/game', async (c) => {
 });
 
 app.frame('/result', (c) => {
-  const outcome = c.req.query('outcome')
-  let gifUrl: string
+  console.log('Entering /result route');
+  console.log('Query parameters:', c.req.query());
+
+  const outcome = c.req.query('outcome');
+  console.log('Outcome:', outcome);
+
+  let gifUrl: string;
 
   switch (outcome) {
     case 'win':
-      gifUrl = WIN_GIF_URL
-      break
+      gifUrl = WIN_GIF_URL;
+      break;
     case 'lose':
-      gifUrl = LOSE_GIF_URL
-      break
+      gifUrl = LOSE_GIF_URL;
+      break;
+    case 'tie':
+      gifUrl = TIE_GIF_URL;
+      break;
     default:
-      gifUrl = TIE_GIF_URL
+      console.error('Invalid outcome:', outcome);
+      gifUrl = TIE_GIF_URL; // Default to tie if outcome is invalid
   }
 
-  return c.res({
-    image: gifUrl,
-    intents: [
-      <Button action="/game">Play Again</Button>,
-      <Button action="/share">View Stats</Button>
-    ],
-  })
-})
+  console.log('Selected GIF URL:', gifUrl);
+
+  try {
+    return c.res({
+      image: gifUrl,
+      intents: [
+        <Button action="/game">Play Again</Button>,
+        <Button action="/share">View Stats</Button>
+      ],
+    });
+  } catch (error) {
+    console.error('Error in /result route:', error);
+    // Return a fallback response
+    return c.res({
+      image: (
+        <div style={{ width: '100%', height: '100%', background: 'black', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          Error loading result
+        </div>
+      ),
+      intents: [
+        <Button action="/game">Play Again</Button>,
+      ],
+    });
+  }
+});
 
 app.frame('/share', async (c) => {
   console.log('Entering /share route');
