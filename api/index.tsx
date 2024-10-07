@@ -813,6 +813,27 @@ app.frame('/next', (c) => {
   });
 });
 
+app.frame('/next', (c) => {
+  const { buttonValue } = c;
+
+  if (buttonValue === '1') {
+    return new Response('', {
+      status: 302,
+      headers: { Location: 'https://podplay.vercel.app/api/game' }
+    });
+  } else if (buttonValue === '2') {
+    return new Response('', {
+      status: 302,
+      headers: { Location: 'https://podplay.vercel.app/api/share' }
+    });
+  }
+
+  // If no button was pressed, redirect back to the game
+  return new Response('', {
+    status: 302,
+    headers: { Location: 'https://podplay.vercel.app/api/game' }
+  });
+});
 
 app.frame('/share', async (c) => {
   console.log('Entering /share route');
