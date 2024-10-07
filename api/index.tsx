@@ -707,7 +707,8 @@ app.frame('/game', async (c) => {
 
   const intents = state.isGameOver
     ? [
-        <Button value="newgame">New Game</Button>,
+        <Button value="/newgame">New Game</Button>,
+        <Button value="/next">Next</Button>,
         <Button action="/share">Your Stats</Button>
       ]
     : shuffledMoves.map((index) => 
