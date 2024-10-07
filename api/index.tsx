@@ -723,6 +723,8 @@ app.frame('/game', async (c) => {
         </Button>
       );
 
+  console.log('Intents:', intents);
+
   return c.res({
     image: (
       <div style={{
@@ -759,9 +761,13 @@ app.frame('/game', async (c) => {
 
 // Update the /next route
 app.frame('/next', (c) => {
-  const result = c.req.query('result');
+  const urlParts = c.req.url.split('?');
+  const queryString = urlParts.length > 1 ? urlParts[1] : '';
+  const queryParams = new URLSearchParams(queryString);
+  const result = queryParams.get('result');
+  
   console.log('Received result:', result);
-  console.log('Full query string:', c.req.url.search);
+  console.log('Full query string:', queryString);
 
   let gifUrl;
 
@@ -791,7 +797,7 @@ app.frame('/next', (c) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Game Result: ${result}</title>
+      <title>Game Result</title>
       <meta property="fc:frame" content="vNext">
       <meta property="fc:frame:image" content="${gifUrl}">
       <meta property="fc:frame:image:aspect_ratio" content="1:1">
