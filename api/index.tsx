@@ -800,7 +800,7 @@ app.frame('/next', (c) => {
       <meta property="fc:frame:button:2" content="Your Stats">
       <meta property="fc:frame:button:1:action" content="post">
       <meta property="fc:frame:button:2:action" content="post">
-      <meta property="fc:frame:post_url" content="${baseUrl}/api/next">
+      <meta property="fc:frame:post_url" content="${baseUrl}/api/share">
     </head>
     <body>
       <h1>Game Result: ${result}</h1>
@@ -813,27 +813,6 @@ app.frame('/next', (c) => {
   });
 });
 
-app.frame('/next', (c) => {
-  const { buttonValue } = c;
-
-  if (buttonValue === '1') {
-    return new Response('', {
-      status: 302,
-      headers: { Location: 'https://podplay.vercel.app/api/game' }
-    });
-  } else if (buttonValue === '2') {
-    return new Response('', {
-      status: 302,
-      headers: { Location: 'https://podplay.vercel.app/api/share' }
-    });
-  }
-
-  // If no button was pressed, redirect back to the game
-  return new Response('', {
-    status: 302,
-    headers: { Location: 'https://podplay.vercel.app/api/game' }
-  });
-});
 
 app.frame('/share', async (c) => {
   console.log('Entering /share route');
