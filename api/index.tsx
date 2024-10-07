@@ -735,7 +735,7 @@ app.frame('/game', async (c) => {
         </div>
       ),
       intents: [
-        <Button action={`/result?outcome=${encodeURIComponent(result)}`}>See Result</Button>
+        <Button value={`result:${result}`}>See Result</Button>
       ],
     });
   }
@@ -790,11 +790,13 @@ app.frame('/game', async (c) => {
 
 app.frame('/result', (c) => {
   console.log('Entering /result route');
-  console.log('Full URL:', c.req.url);
-  console.log('Query string:', c.req.url.split('?')[1]);
+  console.log('Full request:', c.req);
+  console.log('Button value:', c.buttonValue);
 
-  const params = new URLSearchParams(c.req.url.split('?')[1]);
-  const outcome = params.get('outcome');
+  let outcome = 'tie'; // default to tie
+  if (c.buttonValue && c.buttonValue.startsWith('result:')) {
+    outcome = c.buttonValue.split(':')[1];
+  }
   console.log('Outcome:', outcome);
 
   let gifUrl: string;
