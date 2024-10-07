@@ -637,6 +637,7 @@ app.frame('/game', async (c) => {
 
   let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
   let message = `New game started! Your turn, ${username}`;
+  let gameResult: 'win' | 'lose' | 'draw' | null = null;
 
   if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
     console.log('Processing move');
@@ -653,12 +654,14 @@ app.frame('/game', async (c) => {
         if (checkWin(state.board)) {
           message = `${username} wins! Game over.`;
           state.isGameOver = true;
+          gameResult = 'win';
           if (fid) {
             updateUserRecordAsync(fid.toString(), true);
           }
         } else if (state.board.every((cell) => cell !== null)) {
           message = "Game over! It's a Tie.";
           state.isGameOver = true;
+          gameResult = 'draw';
           if (fid) {
             updateUserTieAsync(fid.toString());
           }
@@ -670,12 +673,14 @@ app.frame('/game', async (c) => {
           if (checkWin(state.board)) {
             message += ` Computer wins! Game over.`;
             state.isGameOver = true;
+            gameResult = 'lose';
             if (fid) {
               updateUserRecordAsync(fid.toString(), false);
             }
           } else if (state.board.every((cell) => cell !== null)) {
             message += " It's a draw. Game over.";
             state.isGameOver = true;
+            gameResult = 'draw';
             if (fid) {
               updateUserTieAsync(fid.toString());
             }
@@ -696,6 +701,7 @@ app.frame('/game', async (c) => {
 
   console.log('Final game state:', state);
   console.log('Message:', message);
+  console.log('Game result:', gameResult);
 
   const encodedState = encodeState(state);
   const availableMoves = state.board.reduce((acc, cell, index) => {
@@ -707,8 +713,8 @@ app.frame('/game', async (c) => {
 
   const intents = state.isGameOver
     ? [
-        <Button value="/newgame">New Game</Button>,
-        <Button value="/next">Next</Button>,
+        <Button action="/game">New Game</Button>,
+        <Button action={`/next?result=${gameResult}`}>Next</Button>,
         <Button action="/share">Your Stats</Button>
       ]
     : shuffledMoves.map((index) => 
@@ -755,54 +761,30 @@ app.frame('/game', async (c) => {
 app.frame('/next', (c) => {
   const result = c.req.query('result');
   let gifUrl;
-  let message;
 
   switch (result) {
     case 'win':
       gifUrl = WIN_GIF_URL;
-      message = 'Congratulations! You won!';
       break;
     case 'lose':
       gifUrl = LOSE_GIF_URL;
-      message = 'Better luck next time!';
       break;
     case 'draw':
       gifUrl = DRAW_GIF_URL;
-      message = "It's a draw!";
       break;
     default:
-      gifUrl = null;
-      message = 'Unknown result';
+      gifUrl = DRAW_GIF_URL; // Default to draw if no result is provided
   }
 
   return c.res({
     image: (
       <div style={{
-        display: 'flex',
-        flexDirection: 'column' as const,
-        alignItems: 'center',
-        justifyContent: 'center',
         width: '1080px',
         height: '1080px',
         backgroundImage: `url(${gifUrl})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        color: 'white',
-        fontSize: '36px',
-        fontFamily: 'Arial, sans-serif',
-      }}>
-        <div style={{ 
-          marginTop: '40px', 
-          maxWidth: '900px', 
-          textAlign: 'center', 
-          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-          padding: '20px', 
-          borderRadius: '10px', 
-          color: 'black' 
-        }}>
-          {message}
-        </div>
-      </div>
+      }}/>
     ),
     intents: [
       <Button action="/game">New Game</Button>,
