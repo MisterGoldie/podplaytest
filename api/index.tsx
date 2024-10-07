@@ -800,7 +800,9 @@ app.frame('/next', (c) => {
       <meta property="fc:frame:button:2" content="Your Stats">
       <meta property="fc:frame:button:1:action" content="post">
       <meta property="fc:frame:button:2:action" content="post">
-      <meta property="fc:frame:post_url" content="${baseUrl}/api/share">
+      <meta property="fc:frame:post_url" content="${baseUrl}/api/next">
+      <meta property="fc:frame:button:1:target" content="${baseUrl}/api/game">
+      <meta property="fc:frame:button:2:target" content="${baseUrl}/api/share">
     </head>
     <body>
       <h1>Game Result: ${result}</h1>
