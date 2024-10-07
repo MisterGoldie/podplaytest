@@ -761,6 +761,7 @@ app.frame('/game', async (c) => {
 app.frame('/next', (c) => {
   const result = c.req.query('result');
   console.log('Received result:', result);
+  console.log('Full query string:', c.req.url.search);
 
   let gifUrl;
 
@@ -779,7 +780,7 @@ app.frame('/next', (c) => {
       break;
     default:
       gifUrl = DRAW_GIF_URL;
-      console.log('Default to draw GIF');
+      console.log('Default to draw GIF. Unexpected result:', result);
   }
 
   console.log('Final GIF URL:', gifUrl);
@@ -792,7 +793,7 @@ app.frame('/next', (c) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Game Result</title>
+      <title>Game Result: ${result}</title>
       <meta property="fc:frame" content="vNext">
       <meta property="fc:frame:image" content="${gifUrl}">
       <meta property="fc:frame:image:aspect_ratio" content="1:1">
@@ -809,6 +810,8 @@ app.frame('/next', (c) => {
     </body>
     </html>
   `;
+
+  console.log('Generated HTML:', html);
 
   return new Response(html, {
     headers: { 'Content-Type': 'text/html' },
