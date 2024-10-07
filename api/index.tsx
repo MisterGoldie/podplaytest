@@ -785,8 +785,8 @@ app.frame('/next', (c) => {
       console.log('Selected draw GIF');
       break;
     default:
-      gifUrl = DRAW_GIF_URL;
-      console.log('Default to draw GIF. Unexpected result:', result);
+      console.error('Unexpected result:', result);
+      gifUrl = ''; // Set to empty string or some error image URL
   }
 
   console.log('Final GIF URL:', gifUrl);
