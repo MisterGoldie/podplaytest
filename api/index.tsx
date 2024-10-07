@@ -14,6 +14,11 @@ const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 const MOXIE_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_protocol_stats_mainnet/version/latest";
 const MOXIE_VESTING_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_vesting_mainnet/version/latest";
 
+const WIN_GIF_URL = 'https://bafybeigzvabzxudnvtrzqjqqfsdwhp2l3dw2xpvwi6zmqnidvh4olqlj5i.ipfs.w3s.link/youwin.gif'
+const LOSE_GIF_URL = 'https://bafybeihhfcjryv4l7nyrhfz7tl7iee4nngdcj2zaxc7abltebkf5ofiqam.ipfs.w3s.link/youlose.gif'
+const TIE_GIF_URL = 'https://bafybeih2r2umgzepagp3tqxlyefblsgzvvvifjcg4gkbwekxkqulazn7qu.ipfs.w3s.link/draw.gif'
+
+
 let db: admin.firestore.Firestore | null = null;
 let initializationError: Error | null = null;
 
@@ -702,16 +707,52 @@ app.frame('/game', async (c) => {
 
   const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
 
-  const intents = state.isGameOver
-    ? [
-        <Button value="newgame">New Game</Button>,
-        <Button action="/share">Your Stats</Button>
-      ]
-    : shuffledMoves.map((index) => 
-        <Button value={`move:${encodedState}:${index}`}>
-          {COORDINATES[index]}
-        </Button>
-      );
+  if (state.isGameOver) {
+    let result = 'tie';
+    if (message.includes('wins')) {
+      result = message.includes(username) ? 'win' : 'lose';
+    }
+    return c.res({
+      image: (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column' as const,
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '1080px',
+          height: '1080px',
+          backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          color: 'white',
+          fontSize: '36px',
+          fontFamily: 'Arial, sans-serif',
+        }}>
+          {renderBoard(state.board)}
+          <div style={{ 
+            marginTop: '40px', 
+            maxWidth: '900px', 
+            textAlign: 'center', 
+            backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+            padding: '20px', 
+            borderRadius: '10px', 
+            color: 'black' 
+          }}>
+            {message}
+          </div>
+        </div>
+      ),
+      intents: [
+        <Button action={`/result?outcome=${result}`}>See Result</Button>
+      ],
+    });
+  }
+
+  const intents = shuffledMoves.map((index) => 
+    <Button value={`move:${encodedState}:${index}`}>
+      {COORDINATES[index]}
+    </Button>
+  );
 
   return c.res({
     image: (
@@ -747,6 +788,48 @@ app.frame('/game', async (c) => {
   });
 });
 
+app.frame('/result', (c) => {
+  const outcome = c.req.query('outcome')
+  let gifUrl: string
+  let resultText: string
+
+  switch (outcome) {
+    case 'win':
+      gifUrl = WIN_GIF_URL
+      resultText = 'Congratulations! You won!'
+      break
+    case 'lose':
+      gifUrl = LOSE_GIF_URL
+      resultText = 'Better luck next time!'
+      break
+    default:
+      gifUrl = TIE_GIF_URL
+      resultText = "It's a tie!"
+  }
+
+  return c.res({
+    image: (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundColor: '#000000',
+        color: 'white',
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        <img src={gifUrl} alt={`Game result: ${outcome}`} style={{ width: '640px', height: '640px' }} />
+        <h1 style={{ fontSize: '48px', marginTop: '20px' }}>{resultText}</h1>
+      </div>
+    ),
+    intents: [
+      <Button action="/game">Play Again</Button>,
+      <Button action="/share">View Stats</Button>
+    ],
+  })
+})
 
 app.frame('/share', async (c) => {
   console.log('Entering /share route');
