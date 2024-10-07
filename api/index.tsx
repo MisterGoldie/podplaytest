@@ -760,6 +760,14 @@ app.frame('/game', async (c) => {
 // Update the /next route
 app.frame('/next', (c) => {
   const result = c.req.query('result');
+  const buttonValue = c.buttonValue;
+
+  if (buttonValue === '1') {
+    return c.res({ image: 'https://podplay.vercel.app/api/game' });
+  } else if (buttonValue === '2') {
+    return c.res({ image: 'https://podplay.vercel.app/api/share' });
+  }
+
   console.log('Received result:', result); // Debugging log
 
   let gifUrl;
@@ -798,7 +806,7 @@ app.frame('/next', (c) => {
       <meta property="fc:frame:button:2" content="Your Stats">
       <meta property="fc:frame:button:1:action" content="post">
       <meta property="fc:frame:button:2:action" content="post">
-      <meta property="fc:frame:post_url" content="https://podplay.vercel.app/api/share">
+      <meta property="fc:frame:post_url" content="https://podplay.vercel.app/api/next">
     </head>
     <body>
       <h1>Game Result</h1>
@@ -810,6 +818,7 @@ app.frame('/next', (c) => {
     headers: { 'Content-Type': 'text/html' },
   });
 });
+
 
 app.frame('/share', async (c) => {
   console.log('Entering /share route');
