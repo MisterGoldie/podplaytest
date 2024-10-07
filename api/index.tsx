@@ -759,16 +759,20 @@ app.frame('/game', async (c) => {
 
 // Update the /next route
 app.frame('/next', (c) => {
-  const result = c.req.query('result');
-  const buttonValue = c.buttonValue;
+  const { buttonValue } = c;
 
   if (buttonValue === '1') {
-    return c.res({ image: 'https://podplay.vercel.app/api/game' });
+    return c.res({
+      image: `https://podplay.vercel.app/api/game`
+    });
   } else if (buttonValue === '2') {
-    return c.res({ image: 'https://podplay.vercel.app/api/share' });
+    return c.res({
+      image: `https://podplay.vercel.app/api/share`
+    });
   }
 
-  console.log('Received result:', result); // Debugging log
+  const result = c.req.query('result');
+  console.log('Received result:', result);
 
   let gifUrl;
 
@@ -790,7 +794,7 @@ app.frame('/next', (c) => {
       console.log('Default to draw GIF');
   }
 
-  console.log('Final GIF URL:', gifUrl); // Debugging log
+  console.log('Final GIF URL:', gifUrl);
 
   const html = `
     <!DOCTYPE html>
@@ -798,18 +802,21 @@ app.frame('/next', (c) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="fc:frame" content="vNext">
+      <meta name="fc:frame:image" content="${gifUrl}">
+      <meta name="og:image" content="${gifUrl}">
+      <meta name="og:title" content="Game Result">
+      <meta name="fc:frame:post_url" content="https://podplay.vercel.app/api/next">
+      <meta name="fc:frame:image:aspect_ratio" content="1:1">
+      <meta name="fc:frame:button:1" content="New Game">
+      <meta name="fc:frame:button:1:action" content="post">
+      <meta name="fc:frame:button:2" content="Your Stats">
+      <meta name="fc:frame:button:2:action" content="post">
+      <meta name="frames.js:version" content="0.19.3">
       <title>Game Result</title>
-      <meta property="fc:frame" content="vNext">
-      <meta property="fc:frame:image" content="${gifUrl}">
-      <meta property="fc:frame:image:aspect_ratio" content="1:1">
-      <meta property="fc:frame:button:1" content="New Game">
-      <meta property="fc:frame:button:2" content="Your Stats">
-      <meta property="fc:frame:button:1:action" content="post">
-      <meta property="fc:frame:button:2:action" content="post">
-      <meta property="fc:frame:post_url" content="https://podplay.vercel.app/api/next">
     </head>
     <body>
-      <h1>Game Result</h1>
+      <h1>Game Result: ${result}</h1>
     </body>
     </html>
   `;
