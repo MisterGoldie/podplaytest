@@ -13,6 +13,9 @@ const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as str
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 const MOXIE_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_protocol_stats_mainnet/version/latest";
 const MOXIE_VESTING_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_vesting_mainnet/version/latest";
+const WIN_GIF_URL = 'https://bafybeibgjptcdynqtjdskt3lk3eh65blz5jbklps2tlmbjgamqhcmycmlm.ipfs.w3s.link/Win.gif'
+const LOSE_GIF_URL = 'https://bafybeighyzexsg3vjxli5o6yfxfxuwrwsjoljnruvwhpqklqdyddpsxxry.ipfs.w3s.link/giphy%202.GIF'
+const DRAW_GIF_URL = 'https://bafybeigniqc263vmmcwmy2l4hitkklyarbu2e6s3q46izzalxswe5wbyaa.ipfs.w3s.link/giphy.GIF'
 
 let db: admin.firestore.Firestore | null = null;
 let initializationError: Error | null = null;
@@ -634,6 +637,7 @@ app.frame('/game', async (c) => {
 
   let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
   let message = `New game started! Your turn, ${username}`;
+  let gameResult: 'win' | 'lose' | 'draw' | null = null;
 
   if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
     console.log('Processing move');
@@ -650,12 +654,14 @@ app.frame('/game', async (c) => {
         if (checkWin(state.board)) {
           message = `${username} wins! Game over.`;
           state.isGameOver = true;
+          gameResult = 'win';
           if (fid) {
             updateUserRecordAsync(fid.toString(), true);
           }
         } else if (state.board.every((cell) => cell !== null)) {
           message = "Game over! It's a Tie.";
           state.isGameOver = true;
+          gameResult = 'draw';
           if (fid) {
             updateUserTieAsync(fid.toString());
           }
@@ -667,12 +673,14 @@ app.frame('/game', async (c) => {
           if (checkWin(state.board)) {
             message += ` Computer wins! Game over.`;
             state.isGameOver = true;
+            gameResult = 'lose';
             if (fid) {
               updateUserRecordAsync(fid.toString(), false);
             }
           } else if (state.board.every((cell) => cell !== null)) {
             message += " It's a draw. Game over.";
             state.isGameOver = true;
+            gameResult = 'draw';
             if (fid) {
               updateUserTieAsync(fid.toString());
             }
@@ -705,6 +713,7 @@ app.frame('/game', async (c) => {
   const intents = state.isGameOver
     ? [
         <Button value="newgame">New Game</Button>,
+        <Button action={`/next?result=${gameResult}`}>Next</Button>,
         <Button action="/share">Your Stats</Button>
       ]
     : shuffledMoves.map((index) => 
@@ -744,6 +753,67 @@ app.frame('/game', async (c) => {
       </div>
     ),
     intents: intents,
+  });
+});
+
+// Add this new route to handle the /next action
+app.frame('/next', (c) => {
+  const result = c.req.query('result');
+  let gifUrl;
+  let message;
+
+  switch (result) {
+    case 'win':
+      gifUrl = WIN_GIF_URL;
+      message = 'Congratulations! You won!';
+      break;
+    case 'lose':
+      gifUrl = LOSE_GIF_URL;
+      message = 'Better luck next time!';
+      break;
+    case 'draw':
+      gifUrl = DRAW_GIF_URL;
+      message = "It's a draw!";
+      break;
+    default:
+      gifUrl = null;
+      message = 'Unknown result';
+  }
+
+  return c.res({
+    image: (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontSize: '36px',
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        {gifUrl && <img src={gifUrl} alt="Game result" style={{ width: '600px', height: '600px', marginBottom: '20px' }} />}
+        <div style={{ 
+          marginTop: '40px', 
+          maxWidth: '900px', 
+          textAlign: 'center', 
+          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+          padding: '20px', 
+          borderRadius: '10px', 
+          color: 'black' 
+        }}>
+          {message}
+        </div>
+      </div>
+    ),
+    intents: [
+      <Button action="/game">New Game</Button>,
+      <Button action="/share">Your Stats</Button>
+    ],
   });
 });
 
