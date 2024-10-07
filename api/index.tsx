@@ -735,7 +735,7 @@ app.frame('/game', async (c) => {
         </div>
       ),
       intents: [
-        <Button action={`/result?outcome=${result}`}>See Result</Button>
+        <Button action={`/result?outcome=${encodeURIComponent(result)}`}>See Result</Button>
       ],
     });
   }
@@ -790,9 +790,11 @@ app.frame('/game', async (c) => {
 
 app.frame('/result', (c) => {
   console.log('Entering /result route');
-  console.log('Query parameters:', c.req.query());
+  console.log('Full URL:', c.req.url);
+  console.log('Query string:', c.req.url.split('?')[1]);
 
-  const outcome = c.req.query('outcome');
+  const params = new URLSearchParams(c.req.url.split('?')[1]);
+  const outcome = params.get('outcome');
   console.log('Outcome:', outcome);
 
   let gifUrl: string;
