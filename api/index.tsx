@@ -767,12 +767,14 @@ app.frame('/next', (c) => {
 
   if (buttonValue) {
     if (buttonValue === '1') {
-      return c.res({
-        image: `https://podplay.vercel.app/api/game`
+      return new Response('', {
+        status: 302,
+        headers: { Location: 'https://podplay.vercel.app/api/game' }
       });
     } else if (buttonValue === '2') {
-      return c.res({
-        image: `https://podplay.vercel.app/api/share`
+      return new Response('', {
+        status: 302,
+        headers: { Location: 'https://podplay.vercel.app/api/share' }
       });
     }
   }
