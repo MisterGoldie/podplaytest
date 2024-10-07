@@ -735,7 +735,7 @@ app.frame('/game', async (c) => {
         </div>
       ),
       intents: [
-        <Button action={`/result?outcome=${result}`}>See Result</Button>
+        <Button action={`/result?outcome=${encodeURIComponent(result)}`}>See Result</Button>
       ],
     });
   }
@@ -800,16 +800,20 @@ app.frame('/result', (c) => {
   switch (outcome) {
     case 'win':
       gifUrl = WIN_GIF_URL;
+      console.log('Selected win GIF');
       break;
     case 'lose':
       gifUrl = LOSE_GIF_URL;
+      console.log('Selected lose GIF');
       break;
     case 'tie':
       gifUrl = TIE_GIF_URL;
+      console.log('Selected tie GIF');
       break;
     default:
       console.error('Invalid outcome:', outcome);
       gifUrl = TIE_GIF_URL; // Default to tie if outcome is invalid
+      console.log('Selected default (tie) GIF');
   }
 
   console.log('Selected GIF URL:', gifUrl);
