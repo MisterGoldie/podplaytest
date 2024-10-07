@@ -779,13 +779,23 @@ app.frame('/next', (c) => {
   return c.res({
     image: (
       <div style={{
-        display: 'flex', // Added this line to fix the error
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         width: '1080px',
         height: '1080px',
-        backgroundImage: `url(${gifUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}/>
+        backgroundColor: '#000000', // Add a background color in case the image doesn't cover the entire area
+      }}>
+        <img 
+          src={gifUrl} 
+          alt="Game Result" 
+          style={{
+            maxWidth: '100%',
+            maxHeight: '100%',
+            objectFit: 'contain'
+          }}
+        />
+      </div>
     ),
     intents: [
       <Button action="/game">New Game</Button>,
