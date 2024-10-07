@@ -760,7 +760,8 @@ app.frame('/game', async (c) => {
 // Update the /next route
 app.frame('/next', (c) => {
   const result = c.req.query('result');
-  console.log('Received result:', result); // Debugging log
+  console.log('Received result:', result);
+  console.log('Full query string:', c.req.url.search);
 
   let gifUrl;
 
@@ -779,10 +780,10 @@ app.frame('/next', (c) => {
       break;
     default:
       gifUrl = DRAW_GIF_URL;
-      console.log('Default to draw GIF');
+      console.log('Default to draw GIF. Unexpected result:', result);
   }
 
-  console.log('Final GIF URL:', gifUrl); // Debugging log
+  console.log('Final GIF URL:', gifUrl);
 
   const html = `
     <!DOCTYPE html>
@@ -790,7 +791,7 @@ app.frame('/next', (c) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Game Result</title>
+      <title>Game Result: ${result}</title>
       <meta property="fc:frame" content="vNext">
       <meta property="fc:frame:image" content="${gifUrl}">
       <meta property="fc:frame:image:aspect_ratio" content="1:1">
@@ -801,7 +802,7 @@ app.frame('/next', (c) => {
       <meta property="fc:frame:post_url" content="https://podplay.vercel.app/api/game">
     </head>
     <body>
-      <h1>Game Result</h1>
+      <h1>Game Result: ${result}</h1>
     </body>
     </html>
   `;
