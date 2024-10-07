@@ -652,16 +652,16 @@ app.frame('/game', async (c) => {
         message = `${username} moved at ${COORDINATES[move]}.`;
         
         if (checkWin(state.board)) {
+          gameResult = 'win';
           message = `${username} wins! Game over.`;
           state.isGameOver = true;
-          gameResult = 'win';
           if (fid) {
             updateUserRecordAsync(fid.toString(), true);
           }
         } else if (state.board.every((cell) => cell !== null)) {
+          gameResult = 'draw';
           message = "Game over! It's a Tie.";
           state.isGameOver = true;
-          gameResult = 'draw';
           if (fid) {
             updateUserTieAsync(fid.toString());
           }
@@ -671,16 +671,16 @@ app.frame('/game', async (c) => {
           message += ` Computer moved at ${COORDINATES[computerMove]}.`;
           
           if (checkWin(state.board)) {
+            gameResult = 'lose';
             message += ` Computer wins! Game over.`;
             state.isGameOver = true;
-            gameResult = 'lose';
             if (fid) {
               updateUserRecordAsync(fid.toString(), false);
             }
           } else if (state.board.every((cell) => cell !== null)) {
+            gameResult = 'draw';
             message += " It's a draw. Game over.";
             state.isGameOver = true;
-            gameResult = 'draw';
             if (fid) {
               updateUserTieAsync(fid.toString());
             }
