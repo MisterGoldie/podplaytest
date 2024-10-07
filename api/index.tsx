@@ -760,47 +760,53 @@ app.frame('/game', async (c) => {
 // Update the /next route
 app.frame('/next', (c) => {
   const result = c.req.query('result');
+  console.log('Received result:', result); // Debugging log
+
   let gifUrl;
 
   switch (result) {
     case 'win':
       gifUrl = WIN_GIF_URL;
+      console.log('Selected win GIF');
       break;
     case 'lose':
       gifUrl = LOSE_GIF_URL;
+      console.log('Selected lose GIF');
       break;
     case 'draw':
       gifUrl = DRAW_GIF_URL;
+      console.log('Selected draw GIF');
       break;
     default:
-      gifUrl = DRAW_GIF_URL; // Default to draw if no result is provided
+      gifUrl = DRAW_GIF_URL;
+      console.log('Default to draw GIF');
   }
 
-  return c.res({
-    image: (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#000000', // Add a background color in case the image doesn't cover the entire area
-      }}>
-        <img 
-          src={gifUrl} 
-          alt="Game Result" 
-          style={{
-            maxWidth: '100%',
-            maxHeight: '100%',
-            objectFit: 'contain'
-          }}
-        />
-      </div>
-    ),
-    intents: [
-      <Button action="/game">New Game</Button>,
-      <Button action="/share">Your Stats</Button>
-    ],
+  console.log('Final GIF URL:', gifUrl); // Debugging log
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Game Result</title>
+      <meta property="fc:frame" content="vNext">
+      <meta property="fc:frame:image" content="${gifUrl}">
+      <meta property="fc:frame:button:1" content="New Game">
+      <meta property="fc:frame:button:2" content="Your Stats">
+      <meta property="fc:frame:button:1:action" content="post">
+      <meta property="fc:frame:button:2:action" content="post">
+      <meta property="fc:frame:post_url" content="https://podplay.vercel.app/api/game">
+    </head>
+    <body>
+      <h1>Game Result</h1>
+    </body>
+    </html>
+  `
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html' },
   });
 });
 
