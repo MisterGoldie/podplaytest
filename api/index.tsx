@@ -779,6 +779,7 @@ app.frame('/next', (c) => {
   return c.res({
     image: (
       <div style={{
+        display: 'flex', // Added this line to fix the error
         width: '1080px',
         height: '1080px',
         backgroundImage: `url(${gifUrl})`,
