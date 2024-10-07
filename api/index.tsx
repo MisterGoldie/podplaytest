@@ -637,7 +637,6 @@ app.frame('/game', async (c) => {
 
   let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
   let message = `New game started! Your turn, ${username}`;
-  let gameResult: 'win' | 'lose' | 'draw' | null = null;
 
   if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
     console.log('Processing move');
@@ -654,14 +653,12 @@ app.frame('/game', async (c) => {
         if (checkWin(state.board)) {
           message = `${username} wins! Game over.`;
           state.isGameOver = true;
-          gameResult = 'win';
           if (fid) {
             updateUserRecordAsync(fid.toString(), true);
           }
         } else if (state.board.every((cell) => cell !== null)) {
           message = "Game over! It's a Tie.";
           state.isGameOver = true;
-          gameResult = 'draw';
           if (fid) {
             updateUserTieAsync(fid.toString());
           }
@@ -673,14 +670,12 @@ app.frame('/game', async (c) => {
           if (checkWin(state.board)) {
             message += ` Computer wins! Game over.`;
             state.isGameOver = true;
-            gameResult = 'lose';
             if (fid) {
               updateUserRecordAsync(fid.toString(), false);
             }
           } else if (state.board.every((cell) => cell !== null)) {
             message += " It's a draw. Game over.";
             state.isGameOver = true;
-            gameResult = 'draw';
             if (fid) {
               updateUserTieAsync(fid.toString());
             }
@@ -713,7 +708,6 @@ app.frame('/game', async (c) => {
   const intents = state.isGameOver
     ? [
         <Button value="newgame">New Game</Button>,
-        <Button action={`/next?result=${gameResult}`}>Next</Button>,
         <Button action="/share">Your Stats</Button>
       ]
     : shuffledMoves.map((index) => 
@@ -756,7 +750,7 @@ app.frame('/game', async (c) => {
   });
 });
 
-// Add this new route to handle the /next action
+// Update the /next route
 app.frame('/next', (c) => {
   const result = c.req.query('result');
   let gifUrl;
@@ -789,14 +783,13 @@ app.frame('/next', (c) => {
         justifyContent: 'center',
         width: '1080px',
         height: '1080px',
-        backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
+        backgroundImage: `url(${gifUrl})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
         fontSize: '36px',
         fontFamily: 'Arial, sans-serif',
       }}>
-        {gifUrl && <img src={gifUrl} alt="Game result" style={{ width: '600px', height: '600px', marginBottom: '20px' }} />}
         <div style={{ 
           marginTop: '40px', 
           maxWidth: '900px', 
@@ -816,7 +809,6 @@ app.frame('/next', (c) => {
     ],
   });
 });
-
 
 app.frame('/share', async (c) => {
   console.log('Entering /share route');
