@@ -13,7 +13,7 @@ const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as str
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 const MOXIE_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_protocol_stats_mainnet/version/latest";
 const MOXIE_VESTING_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_vesting_mainnet/version/latest";
-const WIN_GIF_URL = 'https://bafybeibgjptcdynqtjdskt3lk3eh65blz5jbklps2tlmbjgamqhcmycmlm.ipfs.w3s.link/Win.gif'
+const WIN_GIF_URL = 'https://bafybeie6qqm6r24chds5smesevkrdsg3jqmgw5wdmwzat7zdze3ukcgd5m.ipfs.w3s.link/giphy-downsized%202.GIF'
 const LOSE_GIF_URL = 'https://bafybeighyzexsg3vjxli5o6yfxfxuwrwsjoljnruvwhpqklqdyddpsxxry.ipfs.w3s.link/giphy%202.GIF'
 const DRAW_GIF_URL = 'https://bafybeigniqc263vmmcwmy2l4hitkklyarbu2e6s3q46izzalxswe5wbyaa.ipfs.w3s.link/giphy.GIF'
 
@@ -779,7 +779,7 @@ app.frame('/next', (c) => {
       console.log('Selected draw GIF');
       break;
     default:
-      gifUrl = DRAW_GIF_URL;
+      gifUrl = WIN_GIF_URL;
       console.log('Default to draw GIF. Unexpected result:', result);
   }
 
