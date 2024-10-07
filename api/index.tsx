@@ -723,8 +723,6 @@ app.frame('/game', async (c) => {
         </Button>
       );
 
-  console.log('Intents:', intents);
-
   return c.res({
     image: (
       <div style={{
@@ -761,13 +759,9 @@ app.frame('/game', async (c) => {
 
 // Update the /next route
 app.frame('/next', (c) => {
-  const urlParts = c.req.url.split('?');
-  const queryString = urlParts.length > 1 ? urlParts[1] : '';
-  const queryParams = new URLSearchParams(queryString);
-  const result = queryParams.get('result');
-  
+  const result = c.req.query('result');
   console.log('Received result:', result);
-  console.log('Full query string:', queryString);
+  console.log('Full query string:', c.req.url.search);
 
   let gifUrl;
 
@@ -785,38 +779,36 @@ app.frame('/next', (c) => {
       console.log('Selected draw GIF');
       break;
     default:
-      console.error('Unexpected result:', result);
-      gifUrl = DRAW_GIF_URL; // Fallback to draw GIF if result is unexpected
+      gifUrl = DRAW_GIF_URL;
+      console.log('Default to draw GIF. Unexpected result:', result);
   }
 
   console.log('Final GIF URL:', gifUrl);
 
-  return c.res({
-    image: (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column' as const,
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '1080px',
-        height: '1080px',
-        backgroundColor: '#000000', // Fallback background color
-      }}>
-        <img 
-          src={gifUrl} 
-          alt="Game Result"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-          }}
-        />
-      </div>
-    ),
-    intents: [
-      <Button action="/game">Play Again</Button>,
-      <Button action="/share">Your Stats</Button>
-    ],
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Game Result: ${result}</title>
+      <meta property="fc:frame" content="vNext">
+      <meta property="fc:frame:image" content="${gifUrl}">
+      <meta property="fc:frame:image:aspect_ratio" content="1:1">
+      <meta property="fc:frame:button:1" content="New Game">
+      <meta property="fc:frame:button:2" content="Your Stats">
+      <meta property="fc:frame:button:1:action" content="post">
+      <meta property="fc:frame:button:2:action" content="post">
+      <meta property="fc:frame:post_url" content="https://podplay.vercel.app/api/game">
+    </head>
+    <body>
+      <h1>Game Result: ${result}</h1>
+    </body>
+    </html>
+  `;
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html' },
   });
 });
 
