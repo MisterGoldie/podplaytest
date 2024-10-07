@@ -698,19 +698,12 @@ app.frame('/game', async (c) => {
   console.log('Final game state:', state);
   console.log('Message:', message);
 
-  const encodedState = encodeState(state);
-  const availableMoves = state.board.reduce((acc, cell, index) => {
-    if (cell === null) acc.push(index);
-    return acc;
-  }, [] as number[]);
-
-  const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
-
   if (state.isGameOver) {
     let result = 'tie';
     if (message.includes('wins')) {
       result = message.includes(username) ? 'win' : 'lose';
     }
+    console.log(`Game over. Result: ${result}`);
     return c.res({
       image: (
         <div style={{
@@ -746,6 +739,14 @@ app.frame('/game', async (c) => {
       ],
     });
   }
+
+  const encodedState = encodeState(state);
+  const availableMoves = state.board.reduce((acc, cell, index) => {
+    if (cell === null) acc.push(index);
+    return acc;
+  }, [] as number[]);
+
+  const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
 
   const intents = shuffledMoves.map((index) => 
     <Button value={`move:${encodedState}:${index}`}>
@@ -813,28 +814,13 @@ app.frame('/result', (c) => {
 
   console.log('Selected GIF URL:', gifUrl);
 
-  try {
-    return c.res({
-      image: gifUrl,
-      intents: [
-        <Button action="/game">Play Again</Button>,
-        <Button action="/share">View Stats</Button>
-      ],
-    });
-  } catch (error) {
-    console.error('Error in /result route:', error);
-    // Return a fallback response
-    return c.res({
-      image: (
-        <div style={{ width: '100%', height: '100%', background: 'black', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          Error loading result
-        </div>
-      ),
-      intents: [
-        <Button action="/game">Play Again</Button>,
-      ],
-    });
-  }
+  return c.res({
+    image: gifUrl,
+    intents: [
+      <Button action="/game">Play Again</Button>,
+      <Button action="/share">View Stats</Button>
+    ],
+  });
 });
 
 app.frame('/share', async (c) => {
