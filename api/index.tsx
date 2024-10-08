@@ -712,11 +712,12 @@ app.frame('/game', async (c) => {
 
   const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
 
-  console.log('Game result before encoding:', gameResult);
-  const encodedGameResult = encodeURIComponent(gameResult || '');
-  console.log('Encoded game result:', encodedGameResult);
-  const nextButtonAction = `/next?result=${encodedGameResult}&t=${Date.now()}`;
-  console.log('Full Next button action:', nextButtonAction);
+  let nextButtonAction = '/next';
+  if (state.isGameOver && gameResult) {
+    const encodedResult = encodeURIComponent(gameResult);
+    nextButtonAction = `/next?result=${encodedResult}`;
+  }
+  console.log('Next button action:', nextButtonAction);
 
   const intents = state.isGameOver
     ? [
@@ -768,13 +769,9 @@ app.frame('/game', async (c) => {
 app.frame('/next', async (c) => {
   console.log('Entering /next route');
   console.log('Full request URL:', c.req.url);
-  console.log('Raw query string:', c.req.url.search);
-
-  // Add a small delay to ensure the result is received
-  await new Promise(resolve => setTimeout(resolve, 500));
 
   const result = c.req.query('result');
-  console.log('Received result after delay:', result);
+  console.log('Received result:', result);
 
   let gifUrl;
 
@@ -830,7 +827,6 @@ app.frame('/next', async (c) => {
     headers: { 'Content-Type': 'text/html' },
   });
 });
-
 
 app.frame('/share', async (c) => {
   console.log('Entering /share route');
