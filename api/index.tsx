@@ -641,9 +641,9 @@ app.frame('/game', async (c) => {
   let gameResult: 'win' | 'lose' | 'draw' | null = null;
   let showResult = false;
 
-  if (buttonValue === 'show_result') {
+  if (buttonValue && buttonValue.startsWith('show_result:')) {
     showResult = true;
-    gameResult = c.req.query('result') as 'win' | 'lose' | 'draw' | null;
+    gameResult = buttonValue.split(':')[1] as 'win' | 'lose' | 'draw';
     console.log('Showing result:', gameResult);
   } else if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
     console.log('Processing move');
@@ -743,7 +743,7 @@ app.frame('/game', async (c) => {
     ? [
         <Button action="/game">New Game</Button>,
         <Button action="/share">Your Stats</Button>,
-        <Button action={`/game?result=${gameResult}`} value="show_result">Next</Button>
+        <Button action="/game" value={`show_result:${gameResult}`}>Next</Button>
       ]
     : shuffledMoves.map((index) => 
         <Button value={`move:${encodedState}:${index}`}>
