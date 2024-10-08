@@ -62,10 +62,6 @@ try {
   db = null;
 }
 
-type Intent = 
-  | { text: string; action: string; value?: string }
-  | { text: string; value: string };
-
 const getDb = () => {
   if (db) {
     return db;
@@ -624,8 +620,6 @@ app.frame('/howtoplay', () => {
   })
 })
 
-
-
 app.frame('/game', async (c) => {
   console.log('Entering /game route');
   const { buttonValue, status, frameData } = c;
@@ -645,13 +639,8 @@ app.frame('/game', async (c) => {
   let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
   let message = `New game started! Your turn, ${username}`;
   let gameResult: 'win' | 'lose' | 'draw' | null = null;
-  let showResult = false;
 
-  if (buttonValue && buttonValue.startsWith('show_result:')) {
-    showResult = true;
-    gameResult = buttonValue.split(':')[1] as 'win' | 'lose' | 'draw';
-    console.log('Showing result:', gameResult);
-  } else if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
+  if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
     console.log('Processing move');
     try {
       const [, encodedState, moveIndex] = buttonValue.split(':');
@@ -723,44 +712,92 @@ app.frame('/game', async (c) => {
 
   const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
 
-  const generateIntents = (): Intent[] => {
-    if (showResult) {
-      return [
-        { text: "New Game", action: "/game" },
-        { text: "Your Stats", action: "/share" }
-      ];
-    } else if (state.isGameOver) {
-      return [
-        { text: "New Game", action: "/game" },
-        { text: "Your Stats", action: "/share" },
-        { text: "Next", action: "/game", value: `show_result:${gameResult}` }
-      ];
-    } else {
-      return shuffledMoves.map((index) => ({
-        text: COORDINATES[index],
-        value: `move:${encodedState}:${index}`
-      }));
-    }
-  };
-
-  const intents = generateIntents();
-
-  const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
-
-  let imageUrl = 'https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png';
-  if (showResult) {
-    switch (gameResult) {
-      case 'win':
-        imageUrl = WIN_GIF_URL;
-        break;
-      case 'lose':
-        imageUrl = LOSE_GIF_URL;
-        break;
-      case 'draw':
-        imageUrl = DRAW_GIF_URL;
-        break;
-    }
+  let nextButtonAction = '/next';
+  if (state.isGameOver && gameResult) {
+    const encodedResult = encodeURIComponent(gameResult);
+    nextButtonAction = `/next?result=${encodedResult}`;
   }
+  console.log('Next button action (full URL):', `https://podplay.vercel.app/api${nextButtonAction}`);
+
+  const intents = state.isGameOver
+    ? [
+        <Button action="/game">New Game</Button>,
+        <Button action="/share">Your Stats</Button>,
+        <Button action={nextButtonAction}>Next</Button>
+      ]
+    : shuffledMoves.map((index) => 
+        <Button value={`move:${encodedState}:${index}`}>
+          {COORDINATES[index]}
+        </Button>
+      );
+
+  return c.res({
+    image: (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontSize: '36px',
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        {renderBoard(state.board)}
+        <div style={{ 
+          marginTop: '40px', 
+          maxWidth: '900px', 
+          textAlign: 'center', 
+          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+          padding: '20px', 
+          borderRadius: '10px', 
+          color: 'black' 
+        }}>
+          {message}
+        </div>
+      </div>
+    ),
+    intents: intents,
+  });
+});
+
+// Update the /next route
+app.frame('/next', async (c) => {
+  console.log('Entering /next route');
+  console.log('Full request URL:', c.req.url);
+  console.log('Query string:', c.req.url.search);
+  console.log('All query parameters:', c.req.query());
+
+  const result = c.req.query('result');
+  console.log('Received result:', result);
+
+  let gifUrl;
+
+  switch (result) {
+    case 'win':
+      gifUrl = WIN_GIF_URL;
+      console.log('Selected win GIF');
+      break;
+    case 'lose':
+      gifUrl = LOSE_GIF_URL;
+      console.log('Selected lose GIF');
+      break;
+    case 'draw':
+      gifUrl = DRAW_GIF_URL;
+      console.log('Selected draw GIF');
+      break;
+    default:
+      gifUrl = DRAW_GIF_URL;
+      console.log('Default to draw GIF. Unexpected result:', result);
+  }
+
+  console.log('Final GIF URL:', gifUrl);
+
+  const baseUrl = 'https://podplay.vercel.app';
 
   const html = `
     <!DOCTYPE html>
@@ -768,27 +805,25 @@ app.frame('/game', async (c) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Tic-Tac-Toe Game</title>
+      <title>Game Result: ${result}</title>
       <meta property="fc:frame" content="vNext">
-      <meta property="fc:frame:image" content="${imageUrl}">
+      <meta property="fc:frame:image" content="${gifUrl}">
       <meta property="fc:frame:image:aspect_ratio" content="1:1">
-      ${intents.map((intent, index) => `
-        <meta property="fc:frame:button:${index + 1}" content="${intent.text}">
-        ${'action' in intent ? `<meta property="fc:frame:button:${index + 1}:action" content="${intent.action}">` : ''}
-        ${intent.value ? `<meta property="fc:frame:button:${index + 1}:value" content="${intent.value}">` : ''}
-      `).join('')}
-      <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
+      <meta property="fc:frame:button:1" content="New Game">
+      <meta property="fc:frame:button:2" content="Your Stats">
+      <meta property="fc:frame:button:1:action" content="post">
+      <meta property="fc:frame:button:2:action" content="post">
+      <meta property="fc:frame:post_url" content="${baseUrl}/api/next">
+      <meta property="fc:frame:button:1:target" content="${baseUrl}/api/game">
+      <meta property="fc:frame:button:2:target" content="${baseUrl}/api/share">
     </head>
     <body>
-      ${showResult ? '' : `
-        <div style="display:none;">
-          ${renderBoard(state.board)}
-          <div>${message}</div>
-        </div>
-      `}
+      <h1>Game Result: ${result}</h1>
     </body>
     </html>
   `;
+
+  console.log('Generated HTML:', html);
 
   return new Response(html, {
     headers: { 'Content-Type': 'text/html' },
