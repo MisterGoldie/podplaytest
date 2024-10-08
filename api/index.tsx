@@ -714,9 +714,9 @@ app.frame('/game', async (c) => {
 
   const intents = state.isGameOver
     ? [
-        <Button action={`/next?result=${gameResult}`}>Next</Button>,
         <Button action="/game">New Game</Button>,
-        <Button action="/share">Your Stats</Button>
+        <Button action="/share">Your Stats</Button>,
+        <Button action={`/next?result=${gameResult}`}>Next</Button>
       ]
     : shuffledMoves.map((index) => 
         <Button value={`move:${encodedState}:${index}`}>
