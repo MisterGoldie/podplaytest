@@ -714,8 +714,8 @@ app.frame('/game', async (c) => {
 
   const intents = state.isGameOver
     ? [
-        <Button action="/game">New Game</Button>,
         <Button action={`/next?result=${gameResult}`}>Next</Button>,
+        <Button action="/game">New Game</Button>,
         <Button action="/share">Your Stats</Button>
       ]
     : shuffledMoves.map((index) => 
@@ -760,7 +760,7 @@ app.frame('/game', async (c) => {
 
 // Update the /next route
 app.frame('/next', (c) => {
-  const result = c.req.param('result');
+  const result = c.req.query('result');
   console.log('Received result:', result);
 
   let gifUrl;
