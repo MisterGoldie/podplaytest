@@ -716,7 +716,7 @@ app.frame('/game', async (c) => {
     ? [
         <Button action="/game">New Game</Button>,
         <Button action="/share">Your Stats</Button>,
-        <Button action={`/next?result=${gameResult}`}>Next</Button>
+        <Button action={`/next?result=${encodeURIComponent(gameResult || '')}`}>Next</Button>
       ]
     : shuffledMoves.map((index) => 
         <Button value={`move:${encodedState}:${index}`}>
@@ -760,7 +760,7 @@ app.frame('/game', async (c) => {
 
 // Update the /next route
 app.frame('/next', (c) => {
-  const result = c.req.query('result');
+  const result = decodeURIComponent(c.req.query('result') || '');
   console.log('Received result:', result);
 
   let gifUrl;
