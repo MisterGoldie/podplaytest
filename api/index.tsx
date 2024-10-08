@@ -620,7 +620,6 @@ app.frame('/howtoplay', () => {
   })
 })
 
-
 app.frame('/game', async (c) => {
   console.log('Entering /game route');
   const { buttonValue, status, frameData } = c;
@@ -640,13 +639,8 @@ app.frame('/game', async (c) => {
   let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
   let message = `New game started! Your turn, ${username}`;
   let gameResult: 'win' | 'lose' | 'draw' | null = null;
-  let showResult = false;
 
-  if (buttonValue && buttonValue.startsWith('show_result:')) {
-    showResult = true;
-    gameResult = buttonValue.split(':')[1] as 'win' | 'lose' | 'draw';
-    console.log('Showing result:', gameResult);
-  } else if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
+  if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
     console.log('Processing move');
     try {
       const [, encodedState, moveIndex] = buttonValue.split(':');
@@ -718,79 +712,51 @@ app.frame('/game', async (c) => {
 
   const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
 
-  const generateIntents = (): Intent[] => {
-    if (showResult) {
-      return [
-        { text: "New Game", action: "/game" },
-        { text: "Your Stats", action: "/share" }
-      ];
-    } else if (state.isGameOver) {
-      return [
-        { text: "New Game", action: "/game" },
-        { text: "Your Stats", action: "/share" },
-        { text: "Next", action: "/game", value: `show_result:${gameResult}` }
-      ];
-    } else {
-      return shuffledMoves.map((index) => ({
-        text: COORDINATES[index],
-        value: `move:${encodedState}:${index}`
-      }));
-    }
-  };
+  const intents = state.isGameOver
+    ? [
+        <Button action="/game">New Game</Button>,
+        <Button action={`/next?result=${gameResult}`}>Next</Button>,
+        <Button action="/share">Your Stats</Button>
+      ]
+    : shuffledMoves.map((index) => 
+        <Button value={`move:${encodedState}:${index}`}>
+          {COORDINATES[index]}
+        </Button>
+      );
 
-  const intents = generateIntents();
-
-  const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
-
-  let imageUrl = 'https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png';
-  if (showResult) {
-    switch (gameResult) {
-      case 'win':
-        imageUrl = WIN_GIF_URL;
-        break;
-      case 'lose':
-        imageUrl = LOSE_GIF_URL;
-        break;
-      case 'draw':
-        imageUrl = DRAW_GIF_URL;
-        break;
-    }
-  }
-
-  const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Tic-Tac-Toe Game</title>
-      <meta property="fc:frame" content="vNext">
-      <meta property="fc:frame:image" content="${imageUrl}">
-      <meta property="fc:frame:image:aspect_ratio" content="1:1">
-      ${intents.map((intent, index) => `
-        <meta property="fc:frame:button:${index + 1}" content="${intent.text}">
-        ${'action' in intent ? `<meta property="fc:frame:button:${index + 1}:action" content="${intent.action}">` : ''}
-        ${intent.value ? `<meta property="fc:frame:button:${index + 1}:value" content="${intent.value}">` : ''}
-      `).join('')}
-      <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
-    </head>
-    <body>
-      ${showResult ? '' : `
-        <div style="display:none;">
-          ${renderBoard(state.board)}
-          <div>${message}</div>
+  return c.res({
+    image: (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontSize: '36px',
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        {renderBoard(state.board)}
+        <div style={{ 
+          marginTop: '40px', 
+          maxWidth: '900px', 
+          textAlign: 'center', 
+          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+          padding: '20px', 
+          borderRadius: '10px', 
+          color: 'black' 
+        }}>
+          {message}
         </div>
-      `}
-    </body>
-    </html>
-  `;
-
-  return new Response(html, {
-    headers: { 'Content-Type': 'text/html' },
+      </div>
+    ),
+    intents: intents,
   });
 });
-
-
 
 // Update the /next route
 app.frame('/next', (c) => {
