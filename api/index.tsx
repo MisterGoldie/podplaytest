@@ -639,8 +639,13 @@ app.frame('/game', async (c) => {
   let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
   let message = `New game started! Your turn, ${username}`;
   let gameResult: 'win' | 'lose' | 'draw' | null = null;
+  let showResult = false;
 
-  if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
+  if (buttonValue && buttonValue.startsWith('show_result:')) {
+    showResult = true;
+    gameResult = buttonValue.split(':')[1] as 'win' | 'lose' | 'draw';
+    console.log('Showing result:', gameResult);
+  } else if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
     console.log('Processing move');
     try {
       const [, encodedState, moveIndex] = buttonValue.split(':');
@@ -712,17 +717,57 @@ app.frame('/game', async (c) => {
 
   const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
 
-  const intents = state.isGameOver
+  const intents = showResult
     ? [
         <Button action="/game">New Game</Button>,
-        <Button action={`/next?result=${gameResult}`}>Next</Button>,
         <Button action="/share">Your Stats</Button>
+      ]
+    : state.isGameOver
+    ? [
+        <Button action="/game">New Game</Button>,
+        <Button action="/share">Your Stats</Button>,
+        <Button value={`show_result:${gameResult}`}>See Result</Button>
       ]
     : shuffledMoves.map((index) => 
         <Button value={`move:${encodedState}:${index}`}>
           {COORDINATES[index]}
         </Button>
       );
+
+  let imageContent;
+  if (showResult) {
+    const gifUrl = gameResult === 'win' ? WIN_GIF_URL :
+                   gameResult === 'lose' ? LOSE_GIF_URL :
+                   DRAW_GIF_URL;
+    imageContent = (
+      <img 
+        src={gifUrl}
+        alt={`Game result: ${gameResult}`}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+        }}
+      />
+    );
+  } else {
+    imageContent = (
+      <>
+        {renderBoard(state.board)}
+        <div style={{ 
+          marginTop: '40px', 
+          maxWidth: '900px', 
+          textAlign: 'center', 
+          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+          padding: '20px', 
+          borderRadius: '10px', 
+          color: 'black' 
+        }}>
+          {message}
+        </div>
+      </>
+    );
+  }
 
   return c.res({
     image: (
@@ -740,18 +785,7 @@ app.frame('/game', async (c) => {
         fontSize: '36px',
         fontFamily: 'Arial, sans-serif',
       }}>
-        {renderBoard(state.board)}
-        <div style={{ 
-          marginTop: '40px', 
-          maxWidth: '900px', 
-          textAlign: 'center', 
-          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-          padding: '20px', 
-          borderRadius: '10px', 
-          color: 'black' 
-        }}>
-          {message}
-        </div>
+        {imageContent}
       </div>
     ),
     intents: intents,
@@ -781,7 +815,7 @@ app.frame('/next', (c) => {
       break;
     default:
       gifUrl = WIN_GIF_URL;
-      console.log('Default to draw GIF. Unexpected result:', result);
+      console.log('Default to win GIF. Unexpected result:', result);
   }
 
   console.log('Final GIF URL:', gifUrl);
