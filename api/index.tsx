@@ -760,9 +760,8 @@ app.frame('/game', async (c) => {
 
 // Update the /next route
 app.frame('/next', (c) => {
-  const result = c.req.query('result');
+  const result = c.req.param('result');
   console.log('Received result:', result);
-  console.log('Full query string:', c.req.url.search);
 
   let gifUrl;
 
@@ -780,7 +779,7 @@ app.frame('/next', (c) => {
       console.log('Selected draw GIF');
       break;
     default:
-      gifUrl = WIN_GIF_URL;
+      gifUrl = DRAW_GIF_URL;
       console.log('Default to draw GIF. Unexpected result:', result);
   }
 
