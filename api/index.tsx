@@ -624,7 +624,6 @@ app.frame('/howtoplay', () => {
   })
 })
 
-
 app.frame('/game', async (c) => {
   console.log('Entering /game route');
   const { buttonValue, status, frameData } = c;
@@ -714,6 +713,23 @@ app.frame('/game', async (c) => {
   console.log('Message:', message);
   console.log('Game result:', gameResult);
 
+  let gifUrl;
+  if (showResult) {
+    switch (gameResult) {
+      case 'win':
+        gifUrl = WIN_GIF_URL;
+        break;
+      case 'lose':
+        gifUrl = LOSE_GIF_URL;
+        break;
+      case 'draw':
+        gifUrl = DRAW_GIF_URL;
+        break;
+      default:
+        gifUrl = DRAW_GIF_URL;
+    }
+  }
+
   const encodedState = encodeState(state);
   const availableMoves = state.board.reduce((acc, cell, index) => {
     if (cell === null) acc.push(index);
@@ -722,75 +738,74 @@ app.frame('/game', async (c) => {
 
   const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
 
-  const generateIntents = (): Intent[] => {
-    if (showResult) {
-      return [
-        { text: "New Game", action: "/game" },
-        { text: "Your Stats", action: "/share" }
-      ];
-    } else if (state.isGameOver) {
-      return [
-        { text: "New Game", action: "/game" },
-        { text: "Your Stats", action: "/share" },
-        { text: "Next", action: "/game", value: `show_result:${gameResult}` }
-      ];
-    } else {
-      return shuffledMoves.map((index) => ({
-        text: COORDINATES[index],
-        value: `move:${encodedState}:${index}`
-      }));
-    }
-  };
+  const intents = showResult
+    ? [
+        <Button action="/game">New Game</Button>,
+        <Button action="/share">Your Stats</Button>
+      ]
+    : state.isGameOver
+    ? [
+        <Button action="/game">New Game</Button>,
+        <Button action="/share">Your Stats</Button>,
+        <Button action="/game" value={`show_result:${gameResult}`}>Next</Button>
+      ]
+    : shuffledMoves.map((index) => 
+        <Button value={`move:${encodedState}:${index}`}>
+          {COORDINATES[index]}
+        </Button>
+      );
 
-  const intents = generateIntents();
-
-  const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
-
-  let imageUrl = 'https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png';
-  if (showResult) {
-    switch (gameResult) {
-      case 'win':
-        imageUrl = WIN_GIF_URL;
-        break;
-      case 'lose':
-        imageUrl = LOSE_GIF_URL;
-        break;
-      case 'draw':
-        imageUrl = DRAW_GIF_URL;
-        break;
-    }
-  }
-
-  const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Tic-Tac-Toe Game</title>
-      <meta property="fc:frame" content="vNext">
-      <meta property="fc:frame:image" content="${imageUrl}">
-      <meta property="fc:frame:image:aspect_ratio" content="1:1">
-      ${intents.map((intent, index) => `
-        <meta property="fc:frame:button:${index + 1}" content="${intent.text}">
-        ${'action' in intent ? `<meta property="fc:frame:button:${index + 1}:action" content="${intent.action}">` : ''}
-        ${intent.value ? `<meta property="fc:frame:button:${index + 1}:value" content="${intent.value}">` : ''}
-      `).join('')}
-      <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
-    </head>
-    <body>
-      ${showResult ? '' : `
-        <div style="display:none;">
-          ${renderBoard(state.board)}
-          <div>${message}</div>
+  return c.res({
+    image: showResult
+      ? (
+        <div style={{
+          width: '1080px',
+          height: '1080px',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#000000', // Black background
+        }}>
+          <img 
+            src={gifUrl} 
+            style={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              objectFit: 'contain',
+            }}
+          />
         </div>
-      `}
-    </body>
-    </html>
-  `;
-
-  return new Response(html, {
-    headers: { 'Content-Type': 'text/html' },
+      )
+      : (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '1080px',
+          height: '1080px',
+          backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          color: 'white',
+          fontSize: '36px',
+          fontFamily: 'Arial, sans-serif',
+        }}>
+          {renderBoard(state.board)}
+          <div style={{ 
+            marginTop: '40px', 
+            maxWidth: '900px', 
+            textAlign: 'center', 
+            backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+            padding: '20px', 
+            borderRadius: '10px', 
+            color: 'black' 
+          }}>
+            {message}
+          </div>
+        </div>
+      ),
+    intents: intents,
   });
 });
 
