@@ -62,10 +62,6 @@ try {
   db = null;
 }
 
-type Intent = 
-  | { text: string; action: string; value?: string }
-  | { text: string; value: string };
-
 const getDb = () => {
   if (db) {
     return db;
@@ -624,7 +620,6 @@ app.frame('/howtoplay', () => {
   })
 })
 
-
 app.frame('/game', async (c) => {
   console.log('Entering /game route');
   const { buttonValue, status, frameData } = c;
@@ -644,13 +639,8 @@ app.frame('/game', async (c) => {
   let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
   let message = `New game started! Your turn, ${username}`;
   let gameResult: 'win' | 'lose' | 'draw' | null = null;
-  let showResult = false;
 
-  if (buttonValue && buttonValue.startsWith('show_result:')) {
-    showResult = true;
-    gameResult = buttonValue.split(':')[1] as 'win' | 'lose' | 'draw';
-    console.log('Showing result:', gameResult);
-  } else if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
+  if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
     console.log('Processing move');
     try {
       const [, encodedState, moveIndex] = buttonValue.split(':');
@@ -714,23 +704,6 @@ app.frame('/game', async (c) => {
   console.log('Message:', message);
   console.log('Game result:', gameResult);
 
-  let gifUrl;
-  if (showResult) {
-    switch (gameResult) {
-      case 'win':
-        gifUrl = WIN_GIF_URL;
-        break;
-      case 'lose':
-        gifUrl = LOSE_GIF_URL;
-        break;
-      case 'draw':
-        gifUrl = DRAW_GIF_URL;
-        break;
-      default:
-        gifUrl = DRAW_GIF_URL;
-    }
-  }
-
   const encodedState = encodeState(state);
   const availableMoves = state.board.reduce((acc, cell, index) => {
     if (cell === null) acc.push(index);
@@ -739,16 +712,11 @@ app.frame('/game', async (c) => {
 
   const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
 
-  const intents = showResult
+  const intents = state.isGameOver
     ? [
         <Button action="/game">New Game</Button>,
+        <Button action={`/next?result=${gameResult}`}>Next</Button>,
         <Button action="/share">Your Stats</Button>
-      ]
-    : state.isGameOver
-    ? [
-        <Button action="/game">New Game</Button>,
-        <Button action="/share">Your Stats</Button>,
-        <Button action="/game" value={`show_result:${gameResult}`}>Next</Button>
       ]
     : shuffledMoves.map((index) => 
         <Button value={`move:${encodedState}:${index}`}>
@@ -757,58 +725,100 @@ app.frame('/game', async (c) => {
       );
 
   return c.res({
-    image: showResult
-      ? (
-        <div style={{
-          width: '1080px',
-          height: '1080px',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#000000', // Black background
+    image: (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontSize: '36px',
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        {renderBoard(state.board)}
+        <div style={{ 
+          marginTop: '40px', 
+          maxWidth: '900px', 
+          textAlign: 'center', 
+          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+          padding: '20px', 
+          borderRadius: '10px', 
+          color: 'black' 
         }}>
-          <img 
-            src={gifUrl} 
-            style={{
-              maxWidth: '100%',
-              maxHeight: '100%',
-              objectFit: 'contain',
-            }}
-          />
+          {message}
         </div>
-      )
-      : (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '1080px',
-          height: '1080px',
-          backgroundImage: 'url(https://bafybeiddxtdntzltw5xzc2zvqtotweyrgbeq7t5zvdduhi6nnb7viesov4.ipfs.w3s.link/Frame%2025%20(5).png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          color: 'white',
-          fontSize: '36px',
-          fontFamily: 'Arial, sans-serif',
-        }}>
-          {renderBoard(state.board)}
-          <div style={{ 
-            marginTop: '40px', 
-            maxWidth: '900px', 
-            textAlign: 'center', 
-            backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-            padding: '20px', 
-            borderRadius: '10px', 
-            color: 'black' 
-          }}>
-            {message}
-          </div>
-        </div>
-      ),
+      </div>
+    ),
     intents: intents,
   });
 });
+
+// Update the /next route
+app.frame('/next', (c) => {
+  const result = c.req.query('result');
+  console.log('Received result:', result);
+  console.log('Full query string:', c.req.url.search);
+
+  let gifUrl;
+
+  switch (result) {
+    case 'win':
+      gifUrl = WIN_GIF_URL;
+      console.log('Selected win GIF');
+      break;
+    case 'lose':
+      gifUrl = LOSE_GIF_URL;
+      console.log('Selected lose GIF');
+      break;
+    case 'draw':
+      gifUrl = DRAW_GIF_URL;
+      console.log('Selected draw GIF');
+      break;
+    default:
+      gifUrl = WIN_GIF_URL;
+      console.log('Default to draw GIF. Unexpected result:', result);
+  }
+
+  console.log('Final GIF URL:', gifUrl);
+
+  const baseUrl = 'https://podplay.vercel.app';
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Game Result: ${result}</title>
+      <meta property="fc:frame" content="vNext">
+      <meta property="fc:frame:image" content="${gifUrl}">
+      <meta property="fc:frame:image:aspect_ratio" content="1:1">
+      <meta property="fc:frame:button:1" content="New Game">
+      <meta property="fc:frame:button:2" content="Your Stats">
+      <meta property="fc:frame:button:1:action" content="post">
+      <meta property="fc:frame:button:2:action" content="post">
+      <meta property="fc:frame:post_url" content="${baseUrl}/api/next">
+      <meta property="fc:frame:button:1:target" content="${baseUrl}/api/game">
+      <meta property="fc:frame:button:2:target" content="${baseUrl}/api/share">
+    </head>
+    <body>
+      <h1>Game Result: ${result}</h1>
+    </body>
+    </html>
+  `;
+
+  console.log('Generated HTML:', html);
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html' },
+  });
+});
+
 
 app.frame('/share', async (c) => {
   console.log('Entering /share route');
