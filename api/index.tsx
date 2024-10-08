@@ -715,12 +715,14 @@ app.frame('/game', async (c) => {
   console.log('Game result before encoding:', gameResult);
   const encodedGameResult = encodeURIComponent(gameResult || '');
   console.log('Encoded game result:', encodedGameResult);
+  const nextButtonAction = `/next?result=${encodedGameResult}`;
+  console.log('Full Next button action:', nextButtonAction);
 
   const intents = state.isGameOver
     ? [
         <Button action="/game">New Game</Button>,
         <Button action="/share">Your Stats</Button>,
-        <Button action={`/next?result=${encodedGameResult}`}>Next</Button>
+        <Button action={nextButtonAction}>Next</Button>
       ]
     : shuffledMoves.map((index) => 
         <Button value={`move:${encodedState}:${index}`}>
@@ -764,11 +766,9 @@ app.frame('/game', async (c) => {
 
 // Update the /next route
 app.frame('/next', (c) => {
-  const encodedResult = c.req.query('result');
-  console.log('Encoded result received:', encodedResult);
-  
-  const result = decodeURIComponent(encodedResult || '');
-  console.log('Decoded result:', result);
+  const result = c.req.query('result');
+  console.log('Raw query string:', c.req.url.search);
+  console.log('Received result:', result);
 
   let gifUrl;
 
