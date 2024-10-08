@@ -766,7 +766,7 @@ app.frame('/game', async (c) => {
       : (
         <div style={{
           display: 'flex',
-          flexDirection: 'column' as const,
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           width: '1080px',
