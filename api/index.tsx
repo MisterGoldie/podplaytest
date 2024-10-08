@@ -717,7 +717,7 @@ app.frame('/game', async (c) => {
     const encodedResult = encodeURIComponent(gameResult);
     nextButtonAction = `/next?result=${encodedResult}`;
   }
-  console.log('Next button action:', nextButtonAction);
+  console.log('Next button action (full URL):', `https://podplay.vercel.app/api${nextButtonAction}`);
 
   const intents = state.isGameOver
     ? [
@@ -769,6 +769,8 @@ app.frame('/game', async (c) => {
 app.frame('/next', async (c) => {
   console.log('Entering /next route');
   console.log('Full request URL:', c.req.url);
+  console.log('Query string:', c.req.url.search);
+  console.log('All query parameters:', c.req.query());
 
   const result = c.req.query('result');
   console.log('Received result:', result);
