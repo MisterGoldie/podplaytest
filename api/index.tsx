@@ -755,23 +755,13 @@ app.frame('/game', async (c) => {
     image: showResult
       ? (
         <div style={{
-          display: 'flex',
-          flexDirection: 'column' as const,
-          alignItems: 'center',
-          justifyContent: 'center',
           width: '1080px',
           height: '1080px',
           backgroundImage: `url(${gifUrl})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          color: 'white',
-          fontSize: '48px',
-          fontFamily: 'Arial, sans-serif',
-        }}>
-          <h1 style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
-            Game Result: {gameResult}
-          </h1>
-        </div>
+          backgroundRepeat: 'no-repeat',
+        }}/>
       )
       : (
         <div style={{
