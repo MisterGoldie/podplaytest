@@ -573,6 +573,7 @@ app.frame('/', () => {
       <meta property="fc:frame:button:1:action" content="post">
       <meta property="fc:frame:post_url" content="${baseUrl}/api/howtoplay">
       
+      
       <!-- Added Open Graph tags -->
       <meta property="og:title" content="Tic-Tac-Toe">
       <meta property="og:description" content="Start New Game or Share!">
