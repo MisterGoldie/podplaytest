@@ -758,7 +758,7 @@ app.frame('/game', async (c) => {
   });
 });
 
-// Add the /next route
+// Update the /next route
 app.frame('/next', (c) => {
   const result = c.req.query('result');
   console.log('Received result:', result);
