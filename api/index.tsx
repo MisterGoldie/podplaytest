@@ -84,6 +84,11 @@ export const app = new Frog<{ Variables: NeynarVariables }>({
         source: 'google',
         weight: 400,
       },
+      {
+        name: 'Silkscreen',
+        source: 'google',
+        weight: 700,
+      },
     ],
   },
   imageAspectRatio: '1:1',
@@ -117,7 +122,7 @@ function calculatePODScore(wins: number, ties: number, losses: number, totalGame
   const gamesBonusScore = totalGames >= 25 ? 10 : 0;
   const tokenBonusScore = Math.floor(tokenBalance) * 25; // 25 points for each whole token
   const totalScore = baseScore + gamesBonusScore + tokenBonusScore;
-  return Math.round(totalScore * 10) / 10; // Round to one decimal place...
+  return Math.round(totalScore * 10) / 10; // Round to one decimal place
 }
 
 
@@ -548,12 +553,9 @@ function renderBoard(board: (string | null)[]) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '150px',  // Increased from 120px to 150px
+                fontSize: '120px',
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
-                fontFamily: '"Silkscreen", sans-serif',
-                fontWeight: 400,
-                color: 'white',
               }}>
                 {board[index]}
               </div>
@@ -752,7 +754,6 @@ app.frame('/game', async (c) => {
         color: 'white',
         fontSize: '36px',
         fontFamily: '"Silkscreen", sans-serif',
-        fontWeight: 400,
       }}>
         {renderBoard(state.board)}
         <div style={{ 
@@ -764,8 +765,7 @@ app.frame('/game', async (c) => {
           borderRadius: '10px', 
           color: 'black',
           fontFamily: '"Silkscreen", sans-serif',
-          fontWeight: 400,
-          fontSize: '32px',
+          fontWeight: 700,
         }}>
           {message}
         </div>
