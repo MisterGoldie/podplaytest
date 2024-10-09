@@ -81,7 +81,7 @@ export const app = new Frog<{ Variables: NeynarVariables }>({
     fonts: [
       {
         name: 'Silkscreen',
-        data: await fetch('https://fonts.googleapis.com/css2?family=Silkscreen&display=swap').then(res => res.arrayBuffer()),
+        data: await fetch('https://fonts.cdnfonts.com/s/90123/Silkscreen-Regular.woff').then(res => res.arrayBuffer()),
         weight: 400,
         style: 'normal',
       },
