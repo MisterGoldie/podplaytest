@@ -75,7 +75,18 @@ const getDb = () => {
 
 export const app = new Frog<{ Variables: NeynarVariables }>({
   basePath: '/api',
-  imageOptions: { width: 1080, height: 1080 },
+  imageOptions: {
+    width: 1080,
+    height: 1080,
+    fonts: [
+      {
+        name: 'Silkscreen',
+        data: await fetch('https://fonts.googleapis.com/css2?family=Silkscreen&display=swap').then(res => res.arrayBuffer()),
+        weight: 400,
+        style: 'normal',
+      },
+    ],
+  },
   imageAspectRatio: '1:1',
   title: 'Tic-Tac-Toe Game',
   hub: {
@@ -738,7 +749,7 @@ app.frame('/game', async (c) => {
         backgroundPosition: 'center',
         color: 'white',
         fontSize: '36px',
-        fontFamily: 'Arial, sans-serif',
+        fontFamily: '"Silkscreen", sans-serif',
       }}>
         {renderBoard(state.board)}
         <div style={{ 
@@ -938,4 +949,3 @@ app.frame('/share', async (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
-
