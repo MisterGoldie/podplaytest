@@ -78,14 +78,6 @@ export const app = new Frog<{ Variables: NeynarVariables }>({
   imageOptions: {
     width: 1080,
     height: 1080,
-    fonts: [
-      {
-        name: 'Silkscreen',
-        data: await fetch('https://fonts.cdnfonts.com/s/90123/Silkscreen-Regular.woff').then(res => res.arrayBuffer()),
-        weight: 400,
-        style: 'normal',
-      },
-    ],
   },
   imageAspectRatio: '1:1',
   title: 'Tic-Tac-Toe Game',
@@ -749,7 +741,7 @@ app.frame('/game', async (c) => {
         backgroundPosition: 'center',
         color: 'white',
         fontSize: '36px',
-        fontFamily: '"Silkscreen", sans-serif',
+        fontFamily: '"Courier New", Courier, monospace',
       }}>
         {renderBoard(state.board)}
         <div style={{ 
@@ -759,7 +751,8 @@ app.frame('/game', async (c) => {
           backgroundColor: 'rgba(255, 255, 255, 0.7)', 
           padding: '20px', 
           borderRadius: '10px', 
-          color: 'black' 
+          color: 'black',
+          fontFamily: '"Courier New", Courier, monospace',
         }}>
           {message}
         </div>
