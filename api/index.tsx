@@ -753,7 +753,7 @@ app.frame('/game', async (c) => {
         backgroundPosition: 'center',
         color: 'white',
         fontSize: '36px',
-        fontFamily: '"Courier New", Courier, monospace',
+        fontFamily: '"Silkscreen", sans-serif',
       }}>
         {renderBoard(state.board)}
         <div style={{ 
@@ -764,7 +764,8 @@ app.frame('/game', async (c) => {
           padding: '20px', 
           borderRadius: '10px', 
           color: 'black',
-          fontFamily: '"Courier New", Courier, monospace',
+          fontFamily: '"Silkscreen", sans-serif',
+          fontWeight: 700,
         }}>
           {message}
         </div>
