@@ -80,10 +80,14 @@ export const app = new Frog<{ Variables: NeynarVariables }>({
     height: 1080,
     fonts: [
       {
-        name: 'Jersey 20',
-        data: await fetch('https://fonts.googleapis.com/css2?family=Jersey+20&display=swap').then(res => res.arrayBuffer()),
+        name: 'Silkscreen',
+        source: 'google',
         weight: 400,
-        style: 'normal',
+      },
+      {
+        name: 'Silkscreen',
+        source: 'google',
+        weight: 700,
       },
     ],
   },
@@ -555,7 +559,6 @@ function renderBoard(board: (string | null)[]) {
                 fontSize: '120px',
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
-                fontFamily: '"Jersey 20", sans-serif',
               }}>
                 {board[index]}
               </div>
@@ -753,7 +756,7 @@ app.frame('/game', async (c) => {
         backgroundPosition: 'center',
         color: 'white',
         fontSize: '36px',
-        fontFamily: '"Jersey 20", sans-serif',
+        fontFamily: '"Silkscreen", sans-serif',
       }}>
         {renderBoard(state.board)}
         <div style={{ 
@@ -764,8 +767,8 @@ app.frame('/game', async (c) => {
           padding: '20px', 
           borderRadius: '10px', 
           color: 'black',
-          fontFamily: '"Jersey 20", sans-serif',
-          fontWeight: 400,
+          fontFamily: '"Silkscreen", sans-serif',
+          fontWeight: 700,
         }}>
           {message}
         </div>
@@ -842,7 +845,7 @@ app.frame('/share', async (c) => {
   const { frameData } = c;
   const fid = frameData?.fid;
   const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon, powered by @moxie.eth';
-  const baseUrl = 'https://podplay.vercel.app'; // update this to your actual domain
+  const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
   const originalFramesLink = `${baseUrl}/api`;
   
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
@@ -899,7 +902,7 @@ app.frame('/share', async (c) => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
-        fontFamily: '"Jersey 20", sans-serif',
+        fontFamily: 'Arial, sans-serif',
       }}>
         {profileImage && (
           <img 
