@@ -485,7 +485,7 @@ function getBestMove(board: (string | null)[], player: string): number {
   for (let i = 0; i < 9; i++) {
     if (board[i] === null) {
       board[i] = player
-      if (checkWin(board)) {
+      if (checkWinner(board)) {
         board[i] = null
         return i
       }
@@ -495,12 +495,12 @@ function getBestMove(board: (string | null)[], player: string): number {
 
   for (let i = 0; i < 9; i++) {
     if (board[i] === null) {
-      board[i] = opponent
-      if (checkWin(board)) {
-        board[i] = null
-        return i
+      board[i] = opponent;
+      if (checkWinner(board)) {
+        board[i] = null;
+        return i;
       }
-      board[i] = null
+      board[i] = null;
     }
   }
 
@@ -513,18 +513,26 @@ function getBestMove(board: (string | null)[], player: string): number {
   return availableMoves[Math.floor(Math.random() * availableMoves.length)]
 }
 
-function checkWin(board: (string | null)[]) {
-  const winPatterns = [
+function checkWinner(board: (string | null)[]): string | null {
+  const winningCombos = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
     [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-    [0, 4, 8], [2, 4, 6] // Diagonals
-  ]
+    [0, 4, 8], [2, 4, 6]             // Diagonals
+  ];
 
-  return winPatterns.some(pattern =>
-    board[pattern[0]] &&
-    board[pattern[0]] === board[pattern[1]] &&
-    board[pattern[0]] === board[pattern[2]]
-  )
+  for (const combo of winningCombos) {
+    const [a, b, c] = combo;
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+      return board[a];
+    }
+  }
+
+  // Check for tie
+  if (board.every(cell => cell !== null)) {
+    return 'tie';
+  }
+
+  return null;
 }
 
 function encodeState(state: GameState): string {
@@ -667,38 +675,42 @@ app.frame('/game', async (c) => {
         state.board[move] = 'O';
         message = `${username} moved at ${COORDINATES[move]}.`;
         
-        if (checkWin(state.board)) {
-          gameResult = 'win';
-          message = `${username} wins! Game over.`;
-          state.isGameOver = true;
-          if (fid) {
-            updateUserRecordAsync(fid.toString(), true);
-          }
-        } else if (state.board.every((cell) => cell !== null)) {
+        const winner = checkWinner(state.board);
+
+        if (winner === 'tie') {
           gameResult = 'draw';
-          message = "Game over! It's a Tie.";
+          message = "It's a tie! Game over.";
           state.isGameOver = true;
           if (fid) {
             updateUserTieAsync(fid.toString());
+          }
+        } else if (winner) {
+          gameResult = winner === 'O' ? 'win' : 'lose';
+          message = `${winner === 'O' ? username : 'Goldie'} wins! Game over.`;
+          state.isGameOver = true;
+          if (fid) {
+            updateUserRecordAsync(fid.toString(), winner === 'O');
           }
         } else {
           const computerMove = getBestMove(state.board, 'X');
           state.board[computerMove] = 'X';
           message += ` Computer moved at ${COORDINATES[computerMove]}.`;
           
-          if (checkWin(state.board)) {
-            gameResult = 'lose';
-            message += ` Computer wins! Game over.`;
-            state.isGameOver = true;
-            if (fid) {
-              updateUserRecordAsync(fid.toString(), false);
-            }
-          } else if (state.board.every((cell) => cell !== null)) {
+          const winner = checkWinner(state.board);
+
+          if (winner === 'tie') {
             gameResult = 'draw';
-            message += " It's a draw. Game over.";
+            message += " It's a tie! Game over.";
             state.isGameOver = true;
             if (fid) {
               updateUserTieAsync(fid.toString());
+            }
+          } else if (winner) {
+            gameResult = winner === 'O' ? 'win' : 'lose';
+            message += ` ${winner === 'O' ? username : 'Goldie'} wins! Game over.`;
+            state.isGameOver = true;
+            if (fid) {
+              updateUserRecordAsync(fid.toString(), winner === 'O');
             }
           } else {
             message += ` Your turn, ${username}.`;
