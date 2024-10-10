@@ -80,14 +80,9 @@ export const app = new Frog<{ Variables: NeynarVariables }>({
     height: 1080,
     fonts: [
       {
-        name: 'Silkscreen',
+        name: 'Pixelify Sans',
         source: 'google',
         weight: 400,
-      },
-      {
-        name: 'Silkscreen',
-        source: 'google',
-        weight: 700,
       },
     ],
   },
@@ -556,6 +551,7 @@ function renderBoard(board: (string | null)[]) {
                 fontSize: '120px',
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
+                fontFamily: '"Pixelify Sans", sans-serif',
               }}>
                 {board[index]}
               </div>
@@ -753,7 +749,7 @@ app.frame('/game', async (c) => {
         backgroundPosition: 'center',
         color: 'white',
         fontSize: '36px',
-        fontFamily: '"Silkscreen", sans-serif',
+        fontFamily: '"Pixelify Sans", sans-serif',
       }}>
         {renderBoard(state.board)}
         <div style={{ 
@@ -764,8 +760,7 @@ app.frame('/game', async (c) => {
           padding: '20px', 
           borderRadius: '10px', 
           color: 'black',
-          fontFamily: '"Silkscreen", sans-serif',
-          fontWeight: 700,
+          fontFamily: '"Pixelify Sans", sans-serif',
         }}>
           {message}
         </div>
