@@ -556,8 +556,6 @@ function renderBoard(board: (string | null)[]) {
                 fontSize: '120px',
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
-                fontFamily: '"Silkscreen", sans-serif',
-                fontWeight: 700,
               }}>
                 {board[index]}
               </div>
@@ -755,7 +753,7 @@ app.frame('/game', async (c) => {
         backgroundPosition: 'center',
         color: 'white',
         fontSize: '36px',
-        fontFamily: '"Silkscreen", sans-serif',
+        fontFamily: '"Courier New", Courier, monospace',
       }}>
         {renderBoard(state.board)}
         <div style={{ 
@@ -766,8 +764,7 @@ app.frame('/game', async (c) => {
           padding: '20px', 
           borderRadius: '10px', 
           color: 'black',
-          fontFamily: '"Silkscreen", sans-serif',
-          fontWeight: 700,
+          fontFamily: '"Courier New", Courier, monospace',
         }}>
           {message}
         </div>
