@@ -463,40 +463,46 @@ function shuffleArray<T>(array: T[]): T[] {
   return array;
 }
 
+// Add this function before the app.frame('/game', ...) definition
+
+function checkWin(board: (string | null)[]): boolean {
+  const winPatterns = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+    [0, 4, 8], [2, 4, 6] // Diagonals
+  ];
+
+  return winPatterns.some(pattern =>
+    board[pattern[0]] &&
+    board[pattern[0]] === board[pattern[1]] &&
+    board[pattern[0]] === board[pattern[2]]
+  );
+}
+
+// Update the getBestMove function to use checkWin
 function getBestMove(board: (string | null)[], player: string): number {
-  const opponent = player === 'X' ? 'O' : 'X'
+  const opponent = player === 'X' ? 'O' : 'X';
 
   if (Math.random() < 0.2) {
     const availableMoves = board.reduce((acc, cell, index) => {
-      if (cell === null) acc.push(index)
-      return acc
-    }, [] as number[])
-    return availableMoves[Math.floor(Math.random() * availableMoves.length)]
+      if (cell === null) acc.push(index);
+      return acc;
+    }, [] as number[]);
+    return availableMoves[Math.floor(Math.random() * availableMoves.length)];
   }
 
   if (board.filter(cell => cell !== null).length === 1) {
     const availableMoves = board.reduce((acc, cell, index) => {
-      if (cell === null) acc.push(index)
-      return acc
-    }, [] as number[])
-    return availableMoves[Math.floor(Math.random() * availableMoves.length)]
+      if (cell === null) acc.push(index);
+      return acc;
+    }, [] as number[]);
+    return availableMoves[Math.floor(Math.random() * availableMoves.length)];
   }
 
   for (let i = 0; i < 9; i++) {
     if (board[i] === null) {
-      board[i] = player
-      if (checkWinner(board)) {
-        board[i] = null
-        return i
-      }
-      board[i] = null
-    }
-  }
-
-  for (let i = 0; i < 9; i++) {
-    if (board[i] === null) {
-      board[i] = opponent;
-      if (checkWinner(board)) {
+      board[i] = player;
+      if (checkWin(board)) {
         board[i] = null;
         return i;
       }
@@ -504,35 +510,24 @@ function getBestMove(board: (string | null)[], player: string): number {
     }
   }
 
-  if (board[4] === null && Math.random() < 0.7) return 4
-
-  const availableMoves = board.reduce((acc, cell, index) => {
-    if (cell === null) acc.push(index)
-    return acc
-  }, [] as number[])
-  return availableMoves[Math.floor(Math.random() * availableMoves.length)]
-}
-
-function checkWinner(board: (string | null)[]): string | null {
-  const winningCombos = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-    [0, 4, 8], [2, 4, 6]             // Diagonals
-  ];
-
-  for (const combo of winningCombos) {
-    const [a, b, c] = combo;
-    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-      return board[a];
+  for (let i = 0; i < 9; i++) {
+    if (board[i] === null) {
+      board[i] = opponent;
+      if (checkWin(board)) {
+        board[i] = null;
+        return i;
+      }
+      board[i] = null;
     }
   }
 
-  // Check for tie
-  if (board.every(cell => cell !== null)) {
-    return 'tie';
-  }
+  if (board[4] === null && Math.random() < 0.7) return 4;
 
-  return null;
+  const availableMoves = board.reduce((acc, cell, index) => {
+    if (cell === null) acc.push(index);
+    return acc;
+  }, [] as number[]);
+  return availableMoves[Math.floor(Math.random() * availableMoves.length)];
 }
 
 function encodeState(state: GameState): string {
@@ -675,42 +670,38 @@ app.frame('/game', async (c) => {
         state.board[move] = 'O';
         message = `${username} moved at ${COORDINATES[move]}.`;
         
-        let winner = checkWinner(state.board);
-
-        if (winner === 'tie') {
-          gameResult = 'draw';
-          message = "It's a tie! Game over.";
-          state.isGameOver = true;
-          if (fid) {
-            updateUserTieAsync(fid.toString());
-          }
-        } else if (winner === 'O') {
+        if (checkWin(state.board)) {
           gameResult = 'win';
           message = `${username} wins! Game over.`;
           state.isGameOver = true;
           if (fid) {
             updateUserRecordAsync(fid.toString(), true);
           }
+        } else if (state.board.every((cell) => cell !== null)) {
+          gameResult = 'draw';
+          message = "Game over! It's a Tie.";
+          state.isGameOver = true;
+          if (fid) {
+            updateUserTieAsync(fid.toString());
+          }
         } else {
           const computerMove = getBestMove(state.board, 'X');
           state.board[computerMove] = 'X';
           message += ` Computer moved at ${COORDINATES[computerMove]}.`;
           
-          winner = checkWinner(state.board);
-
-          if (winner === 'tie') {
-            gameResult = 'draw';
-            message += " It's a tie! Game over.";
-            state.isGameOver = true;
-            if (fid) {
-              updateUserTieAsync(fid.toString());
-            }
-          } else if (winner === 'X') {
+          if (checkWin(state.board)) {
             gameResult = 'lose';
-            message += ` Goldie wins! Game over.`;
+            message += ` Computer wins! Game over.`;
             state.isGameOver = true;
             if (fid) {
               updateUserRecordAsync(fid.toString(), false);
+            }
+          } else if (state.board.every((cell) => cell !== null)) {
+            gameResult = 'draw';
+            message += " It's a draw. Game over.";
+            state.isGameOver = true;
+            if (fid) {
+              updateUserTieAsync(fid.toString());
             }
           } else {
             message += ` Your turn, ${username}.`;
