@@ -794,57 +794,62 @@ app.frame('/next', (c) => {
   console.log('Full query string:', c.req.url.search);
 
   let gifUrl;
+  let message;
 
   switch (result) {
     case 'win':
       gifUrl = WIN_GIF_URL;
+      message = "Congratulations! You won!";
       console.log('Selected win GIF');
       break;
     case 'lose':
       gifUrl = LOSE_GIF_URL;
+      message = "Better luck next time!";
       console.log('Selected lose GIF');
       break;
     case 'draw':
       gifUrl = DRAW_GIF_URL;
+      message = "It's a draw!";
       console.log('Selected draw GIF');
       break;
     default:
-      gifUrl = WIN_GIF_URL;
+      gifUrl = DRAW_GIF_URL;
+      message = "Game over!";
       console.log('Default to draw GIF. Unexpected result:', result);
   }
 
   console.log('Final GIF URL:', gifUrl);
 
-  const baseUrl = 'https://podplay.vercel.app';
-
-  const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Game Result: ${result}</title>
-      <meta property="fc:frame" content="vNext">
-      <meta property="fc:frame:image" content="${gifUrl}">
-      <meta property="fc:frame:image:aspect_ratio" content="1:1">
-      <meta property="fc:frame:button:1" content="New Game">
-      <meta property="fc:frame:button:2" content="Your Stats">
-      <meta property="fc:frame:button:1:action" content="post">
-      <meta property="fc:frame:button:2:action" content="post">
-      <meta property="fc:frame:post_url" content="${baseUrl}/api/next">
-      <meta property="fc:frame:button:1:target" content="${baseUrl}/api/game">
-      <meta property="fc:frame:button:2:target" content="${baseUrl}/api/share">
-    </head>
-    <body>
-      <h1>Game Result: ${result}</h1>
-    </body>
-    </html>
-  `;
-
-  console.log('Generated HTML:', html);
-
-  return new Response(html, {
-    headers: { 'Content-Type': 'text/html' },
+  return c.res({
+    image: (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: `url(${gifUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontFamily: '"Silkscreen", sans-serif',
+      }}>
+        <div style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          padding: '20px',
+          borderRadius: '10px',
+          textAlign: 'center',
+        }}>
+          <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>{message}</h1>
+          <p style={{ fontSize: '24px' }}>Frame by @goldie & @themrsazon</p>
+        </div>
+      </div>
+    ),
+    intents: [
+      <Button action="/game">New Game</Button>,
+      <Button action="/share">Your Stats</Button>,
+    ],
   });
 });
 
