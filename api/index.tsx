@@ -706,7 +706,7 @@ app.frame('/game', async (c) => {
               updateUserTieAsync(fid.toString());
             }
           } else if (winner) {
-            gameResult = winner === 'O' ? 'win' : 'lose';
+            gameResult = winner === 'X' ? 'lose' : 'win'; // This line is changed
             message += ` ${winner === 'O' ? username : 'Goldie'} wins! Game over.`;
             state.isGameOver = true;
             if (fid) {
