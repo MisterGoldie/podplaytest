@@ -791,68 +791,39 @@ app.frame('/game', async (c) => {
 app.frame('/next', (c) => {
   const result = c.req.query('result');
   console.log('Received result:', result);
-  console.log('Full query string:', c.req.url.search);
 
   let gifUrl;
-  let message;
 
   switch (result) {
     case 'win':
       gifUrl = WIN_GIF_URL;
-      message = "Congratulations! You won!";
-      console.log('Selected win GIF');
+      console.log('Selected win GIF:', gifUrl);
       break;
     case 'lose':
       gifUrl = LOSE_GIF_URL;
-      message = "Better luck next time!";
-      console.log('Selected lose GIF');
+      console.log('Selected lose GIF:', gifUrl);
       break;
     case 'draw':
       gifUrl = DRAW_GIF_URL;
-      message = "It's a draw!";
-      console.log('Selected draw GIF');
+      console.log('Selected draw GIF:', gifUrl);
       break;
     default:
       gifUrl = DRAW_GIF_URL;
-      message = "Game over!";
       console.log('Default to draw GIF. Unexpected result:', result);
   }
-
-  console.log('Final GIF URL:', gifUrl);
 
   return c.res({
     image: (
       <div
         style={{
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
           width: '100%',
           height: '100%',
           backgroundImage: `url(${gifUrl})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          color: 'white',
-          fontFamily: '"Silkscreen", sans-serif',
         }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            padding: '20px',
-            borderRadius: '10px',
-            textAlign: 'center',
-          }}
-        >
-          <p style={{ fontSize: '48px', marginBottom: '20px' }}>{message}</p>
-          <p style={{ fontSize: '24px' }}>Frame by @goldie & @themrsazon</p>
-        </div>
-      </div>
+      />
     ),
     intents: [
       <Button action="/game">New Game</Button>,
