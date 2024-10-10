@@ -685,7 +685,7 @@ app.frame('/game', async (c) => {
             updateUserTieAsync(fid.toString());
           }
         } else if (winner) {
-          gameResult = winner === 'O' ? 'win' : 'lose';
+          gameResult = winner === 'X' ? 'lose' : 'win';  // Changed this line
           message = `${winner === 'O' ? username : 'Goldie'} wins! Game over.`;
           state.isGameOver = true;
           if (fid) {
@@ -706,11 +706,11 @@ app.frame('/game', async (c) => {
               updateUserTieAsync(fid.toString());
             }
           } else if (winner) {
-            gameResult = winner === 'X' ? 'lose' : 'win'; // This line is changed
-            message += ` ${winner === 'O' ? username : 'Goldie'} wins! Game over.`;
+            gameResult = 'lose';  // Changed this line - if there's a winner after CPU's move, it's always 'X', so always a loss
+            message += ` Goldie wins! Game over.`;
             state.isGameOver = true;
             if (fid) {
-              updateUserRecordAsync(fid.toString(), winner === 'O');
+              updateUserRecordAsync(fid.toString(), false);  // Changed this to always false as it's a loss
             }
           } else {
             message += ` Your turn, ${username}.`;
