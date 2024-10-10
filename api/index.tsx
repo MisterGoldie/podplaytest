@@ -844,7 +844,7 @@ app.frame('/share', async (c) => {
   console.log('Entering /share route');
   const { frameData } = c;
   const fid = frameData?.fid;
-  const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon';
+  const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon, powered by @moxie.eth';
   const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
   const originalFramesLink = `${baseUrl}/api`;
   
