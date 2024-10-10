@@ -556,6 +556,8 @@ function renderBoard(board: (string | null)[]) {
                 fontSize: '120px',
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
+                fontFamily: '"Silkscreen", sans-serif',
+                fontWeight: 700,
               }}>
                 {board[index]}
               </div>
