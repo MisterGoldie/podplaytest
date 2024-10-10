@@ -675,7 +675,7 @@ app.frame('/game', async (c) => {
         state.board[move] = 'O';
         message = `${username} moved at ${COORDINATES[move]}.`;
         
-        const winner = checkWinner(state.board);
+        let winner = checkWinner(state.board);
 
         if (winner === 'tie') {
           gameResult = 'draw';
@@ -684,19 +684,19 @@ app.frame('/game', async (c) => {
           if (fid) {
             updateUserTieAsync(fid.toString());
           }
-        } else if (winner) {
-          gameResult = winner === 'X' ? 'lose' : 'win';  // Changed this line
-          message = `${winner === 'O' ? username : 'Goldie'} wins! Game over.`;
+        } else if (winner === 'O') {
+          gameResult = 'win';
+          message = `${username} wins! Game over.`;
           state.isGameOver = true;
           if (fid) {
-            updateUserRecordAsync(fid.toString(), winner === 'O');
+            updateUserRecordAsync(fid.toString(), true);
           }
         } else {
           const computerMove = getBestMove(state.board, 'X');
           state.board[computerMove] = 'X';
           message += ` Computer moved at ${COORDINATES[computerMove]}.`;
           
-          const winner = checkWinner(state.board);
+          winner = checkWinner(state.board);
 
           if (winner === 'tie') {
             gameResult = 'draw';
@@ -705,12 +705,12 @@ app.frame('/game', async (c) => {
             if (fid) {
               updateUserTieAsync(fid.toString());
             }
-          } else if (winner) {
-            gameResult = 'lose';  // Changed this line - if there's a winner after CPU's move, it's always 'X', so always a loss
+          } else if (winner === 'X') {
+            gameResult = 'lose';
             message += ` Goldie wins! Game over.`;
             state.isGameOver = true;
             if (fid) {
-              updateUserRecordAsync(fid.toString(), false);  // Changed this to always false as it's a loss
+              updateUserRecordAsync(fid.toString(), false);
             }
           } else {
             message += ` Your turn, ${username}.`;
