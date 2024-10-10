@@ -80,9 +80,14 @@ export const app = new Frog<{ Variables: NeynarVariables }>({
     height: 1080,
     fonts: [
       {
-        name: 'Jersey 20',
+        name: 'Silkscreen',
         source: 'google',
         weight: 400,
+      },
+      {
+        name: 'Silkscreen',
+        source: 'google',
+        weight: 700,
       },
     ],
   },
@@ -539,7 +544,6 @@ function renderBoard(board: (string | null)[]) {
       display: 'flex',
       flexDirection: 'column',
       gap: '20px',
-      fontFamily: '"Jersey 20", sans-serif',
     }}>
       {[0, 1, 2].map(row => (
         <div key={row} style={{ display: 'flex', gap: '20px' }}>
@@ -555,7 +559,6 @@ function renderBoard(board: (string | null)[]) {
                 fontSize: '120px',
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
-                fontFamily: '"Jersey 20", sans-serif',
               }}>
                 {board[index]}
               </div>
@@ -753,7 +756,7 @@ app.frame('/game', async (c) => {
         backgroundPosition: 'center',
         color: 'white',
         fontSize: '36px',
-        fontFamily: '"Jersey 20", sans-serif',
+        fontFamily: '"Silkscreen", sans-serif',
       }}>
         {renderBoard(state.board)}
         <div style={{ 
@@ -764,8 +767,8 @@ app.frame('/game', async (c) => {
           padding: '20px', 
           borderRadius: '10px', 
           color: 'black',
-          fontFamily: '"Jersey 20", sans-serif',
-          fontWeight: 400,
+          fontFamily: '"Silkscreen", sans-serif',
+          fontWeight: 700,
         }}>
           {message}
         </div>
@@ -899,7 +902,7 @@ app.frame('/share', async (c) => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
-        fontFamily: '"Jersey 20", sans-serif',
+        fontFamily: 'Arial, sans-serif',
       }}>
         {profileImage && (
           <img 
@@ -914,7 +917,7 @@ app.frame('/share', async (c) => {
             }}
           />
         )}
-        <h1 style={{ fontSize: '52px', marginBottom: '20px', fontFamily: '"Jersey 20", sans-serif' }}>Player Stats</h1>
+        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Player Stats</h1>
         <div style={{
           display: 'flex',
           flexDirection: 'column' as const,
@@ -923,7 +926,6 @@ app.frame('/share', async (c) => {
           padding: '20px',
           borderRadius: '10px',
           width: '80%',
-          fontFamily: '"Jersey 20", sans-serif',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
             <span style={{ fontSize: '36px' }}>POD Score:</span>
@@ -942,7 +944,7 @@ app.frame('/share', async (c) => {
             <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{thepodTokenBalance.toFixed(2)}</span>
           </div>
         </div>
-        <p style={{ fontSize: '28px', marginTop: '20px', fontFamily: '"Jersey 20", sans-serif' }}>Frame by @goldie & @themrsazon</p>
+        <p style={{ fontSize: '28px', marginTop: '20px' }}>Frame by @goldie & @themrsazon</p>
       </div>
     ),
     intents: [
