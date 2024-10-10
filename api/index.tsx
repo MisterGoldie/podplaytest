@@ -822,26 +822,34 @@ app.frame('/next', (c) => {
 
   return c.res({
     image: (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '1080px',
-        height: '1080px',
-        backgroundImage: `url(${gifUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        fontFamily: '"Silkscreen", sans-serif',
-      }}>
-        <div style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          padding: '20px',
-          borderRadius: '10px',
-          textAlign: 'center',
-        }}>
-          <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>{message}</h1>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          height: '100%',
+          backgroundImage: `url(${gifUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          color: 'white',
+          fontFamily: '"Silkscreen", sans-serif',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            padding: '20px',
+            borderRadius: '10px',
+            textAlign: 'center',
+          }}
+        >
+          <p style={{ fontSize: '48px', marginBottom: '20px' }}>{message}</p>
           <p style={{ fontSize: '24px' }}>Frame by @goldie & @themrsazon</p>
         </div>
       </div>
