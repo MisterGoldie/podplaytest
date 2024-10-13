@@ -376,13 +376,12 @@ async function getUserProfilePicture(fid: string): Promise<string | null> {
 
     if (data?.data?.Socials?.Social?.[0]?.profileImage) {
       let profileImage = data.data.Socials.Social[0].profileImage;
-      // Remove Cloudinary transformations
-      if (profileImage.includes('cloudinary.com')) {
-        const originalImageUrl = new URL(profileImage).searchParams.get('https://i.imgur.com/WdFhzT0.jpg');
-        if (originalImageUrl) {
-          profileImage = originalImageUrl;
-        }
+      // Extract the original Imgur URL
+      const imgurMatch = profileImage.match(/https:\/\/i\.imgur\.com\/[^.]+\.[a-zA-Z]+/);
+      if (imgurMatch) {
+        profileImage = imgurMatch[0];
       }
+      console.log('Extracted profile image URL:', profileImage);
       return profileImage;
     } else {
       console.log('No profile image found or unexpected API response structure');
@@ -910,9 +909,9 @@ app.frame('/share', async (c) => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
-        fontFamily: '"Silkscreen", sans-serif',
+        fontFamily: 'Arial, sans-serif',
       }}>
-        {profileImage && (
+        {profileImage ? (
           <img 
             src={profileImage} 
             alt="User profile"
@@ -925,6 +924,22 @@ app.frame('/share', async (c) => {
               objectFit: 'cover',
             }}
           />
+        ) : (
+          <div style={{
+            width: '200px',
+            height: '200px',
+            borderRadius: '50%',
+            border: '3px solid white',
+            marginBottom: '20px',
+            backgroundColor: '#303095',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '72px',
+            color: 'white',
+          }}>
+            {fid ? fid.toString().slice(0, 2) : 'P'}
+          </div>
         )}
         <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Player Stats</h1>
         <div style={{
