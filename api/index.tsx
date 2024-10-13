@@ -845,7 +845,7 @@ app.frame('/share', async (c) => {
   const { frameData } = c;
   const fid = frameData?.fid;
   const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon, powered by @moxie.eth';
-  const baseUrl = 'https://podplay.vercel.app'; // Update this to your actual domain
+  const baseUrl = 'https://podplay.vercel.app';
   const originalFramesLink = `${baseUrl}/api`;
   
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
@@ -902,18 +902,19 @@ app.frame('/share', async (c) => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
-        fontFamily: 'Arial, sans-serif',
+        fontFamily: '"Silkscreen", sans-serif',
       }}>
         {profileImage && (
           <img 
             src={profileImage} 
             alt="User profile"
+            width={200}
+            height={200}
             style={{
-              width: '200px',
-              height: '200px',
               borderRadius: '50%',
               border: '3px solid white',
               marginBottom: '20px',
+              objectFit: 'cover',
             }}
           />
         )}
