@@ -375,7 +375,15 @@ async function getUserProfilePicture(fid: string): Promise<string | null> {
     console.log('Profile image API response:', JSON.stringify(data));
 
     if (data?.data?.Socials?.Social?.[0]?.profileImage) {
-      return data.data.Socials.Social[0].profileImage;
+      let profileImage = data.data.Socials.Social[0].profileImage;
+      // Remove Cloudinary transformations
+      if (profileImage.includes('cloudinary.com')) {
+        const originalImageUrl = new URL(profileImage).searchParams.get('https://i.imgur.com/WdFhzT0.jpg');
+        if (originalImageUrl) {
+          profileImage = originalImageUrl;
+        }
+      }
+      return profileImage;
     } else {
       console.log('No profile image found or unexpected API response structure');
       return null;
