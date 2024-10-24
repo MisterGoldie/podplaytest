@@ -758,7 +758,7 @@ app.frame('/game', async (c) => {
         justifyContent: 'center',
         width: '1080px',
         height: '1080px',
-        backgroundImage: 'url(https://bafybeifr4c4c5pfijcacnx4hpdeqdewdncaz33r7tcekh4ka5wufw5rkpe.ipfs.w3s.link/Frame%209%20(4).png)',
+        backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
