@@ -580,104 +580,41 @@ function renderBoard(board: (string | null)[]) {
 // Routes will be defined here...
 
 // Initial route
-app.frame('/', (c) => {
-  const { state, result } = c.req.query();
+app.frame('/', () => {
+  const gifUrl = 'https://bafybeidnv5uh2ne54dlzyummobyv3bmc7uzuyt5htodvy27toqqhijf4xu.ipfs.w3s.link/PodPlay.gif'
+  const baseUrl = 'https://podplay.vercel.app' // Update this to your actual Domain
 
-  if (state && result) {
-    // This is a shared game result
-    const decodedState = decodeState(state as string);
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Tic-Tac-Toe Game</title>
+      <meta property="fc:frame" content="vNext">
+      <meta property="fc:frame:image" content="${gifUrl}">
+      <meta property="fc:frame:image:aspect_ratio" content="1:1">
+      <meta property="fc:frame:button:1" content="Start">
+      <meta property="fc:frame:button:1:action" content="post">
+      <meta property="fc:frame:post_url" content="${baseUrl}/api/howtoplay">
+      
+      
+      <!-- Added Open Graph tags -->
+      <meta property="og:title" content="Tic-Tac-Toe">
+      <meta property="og:description" content="Start New Game or Share!">
+      <meta property="og:image" content="${gifUrl}">
+      <meta property="og:url" content="${baseUrl}/api">
+      <meta property="og:type" content="website">
+    </head>
+    <body>
+    </body>
+    </html>
+  `
 
-    let resultMessage = '';
-    switch (result) {
-      case 'win':
-        resultMessage = 'Your friend won!';
-        break;
-      case 'lose':
-        resultMessage = 'Your friend lost!';
-        break;
-      case 'draw':
-        resultMessage = "It's a draw!";
-        break;
-      default:
-        resultMessage = "Game result";
-    }
-
-    return c.res({
-      image: (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column' as const,
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '1080px',
-          height: '1080px',
-          backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          color: 'white',
-          fontSize: '36px',
-          fontFamily: '"Silkscreen", sans-serif',
-        }}>
-          {renderBoard(decodedState.board)}
-          <div style={{ 
-            marginTop: '40px', 
-            maxWidth: '900px', 
-            textAlign: 'center', 
-            backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-            padding: '20px', 
-            borderRadius: '10px', 
-            color: 'black',
-            fontFamily: '"Silkscreen", sans-serif',
-            fontWeight: 700,
-          }}>
-            {resultMessage} Can you do better?
-          </div>
-        </div>
-      ),
-      intents: [
-        <Button action="/game">Start New Game</Button>,
-      ],
-    });
-  }
-
-  // If no state and result, return the regular start screen
-  return c.res({
-    image: (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column' as const,
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '1080px',
-        height: '1080px',
-        backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        color: 'white',
-        fontSize: '36px',
-        fontFamily: '"Silkscreen", sans-serif',
-      }}>
-        <div style={{
-          fontSize: '48px',
-          fontWeight: 'bold',
-          marginBottom: '20px',
-        }}>
-          Welcome to Tic-Tac-Toe!
-        </div>
-        <div style={{
-          fontSize: '24px',
-          marginBottom: '40px',
-          textAlign: 'center',
-        }}>
-          Play against the AI and test your skills.
-        </div>
-      </div>
-    ),
-    intents: [
-      <Button action="/game">Start Game</Button>,
-    ],
-  });
-});
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html' },
+  })
+})
 
 // How to Play route
 app.frame('/howtoplay', () => {
@@ -804,7 +741,7 @@ app.frame('/game', async (c) => {
     ? [
         <Button action="/game">New Game</Button>,
         <Button action={`/next?result=${gameResult}`}>Next</Button>,
-        <Button action={`/share-result?state=${encodedState}&result=${gameResult}`}>Share Result</Button>
+        <Button action={`/share?state=${encodedState}&result=${gameResult}`}>Your Stats</Button>
       ]
     : shuffledMoves.map((index) => 
         <Button value={`move:${encodedState}:${index}`}>
@@ -914,11 +851,8 @@ app.frame('/share', async (c) => {
   console.log('Entering /share route');
   const { frameData } = c;
   const fid = frameData?.fid;
-  const shareText = 'Welcome to POD Play presented by /thepod 🕹️. Think you can win a game of Tic-Tac-Toe? Frame by @goldie & @themrsazon, powered by @moxie.eth';
-  const baseUrl = 'https://podplay.vercel.app';
-  const originalFramesLink = `${baseUrl}/api`;
-  
-  const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(originalFramesLink)}`;
+  const result = c.req.query('result');
+  const state = c.req.query('state');
 
   let profileImage: string | null = null;
   let userRecord = { wins: 0, losses: 0, ties: 0 };
@@ -926,14 +860,16 @@ app.frame('/share', async (c) => {
   let podScore = 0;
   let ownsThepodToken = false;
   let thepodTokenBalance = 0;
+  let username = 'Player';
 
   if (fid) {
     try {
-      const [profileImageResult, userRecordResult, totalGamesResult, fanTokenResult] = await Promise.all([
+      const [profileImageResult, userRecordResult, totalGamesResult, fanTokenResult, usernameResult] = await Promise.all([
         getUserProfilePicture(fid.toString()),
         getUserRecord(fid.toString()),
         getTotalGamesPlayed(fid.toString()),
-        checkFanTokenOwnership(fid.toString())
+        checkFanTokenOwnership(fid.toString()),
+        getUsername(fid.toString())
       ]);
 
       profileImage = profileImageResult;
@@ -941,6 +877,7 @@ app.frame('/share', async (c) => {
       totalGamesPlayed = totalGamesResult;
       ownsThepodToken = fanTokenResult.ownsToken;
       thepodTokenBalance = fanTokenResult.balance;
+      username = usernameResult;
       podScore = calculatePODScore(userRecord.wins, userRecord.ties, userRecord.losses, totalGamesPlayed, thepodTokenBalance);
 
       console.log(`Profile image URL for FID ${fid}:`, profileImage);
@@ -949,15 +886,31 @@ app.frame('/share', async (c) => {
       console.log(`POD Score for FID ${fid}:`, podScore);
       console.log(`Owns 'thepod' fan token for FID ${fid}:`, ownsThepodToken);
       console.log(`'thepod' fan token balance for FID ${fid}:`, thepodTokenBalance);
+      console.log(`Username for FID ${fid}:`, username);
     } catch (error) {
       console.error(`Error fetching data for FID ${fid}:`, error);
-      if (error instanceof Error) {
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-      }
     }
   }
+
+  let resultMessage = '';
+  switch (result) {
+    case 'win':
+      resultMessage = `${username} won!`;
+      break;
+    case 'lose':
+      resultMessage = `${username} lost!`;
+      break;
+    case 'draw':
+      resultMessage = "It's a draw!";
+      break;
+    default:
+      resultMessage = "Game result";
+  }
+
+  const shareText = `I just played Tic-Tac-Toe on POD Play! ${resultMessage} My POD Score is ${podScore}. Can you beat me? 🕹️`;
+  const baseUrl = 'https://podplay.vercel.app';
+  const shareUrl = `${baseUrl}/api/shared-game?state=${state}&result=${result}`;
+  const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`;
 
   return c.res({
     image: (
@@ -1004,7 +957,7 @@ app.frame('/share', async (c) => {
             {fid ? fid.toString().slice(0, 2) : 'P'}
           </div>
         )}
-        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Player Stats</h1>
+        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>{resultMessage}</h1>
         <div style={{
           display: 'flex',
           flexDirection: 'column' as const,
@@ -1037,32 +990,29 @@ app.frame('/share', async (c) => {
     intents: [
       <Button action="/game">Play Again</Button>,
       <Button action="https://moxie-frames.airstack.xyz/stim?t=cid_thepod">/thepod FT</Button>,
-      <Button.Link href={farcasterShareURL}>Share Game</Button.Link>
+      <Button.Link href={farcasterShareURL}>Share Result</Button.Link>
     ],
   });
 });
 
-// Update the /share-result route
-app.frame('/share-result', (c) => {
+app.frame('/shared-game', (c) => {
   const { state, result } = c.req.query();
   const decodedState = decodeState(state as string);
-  const baseUrl = 'https://podplay.vercel.app';
-  const shareUrl = `${baseUrl}/api?state=${state}&result=${result}`;
 
   let resultMessage = '';
   switch (result) {
     case 'win':
-      resultMessage = 'I won!';
+      resultMessage = 'Your friend won!';
       break;
     case 'lose':
-      resultMessage = 'I lost!';
+      resultMessage = 'Your friend lost!';
       break;
     case 'draw':
       resultMessage = "It's a draw!";
       break;
+    default:
+      resultMessage = "Game result";
   }
-
-  const shareText = `I just played Tic-Tac-Toe on POD Play! ${resultMessage} Can you beat me? 🕹️`;
 
   return c.res({
     image: (
@@ -1092,19 +1042,19 @@ app.frame('/share-result', (c) => {
           fontFamily: '"Silkscreen", sans-serif',
           fontWeight: 700,
         }}>
-          Share this game result!
+          {resultMessage} Can you do better?
         </div>
       </div>
     ),
     intents: [
-      <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`}>
-        Share on Farcaster
-      </Button.Link>,
-      <Button action="/game">New Game</Button>,
+      <Button action="/game">Start New Game</Button>,
     ],
   });
 });
 
+
 export const GET = handle(app)
 export const POST = handle(app)
+
+
 
