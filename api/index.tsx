@@ -1061,7 +1061,7 @@ app.frame('/shared-game', (c) => {
       </div>
     ),
     intents: [
-      <Button action="/game">Play New Game</Button>
+      <Button action="/game">Play</Button>
     ]
   });
 });
