@@ -742,8 +742,8 @@ app.frame('/game', async (c) => {
         <Button action="/game">New Game</Button>,
         <Button action={`/next?result=${gameResult}`}>Next</Button>,
         <Button action="/share">Your Stats</Button>,
-        <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Maxi by POD Play! ${gameResult === 'win' ? 'I won!' : gameResult === 'lose' ? 'I lost!' : "It's a draw!"} Can you beat the CPU? 🕹️`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-game?state=${encodedState}&result=${gameResult}`)}`}>
-          Share Result
+        <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Maxi by POD Play! ${gameResult === 'win' ? 'I won!' : gameResult === 'lose' ? 'I lost!' : "It's a draw!"} Frame by @goldie & @themrsazon`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-game?state=${encodedState}&result=${gameResult}`)}`}>
+          Share Results
         </Button.Link>
       ]
     : shuffledMoves.map((index) => 
