@@ -756,12 +756,11 @@ app.frame('/game', async (c) => {
     image: (
       <div style={{
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'column' as const,
         alignItems: 'center',
         justifyContent: 'center',
-        width: '100%', // Make it responsive
-        maxWidth: '600px', // Limit max width for larger screens
-        height: 'auto', // Allow height to adjust
+        width: '1080px',
+        height: '1080px',
         backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -769,14 +768,14 @@ app.frame('/game', async (c) => {
         fontSize: '36px',
         fontFamily: '"Silkscreen", sans-serif',
       }}>
-        {renderBoard(state.board)} {/* Ensure the board is rendered correctly */}
-        <div style={{
-          marginTop: '40px',
-          maxWidth: '90%', // Make it responsive
-          textAlign: 'center',
-          backgroundColor: 'rgba(255, 255, 255, 0.7)',
-          padding: '20px',
-          borderRadius: '10px',
+        {renderBoard(state.board)}
+        <div style={{ 
+          marginTop: '40px', 
+          maxWidth: '900px', 
+          textAlign: 'center', 
+          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+          padding: '20px', 
+          borderRadius: '10px', 
           color: 'black',
           fontFamily: '"Silkscreen", sans-serif',
           fontWeight: 700,
@@ -1059,4 +1058,3 @@ app.frame('/shared-game', (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
-
