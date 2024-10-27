@@ -742,7 +742,9 @@ app.frame('/game', async (c) => {
         <Button action="/game">New Game</Button>,
         <Button action={`/next?result=${gameResult}`}>Next</Button>,
         <Button action="/share">Your Stats</Button>,
-        <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Toe on POD Play! ${gameResult === 'win' ? 'I won!' : gameResult === 'lose' ? 'I lost!' : "It's a draw!"} Can you beat me? 🕹️`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/game/image?state=${encodedState}&result=${gameResult}`)}`}>
+        <Button.Link 
+          href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Toe on POD Play! ${gameResult === 'win' ? 'I won!' : gameResult === 'lose' ? 'I lost!' : "It's a draw!"} Can you beat me? 🕹️`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-game?state=${encodedState}&result=${gameResult}`)}`}
+        >
           Share Result
         </Button.Link>
       ]
@@ -998,7 +1000,7 @@ app.frame('/share', async (c) => {
   });
 });
 
-app.frame('/shared-game', (c) => {
+app.frame('/shared-game', async (c) => {
   const { state, result } = c.req.query();
   
   let decodedState;
@@ -1018,38 +1020,21 @@ app.frame('/shared-game', (c) => {
     };
   }
 
-  const resultMessage = result === 'win' ? 'Your friend won!' :
-                       result === 'lose' ? 'Your friend lost!' :
-                       result === 'draw' ? "It's a draw!" :
-                       "Game result";
-  // Return HTML metadata if it's a GET request with text/html accept headers
-  if (c.req.method === 'GET' && c.req.header('accept')?.includes('text/html')) {
-    const baseUrl = 'https://podplay.vercel.app';
-    const html = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>POD Play - Shared Game</title>
-        <meta property="fc:frame" content="vNext">
-        <meta property="fc:frame:image" content="${baseUrl}/api/shared-game?state=${encodeURIComponent(state as string)}&result=${encodeURIComponent(result as string)}">
-        <meta property="fc:frame:image:aspect_ratio" content="1:1">
-        <meta property="fc:frame:button:1" content="Start New Game">
-        <meta property="fc:frame:button:1:action" content="post">
-        <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
-      </head>
-      <body>
-        <h1>Shared Game State</h1>
-      </body>
-      </html>
-    `;
-    return new Response(html, {
-      headers: { 'Content-Type': 'text/html' },
-    });
+  let resultMessage = '';
+  switch (result) {
+    case 'win':
+      resultMessage = 'Your friend won!';
+      break;
+    case 'lose':
+      resultMessage = 'Your friend lost!';
+      break;
+    case 'draw':
+      resultMessage = "It's a draw!";
+      break;
+    default:
+      resultMessage = "Game Over!";
   }
 
-  // Generate and return the image for all other requests
   return c.res({
     image: (
       <div style={{
@@ -1070,7 +1055,6 @@ app.frame('/shared-game', (c) => {
           display: 'flex',
           flexDirection: 'column',
           gap: '20px',
-          marginBottom: '20px',
         }}>
           {[0, 1, 2].map(row => (
             <div key={row} style={{ 
@@ -1116,7 +1100,7 @@ app.frame('/shared-game', (c) => {
       </div>
     ),
     intents: [
-      <Button action="/game">Start New Game</Button>
+      <Button action="/game">Play New Game</Button>
     ]
   });
 });
@@ -1124,6 +1108,10 @@ app.frame('/shared-game', (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
+
+
+
+
 
 
 
