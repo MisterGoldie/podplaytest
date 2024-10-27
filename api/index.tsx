@@ -1000,7 +1000,22 @@ app.frame('/share', async (c) => {
 
 app.frame('/shared-game', (c) => {
   const { state, result } = c.req.query();
-  const decodedState = decodeState(state as string);
+  let decodedState;
+  
+  try {
+    decodedState = state ? decodeState(state as string) : {
+      board: Array(9).fill(null),
+      currentPlayer: 'O',
+      isGameOver: false
+    };
+  } catch (error) {
+    console.error('Error decoding state:', error);
+    decodedState = {
+      board: Array(9).fill(null),
+      currentPlayer: 'O',
+      isGameOver: false
+    };
+  }
 
   let resultMessage = '';
   switch (result) {
@@ -1037,8 +1052,34 @@ app.frame('/shared-game', (c) => {
           display: 'flex',
           flexDirection: 'column',
           gap: '20px',
+          marginBottom: '20px',
         }}>
-          {renderBoard(decodedState.board)}
+          {[0, 1, 2].map(row => (
+            <div key={row} style={{ 
+              display: 'flex', 
+              gap: '20px',
+              justifyContent: 'center' 
+            }}>
+              {[0, 1, 2].map(col => {
+                const index = row * 3 + col;
+                return (
+                  <div key={index} style={{
+                    width: '200px',
+                    height: '200px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '120px',
+                    background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
+                    border: '4px solid black',
+                    color: 'white',
+                  }}>
+                    {decodedState.board[index]}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
         </div>
         <div style={{
           display: 'flex',
