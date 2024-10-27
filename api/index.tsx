@@ -1021,7 +1021,7 @@ app.frame('/shared-game', (c) => {
     image: (
       <div style={{
         display: 'flex',
-        flexDirection: 'column' as const,
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         width: '1080px',
@@ -1033,19 +1033,26 @@ app.frame('/shared-game', (c) => {
         fontSize: '36px',
         fontFamily: '"Silkscreen", sans-serif',
       }}>
-        {renderBoard(decodedState.board)}
-        <div style={{ 
-          marginTop: '40px', 
-          maxWidth: '900px', 
-          textAlign: 'center', 
-          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-          padding: '20px', 
-          borderRadius: '10px', 
-          color: 'black',
-          fontFamily: '"Silkscreen", sans-serif',
-          fontWeight: 700,
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}>
-          {resultMessage} Can you do better?
+          {renderBoard(decodedState.board)}
+          <div style={{ 
+            marginTop: '40px', 
+            maxWidth: '900px', 
+            textAlign: 'center', 
+            backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+            padding: '20px', 
+            borderRadius: '10px', 
+            color: 'black',
+            fontFamily: '"Silkscreen", sans-serif',
+            fontWeight: 700,
+          }}>
+            {resultMessage} Can you do better?
+          </div>
         </div>
       </div>
     ),
@@ -1058,6 +1065,8 @@ app.frame('/shared-game', (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
+
+
 
 
 
