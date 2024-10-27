@@ -551,9 +551,6 @@ function renderBoard(board: (string | null)[]) {
       display: 'flex',
       flexDirection: 'column',
       gap: '20px',
-      width: '100%', // Make it responsive
-      maxWidth: '600px', // Limit max width for larger screens
-      margin: '0 auto', // Center the board
     }}>
       {[0, 1, 2].map(row => (
         <div key={row} style={{ display: 'flex', gap: '20px' }}>
@@ -561,13 +558,12 @@ function renderBoard(board: (string | null)[]) {
             const index = row * 3 + col;
             return (
               <div key={index} style={{
-                width: '30%', // Use percentage for responsiveness
-                height: '0', // Set height to 0
-                paddingBottom: '30%', // Maintain aspect ratio
+                width: '200px',
+                height: '200px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '5vw', // Responsive font size
+                fontSize: '120px',
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
               }}>
@@ -760,12 +756,11 @@ app.frame('/game', async (c) => {
     image: (
       <div style={{
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'column' as const,
         alignItems: 'center',
         justifyContent: 'center',
-        width: '100%', // Make it responsive
-        maxWidth: '600px', // Limit max width for larger screens
-        height: 'auto', // Allow height to adjust
+        width: '1080px',
+        height: '1080px',
         backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -774,13 +769,13 @@ app.frame('/game', async (c) => {
         fontFamily: '"Silkscreen", sans-serif',
       }}>
         {renderBoard(state.board)}
-        <div style={{
-          marginTop: '40px',
-          maxWidth: '90%', // Make it responsive
-          textAlign: 'center',
-          backgroundColor: 'rgba(255, 255, 255, 0.7)',
-          padding: '20px',
-          borderRadius: '10px',
+        <div style={{ 
+          marginTop: '40px', 
+          maxWidth: '900px', 
+          textAlign: 'center', 
+          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+          padding: '20px', 
+          borderRadius: '10px', 
           color: 'black',
           fontFamily: '"Silkscreen", sans-serif',
           fontWeight: 700,
@@ -1063,4 +1058,3 @@ app.frame('/shared-game', (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
-
