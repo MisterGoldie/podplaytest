@@ -1001,33 +1001,13 @@ app.frame('/share', async (c) => {
 app.frame('/shared-game', (c) => {
   const { state, result } = c.req.query();
   
-  if (!state) {
-    // If no state is provided, return HTML with error message
-    const baseUrl = 'https://podplay.vercel.app';
-    const html = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>POD Play - Shared Game</title>
-        <meta property="fc:frame" content="vNext">
-        <meta property="fc:frame:image" content="${baseUrl}/api/game/image">
-        <meta property="fc:frame:button:1" content="Start New Game">
-        <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
-      </head>
-      <body>
-      </body>
-      </html>
-    `;
-    return new Response(html, {
-      headers: { 'Content-Type': 'text/html' },
-    });
-  }
-
   let decodedState;
   try {
-    decodedState = decodeState(state as string);
+    decodedState = state ? decodeState(state as string) : {
+      board: Array(9).fill(null),
+      currentPlayer: 'O',
+      isGameOver: false
+    };
     console.log('Decoded state:', decodedState);
   } catch (error) {
     console.error('Error decoding state:', error);
@@ -1043,68 +1023,34 @@ app.frame('/shared-game', (c) => {
                        result === 'draw' ? "It's a draw!" :
                        "Game result";
 
-  const renderGameBoard = (board: (string | null)[]) => (
-    <div style={{ 
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '20px',
-      marginBottom: '20px',
-    }}>
-      {[0, 1, 2].map(row => (
-        <div key={row} style={{ 
-          display: 'flex', 
-          gap: '20px',
-          justifyContent: 'center' 
-        }}>
-          {[0, 1, 2].map(col => {
-            const index = row * 3 + col;
-            return (
-              <div key={index} style={{
-                width: '200px',
-                height: '200px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '120px',
-                background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
-                border: '4px solid black',
-                color: 'white'
-              }}>
-                {board[index]}
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </div>
-  );
-
-  const baseUrl = 'https://podplay.vercel.app';
-  const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>POD Play - Shared Game</title>
-      <meta property="fc:frame" content="vNext">
-      <meta property="fc:frame:image" content="${baseUrl}/api/shared-game/image">
-      <meta property="fc:frame:image:aspect_ratio" content="1:1">
-      <meta property="fc:frame:button:1" content="Start New Game">
-      <meta property="fc:frame:button:1:action" content="post">
-      <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
-    </head>
-    <body>
-    </body>
-    </html>
-  `;
-
-  if (c.req.header('accept')?.includes('text/html')) {
+  // Return HTML for the frame
+  if (c.req.method === 'GET') {
+    const baseUrl = 'https://podplay.vercel.app';
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>POD Play - Shared Game</title>
+        <meta property="fc:frame" content="vNext">
+        <meta property="fc:frame:image" content="${baseUrl}/api/shared-game?state=${state}&result=${result}">
+        <meta property="fc:frame:image:aspect_ratio" content="1:1">
+        <meta property="fc:frame:button:1" content="Start New Game">
+        <meta property="fc:frame:button:1:action" content="post">
+        <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
+      </head>
+      <body>
+        <h1>Shared Game State</h1>
+      </body>
+      </html>
+    `;
     return new Response(html, {
       headers: { 'Content-Type': 'text/html' },
     });
   }
 
+  // Return image for the frame
   return c.res({
     image: (
       <div style={{
@@ -1121,7 +1067,38 @@ app.frame('/shared-game', (c) => {
         color: 'white',
         fontFamily: '"Silkscreen", sans-serif',
       }}>
-        {renderGameBoard(decodedState.board)}
+        <div style={{ 
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+        }}>
+          {[0, 1, 2].map(row => (
+            <div key={row} style={{ 
+              display: 'flex', 
+              gap: '20px',
+              justifyContent: 'center' 
+            }}>
+              {[0, 1, 2].map(col => {
+                const index = row * 3 + col;
+                return (
+                  <div key={index} style={{
+                    width: '200px',
+                    height: '200px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '120px',
+                    background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
+                    border: '4px solid black',
+                    color: 'white'
+                  }}>
+                    {decodedState.board[index]}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
         <div style={{
           display: 'flex',
           justifyContent: 'center',
@@ -1147,7 +1124,6 @@ app.frame('/shared-game', (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
-
 
 
 
