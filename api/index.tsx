@@ -1004,6 +1004,8 @@ app.frame('/shared-game', (c) => {
   // If it's a web request, return HTML with meta tags
   if (c.req.header('accept')?.includes('text/html')) {
     const baseUrl = 'https://podplay.vercel.app';
+    const imageUrl = `${baseUrl}/api/shared-game/image?state=${encodeURIComponent(state as string)}&result=${encodeURIComponent(result as string)}`;
+    
     const html = `
       <!DOCTYPE html>
       <html lang="en">
@@ -1012,11 +1014,14 @@ app.frame('/shared-game', (c) => {
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>POD Play - Shared Game</title>
         <meta property="fc:frame" content="vNext">
-        <meta property="fc:frame:image" content="${baseUrl}/api/shared-game?state=${encodeURIComponent(state as string)}&result=${encodeURIComponent(result as string)}">
+        <meta property="fc:frame:image" content="${imageUrl}">
         <meta property="fc:frame:image:aspect_ratio" content="1:1">
         <meta property="fc:frame:button:1" content="Play New Game">
         <meta property="fc:frame:button:1:action" content="post">
         <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
+        <meta property="og:image" content="${imageUrl}">
+        <meta property="og:title" content="POD Play - Shared Game">
+        <meta property="og:description" content="Check out this game of Tic-Tac-Toe!">
       </head>
       <body>
         <h1>Shared Game State</h1>
@@ -1024,11 +1029,14 @@ app.frame('/shared-game', (c) => {
       </html>
     `;
     return new Response(html, {
-      headers: { 'Content-Type': 'text/html' },
+      headers: { 
+        'Content-Type': 'text/html',
+        'Cache-Control': 'no-store, private, must-revalidate'
+      },
     });
   }
 
-  // Rest of your existing image rendering code...
+  // For image requests
   let decodedState;
   try {
     decodedState = state ? decodeState(state as string) : {
