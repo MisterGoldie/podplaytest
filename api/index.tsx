@@ -1024,6 +1024,7 @@ app.frame('/shared-game', (c) => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: '20px',
         width: '1080px',
         height: '1080px',
         backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
@@ -1032,11 +1033,24 @@ app.frame('/shared-game', (c) => {
         color: 'white',
         fontFamily: '"Silkscreen", sans-serif',
       }}>
-        {renderBoard(decodedState.board)}
         <div style={{
-          marginTop: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+        }}>
+          {renderBoard(decodedState.board)}
+        </div>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
           fontSize: '36px',
           textAlign: 'center',
+          padding: '20px',
+          backgroundColor: 'rgba(255, 255, 255, 0.7)',
+          borderRadius: '10px',
+          color: 'black',
+          maxWidth: '900px',
         }}>
           {resultMessage} Can you do better?
         </div>
