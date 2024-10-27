@@ -1048,13 +1048,17 @@ app.frame('/shared-game', (c) => {
           Game Over! Can you do better?
         </div>
       </div>
-    )
+    ),
+    intents: [
+      <Button action="/game">Play New Game</Button>
+    ]
   });
 });
 
 
 export const GET = handle(app)
 export const POST = handle(app)
+
 
 
 
