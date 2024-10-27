@@ -918,7 +918,7 @@ app.frame('/share', async (c) => {
       resultMessage = "Game result";
   }
 
-  const shareText = `I just played Tic-Tac on POD Play! ${resultMessage} My POD Score is ${podScore}. Can you beat me? 🕹️`;
+  const shareText = `I just played Tic-Tac-Maxi on POD Play! ${resultMessage} My POD Score is ${podScore}. Can you beat me? 🕹️`;
   const baseUrl = 'https://podplay.vercel.app';
   const shareUrl = `${baseUrl}/api/shared-game?state=${state}&result=${result}`;
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`;
