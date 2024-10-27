@@ -748,7 +748,7 @@ app.frame('/game', async (c) => {
             : gameResult === 'lose'
             ? 'I lost 😔'
             : gameResult === 'draw'
-            ? "It's a draw!"
+            ? "It's a draw"
             : ''
         } Frame by @goldie & @themrsazon`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-game?state=${encodedState}&result=${gameResult}`)}`}>
           Share Results
@@ -1001,7 +1001,10 @@ app.frame('/share', async (c) => {
     intents: [
       <Button action="/game">Play Again</Button>,
       <Button action="https://moxie-frames.airstack.xyz/stim?t=cid_thepod">/thepod FT</Button>,
-      <Button.Link href={farcasterShareURL}>Share Result</Button.Link>
+      <Button.Link href={farcasterShareURL}>Share Result</Button.Link>,
+      <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent('Play Tic-Tac-Maxi by POD Play presented by @moxie.eth! Frame by @goldie & @themrsazon')}&embeds[]=${encodeURIComponent('https://podplay.vercel.app/api')}`}>
+        Share Frame
+      </Button.Link>
     ],
   });
 });
@@ -1066,3 +1069,4 @@ app.frame('/shared-game', (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
+
