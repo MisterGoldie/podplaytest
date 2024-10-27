@@ -1022,9 +1022,8 @@ app.frame('/shared-game', (c) => {
                        result === 'lose' ? 'Your friend lost!' :
                        result === 'draw' ? "It's a draw!" :
                        "Game result";
-
-  // Return HTML for the frame
-  if (c.req.method === 'GET') {
+  // Return HTML metadata if it's a GET request with text/html accept header
+  if (c.req.method === 'GET' && c.req.header('accept')?.includes('text/html')) {
     const baseUrl = 'https://podplay.vercel.app';
     const html = `
       <!DOCTYPE html>
@@ -1034,7 +1033,7 @@ app.frame('/shared-game', (c) => {
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>POD Play - Shared Game</title>
         <meta property="fc:frame" content="vNext">
-        <meta property="fc:frame:image" content="${baseUrl}/api/shared-game?state=${state}&result=${result}">
+        <meta property="fc:frame:image" content="${baseUrl}/api/shared-game?state=${encodeURIComponent(state as string)}&result=${encodeURIComponent(result as string)}">
         <meta property="fc:frame:image:aspect_ratio" content="1:1">
         <meta property="fc:frame:button:1" content="Start New Game">
         <meta property="fc:frame:button:1:action" content="post">
@@ -1050,7 +1049,7 @@ app.frame('/shared-game', (c) => {
     });
   }
 
-  // Return image for the frame
+  // Generate and return the image for all other requests
   return c.res({
     image: (
       <div style={{
@@ -1071,6 +1070,7 @@ app.frame('/shared-game', (c) => {
           display: 'flex',
           flexDirection: 'column',
           gap: '20px',
+          marginBottom: '20px',
         }}>
           {[0, 1, 2].map(row => (
             <div key={row} style={{ 
