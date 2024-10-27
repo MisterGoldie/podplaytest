@@ -92,7 +92,7 @@ export const app = new Frog<{ Variables: NeynarVariables }>({
     ],
   },
   imageAspectRatio: '1:1',
-  title: 'Tic-Tac-Toe Game',
+  title: 'Tic-Tac-Maxi Game',
   hub: {
     apiUrl: "https://hubs.airstack.xyz",
     fetchOptions: {
@@ -590,7 +590,7 @@ app.frame('/', () => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Tic-Tac-Toe Game</title>
+      <title>Tic-Tac-Maxi Game</title>
       <meta property="fc:frame" content="vNext">
       <meta property="fc:frame:image" content="${gifUrl}">
       <meta property="fc:frame:image:aspect_ratio" content="1:1">
@@ -600,7 +600,7 @@ app.frame('/', () => {
       
       
       <!-- Added Open Graph tags -->
-      <meta property="og:title" content="Tic-Tac-Toe">
+      <meta property="og:title" content="Tic-Tac-Maxi">
       <meta property="og:description" content="Start New Game or Share!">
       <meta property="og:image" content="${gifUrl}">
       <meta property="og:url" content="${baseUrl}/api">
@@ -627,7 +627,7 @@ app.frame('/howtoplay', () => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>How to Play Tic-Tac-Toe</title>
+      <title>How to Play Tic-Tac-Maxi</title>
       <meta property="fc:frame" content="vNext">
       <meta property="fc:frame:image" content="${imageUrl}">
       <meta property="fc:frame:image:aspect_ratio" content="1:1">
@@ -918,7 +918,7 @@ app.frame('/share', async (c) => {
       resultMessage = "Game result";
   }
 
-  const shareText = `I just played Tic-Tac-Toe on POD Play! ${resultMessage} My POD Score is ${podScore}. Can you beat me? 🕹️`;
+  const shareText = `I just played Tic-Tac-Maxi on POD Play! ${resultMessage} My POD Score is ${podScore}. Can you beat me? 🕹️`;
   const baseUrl = 'https://podplay.vercel.app';
   const shareUrl = `${baseUrl}/api/shared-game?state=${state}&result=${result}`;
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`;
