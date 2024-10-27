@@ -551,6 +551,9 @@ function renderBoard(board: (string | null)[]) {
       display: 'flex',
       flexDirection: 'column',
       gap: '20px',
+      width: '100%', // Make it responsive
+      maxWidth: '600px', // Limit max width for larger screens
+      margin: '0 auto', // Center the board
     }}>
       {[0, 1, 2].map(row => (
         <div key={row} style={{ display: 'flex', gap: '20px' }}>
@@ -558,12 +561,13 @@ function renderBoard(board: (string | null)[]) {
             const index = row * 3 + col;
             return (
               <div key={index} style={{
-                width: '200px',
-                height: '200px',
+                width: '30%', // Use percentage for responsiveness
+                height: '0', // Set height to 0
+                paddingBottom: '30%', // Maintain aspect ratio
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '120px',
+                fontSize: '5vw', // Responsive font size
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
               }}>
@@ -742,7 +746,7 @@ app.frame('/game', async (c) => {
         <Button action="/game">New Game</Button>,
         <Button action={`/next?result=${gameResult}`}>Next</Button>,
         <Button action="/share">Your Stats</Button>,
-        <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Toe on POD Play! ${gameResult === 'win' ? 'I won!' : gameResult === 'lose' ? 'I lost!' : "It's a draw!"} Can you beat me? 🕹️`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-game?state=${encodedState}`)}`}>
+        <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Toe on POD Play! ${gameResult === 'win' ? 'I won!' : gameResult === 'lose' ? 'I lost!' : "It's a draw!"} Can you beat me? 🕹️`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-game?state=${encodedState}&result=${gameResult}`)}`}>
           Share Result
         </Button.Link>
       ]
@@ -756,11 +760,12 @@ app.frame('/game', async (c) => {
     image: (
       <div style={{
         display: 'flex',
-        flexDirection: 'column' as const,
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        width: '1080px',
-        height: '1080px',
+        width: '100%', // Make it responsive
+        maxWidth: '600px', // Limit max width for larger screens
+        height: 'auto', // Allow height to adjust
         backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -769,13 +774,13 @@ app.frame('/game', async (c) => {
         fontFamily: '"Silkscreen", sans-serif',
       }}>
         {renderBoard(state.board)}
-        <div style={{ 
-          marginTop: '40px', 
-          maxWidth: '900px', 
-          textAlign: 'center', 
-          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-          padding: '20px', 
-          borderRadius: '10px', 
+        <div style={{
+          marginTop: '40px',
+          maxWidth: '90%', // Make it responsive
+          textAlign: 'center',
+          backgroundColor: 'rgba(255, 255, 255, 0.7)',
+          padding: '20px',
+          borderRadius: '10px',
           color: 'black',
           fontFamily: '"Silkscreen", sans-serif',
           fontWeight: 700,
@@ -998,11 +1003,9 @@ app.frame('/share', async (c) => {
   });
 });
 
-// Update the /shared-game route
 app.frame('/shared-game', (c) => {
   const { state } = c.req.query();
-  const baseUrl = 'https://podplay.vercel.app';
-
+  
   let decodedState;
   try {
     decodedState = state ? decodeState(state as string) : {
@@ -1019,33 +1022,8 @@ app.frame('/shared-game', (c) => {
       isGameOver: false
     };
   }
-  // Return HTML for frame requests
-  if (c.req.header('accept')?.includes('text/html')) {
-    const html = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>POD Play - Shared Game</title>
-        <meta property="fc:frame" content="vNext">
-        <meta property="fc:frame:image" content="${baseUrl}/api/shared-game?state=${encodeURIComponent(state as string)}">
-        <meta property="fc:frame:image:aspect_ratio" content="1:1">
-        <meta property="fc:frame:button:1" content="Start New Game">
-        <meta property="fc:frame:button:1:action" content="post">
-        <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
-      </head>
-      <body>
-        <h1>Shared Game State</h1>
-      </body>
-      </html>
-    `;
-    return new Response(html, {
-      headers: { 'Content-Type': 'text/html' },
-    });
-  }
 
-  // Return image
+  // Just return the final game state image
   return c.res({
     image: (
       <div style={{
@@ -1085,31 +1063,4 @@ app.frame('/shared-game', (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
