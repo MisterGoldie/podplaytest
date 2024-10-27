@@ -1015,10 +1015,8 @@ app.frame('/shared-game', (c) => {
         <meta property="fc:frame:image" content="${baseUrl}/api/shared-game?state=${encodeURIComponent(state as string)}&result=${encodeURIComponent(result as string)}">
         <meta property="fc:frame:image:aspect_ratio" content="1:1">
         <meta property="fc:frame:button:1" content="Play New Game">
-        <meta property="fc:frame:button:1:action" content="/game">
-        <meta property="og:image" content="${baseUrl}/api/shared-game?state=${encodeURIComponent(state as string)}&result=${encodeURIComponent(result as string)}">
-        <meta property="og:title" content="POD Play - Tic-Tac-Toe Game">
-        <meta property="og:description" content="Check out this game of Tic-Tac-Toe on POD Play!">
+        <meta property="fc:frame:button:1:action" content="post">
+        <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
       </head>
       <body>
         <h1>Shared Game State</h1>
@@ -1030,6 +1028,7 @@ app.frame('/shared-game', (c) => {
     });
   }
 
+  // Rest of your existing image rendering code...
   let decodedState;
   try {
     decodedState = state ? decodeState(state as string) : {
@@ -1037,7 +1036,6 @@ app.frame('/shared-game', (c) => {
       currentPlayer: 'O',
       isGameOver: false
     };
-    console.log('Decoded state:', decodedState);
   } catch (error) {
     console.error('Error decoding state:', error);
     decodedState = {
@@ -1047,7 +1045,6 @@ app.frame('/shared-game', (c) => {
     };
   }
 
-  // Just return the final game state image
   return c.res({
     image: (
       <div style={{
@@ -1087,35 +1084,4 @@ app.frame('/shared-game', (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
