@@ -1022,7 +1022,7 @@ app.frame('/shared-game', (c) => {
                        result === 'lose' ? 'Your friend lost!' :
                        result === 'draw' ? "It's a draw!" :
                        "Game result";
-  // Return HTML metadata if it's a GET request with text/html accept header
+  // Return HTML metadata if it's a GET request with text/html accept headers
   if (c.req.method === 'GET' && c.req.header('accept')?.includes('text/html')) {
     const baseUrl = 'https://podplay.vercel.app';
     const html = `
@@ -1124,6 +1124,7 @@ app.frame('/shared-game', (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
+
 
 
 
