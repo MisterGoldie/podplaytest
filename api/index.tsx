@@ -741,7 +741,7 @@ app.frame('/game', async (c) => {
     ? [
         <Button action="/game">New Game</Button>,
         <Button action={`/next?result=${gameResult}`}>Next</Button>,
-        <Button action="/share">Your Stats</Button>
+        <Button action={`/share-result?state=${encodedState}&result=${gameResult}`}>Share Result</Button>
       ]
     : shuffledMoves.map((index) => 
         <Button value={`move:${encodedState}:${index}`}>
@@ -979,6 +979,123 @@ app.frame('/share', async (c) => {
   });
 });
 
+// Add this new route for sharing game results
+app.frame('/share-result', (c) => {
+  const { state, result } = c.req.query();
+  const decodedState = decodeState(state as string);
+  const baseUrl = 'https://podplay.vercel.app';
+  const shareUrl = `${baseUrl}/api/shared-game?state=${state}&result=${result}`;
+
+  let resultMessage = '';
+  switch (result) {
+    case 'win':
+      resultMessage = 'I won!';
+      break;
+    case 'lose':
+      resultMessage = 'I lost!';
+      break;
+    case 'draw':
+      resultMessage = "It's a draw!";
+      break;
+  }
+
+  const shareText = `I just played Tic-Tac-Toe on POD Play! ${resultMessage} Can you beat me? 🕹️`;
+  const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`;
+
+  return c.res({
+    image: (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontSize: '36px',
+        fontFamily: '"Silkscreen", sans-serif',
+      }}>
+        {renderBoard(decodedState.board)}
+        <div style={{ 
+          marginTop: '40px', 
+          maxWidth: '900px', 
+          textAlign: 'center', 
+          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+          padding: '20px', 
+          borderRadius: '10px', 
+          color: 'black',
+          fontFamily: '"Silkscreen", sans-serif',
+          fontWeight: 700,
+        }}>
+          Share this game result!
+        </div>
+      </div>
+    ),
+    intents: [
+      <Button.Link href={farcasterShareURL}>Share on Farcaster</Button.Link>,
+      <Button action="/game">New Game</Button>,
+    ],
+  });
+});
+
+// Add this new route for handling shared game results
+app.frame('/shared-game', (c) => {
+  const { state, result } = c.req.query();
+  const decodedState = decodeState(state as string);
+
+  let resultMessage = '';
+  switch (result) {
+    case 'win':
+      resultMessage = 'Your friend won!';
+      break;
+    case 'lose':
+      resultMessage = 'Your friend lost!';
+      break;
+    case 'draw':
+      resultMessage = "It's a draw!";
+      break;
+  }
+
+  return c.res({
+    image: (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontSize: '36px',
+        fontFamily: '"Silkscreen", sans-serif',
+      }}>
+        {renderBoard(decodedState.board)}
+        <div style={{ 
+          marginTop: '40px', 
+          maxWidth: '900px', 
+          textAlign: 'center', 
+          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+          padding: '20px', 
+          borderRadius: '10px', 
+          color: 'black',
+          fontFamily: '"Silkscreen", sans-serif',
+          fontWeight: 700,
+        }}>
+          {resultMessage} Can you do better?
+        </div>
+      </div>
+    ),
+    intents: [
+      <Button action="/game">Start New Game</Button>,
+    ],
+  });
+});
 
 export const GET = handle(app)
 export const POST = handle(app)
