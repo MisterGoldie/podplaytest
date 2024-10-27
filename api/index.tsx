@@ -742,9 +742,9 @@ app.frame('/game', async (c) => {
         <Button action="/game">New Game</Button>,
         <Button action={`/next?result=${gameResult}`}>Next</Button>,
         <Button action="/share">Your Stats</Button>,
-        <Button action={`/shared-game?state=${encodedState}&result=${gameResult}`}>
+        <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Toe on POD Play! ${gameResult === 'win' ? 'I won!' : gameResult === 'lose' ? 'I lost!' : "It's a draw!"} Can you beat me? 🕹️`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-game?state=${encodedState}&result=${gameResult}`)}`}>
           Share Result
-        </Button>
+        </Button.Link>
       ]
     : shuffledMoves.map((index) => 
         <Button value={`move:${encodedState}:${index}`}>
@@ -998,12 +998,12 @@ app.frame('/share', async (c) => {
   });
 });
 
-app.frame('/shared-game', async (c) => {
-  const { state: encodedState, result } = c.req.query();
+app.frame('/shared-game', (c) => {
+  const { state } = c.req.query();
   
   let decodedState;
   try {
-    decodedState = encodedState ? decodeState(encodedState as string) : {
+    decodedState = state ? decodeState(state as string) : {
       board: Array(9).fill(null),
       currentPlayer: 'O',
       isGameOver: false
@@ -1018,38 +1018,7 @@ app.frame('/shared-game', async (c) => {
     };
   }
 
-  const resultMessage = result === 'win' ? 'Your friend won!' :
-                       result === 'lose' ? 'Your friend lost!' :
-                       result === 'draw' ? "It's a draw!" :
-                       "Game result";
-
-  // Return HTML metadata if it's a GET request with text/html accept headers
-  if (c.req.method === 'GET' && c.req.header('accept')?.includes('text/html')) {
-    const baseUrl = 'https://podplay.vercel.app';
-    const html = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>POD Play - Shared Game</title>
-        <meta property="fc:frame" content="vNext">
-        <meta property="fc:frame:image" content="${baseUrl}/api/shared-game?state=${encodeURIComponent(encodedState as string)}&result=${encodeURIComponent(result as string)}">
-        <meta property="fc:frame:image:aspect_ratio" content="1:1">
-        <meta property="fc:frame:button:1" content="Start New Game">
-        <meta property="fc:frame:button:1:action" content="post">
-        <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
-      </head>
-      <body>
-        <h1>Shared Game State</h1>
-      </body>
-      </html>
-    `;
-    return new Response(html, {
-      headers: { 'Content-Type': 'text/html' },
-    });
-  }
-
+  // Just return the final game state image
   return c.res({
     image: (
       <div style={{
@@ -1057,7 +1026,6 @@ app.frame('/shared-game', async (c) => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '40px',
         width: '1080px',
         height: '1080px',
         backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
@@ -1068,30 +1036,27 @@ app.frame('/shared-game', async (c) => {
       }}>
         {renderBoard(decodedState.board)}
         <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
+          marginTop: '40px',
           padding: '20px',
           backgroundColor: 'rgba(255, 255, 255, 0.7)',
           borderRadius: '10px',
           color: 'black',
           fontSize: '36px',
-          maxWidth: '900px',
           textAlign: 'center',
+          maxWidth: '900px',
         }}>
-          {resultMessage} Can you do better?
+          Game Over! Can you do better?
         </div>
       </div>
-    ),
-    intents: [
-      <Button action="/game">Start New Game</Button>
-    ]
+    )
   });
 });
 
 
 export const GET = handle(app)
 export const POST = handle(app)
+
+
 
 
 
