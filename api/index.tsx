@@ -999,8 +999,37 @@ app.frame('/share', async (c) => {
 });
 
 app.frame('/shared-game', (c) => {
-  const { state } = c.req.query();
+  const { state, result } = c.req.query();
   
+  // If it's a web request, return HTML with meta tags
+  if (c.req.header('accept')?.includes('text/html')) {
+    const baseUrl = 'https://podplay.vercel.app';
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>POD Play - Shared Game</title>
+        <meta property="fc:frame" content="vNext">
+        <meta property="fc:frame:image" content="${baseUrl}/api/shared-game?state=${encodeURIComponent(state as string)}&result=${encodeURIComponent(result as string)}">
+        <meta property="fc:frame:image:aspect_ratio" content="1:1">
+        <meta property="fc:frame:button:1" content="Play New Game">
+        <meta property="fc:frame:button:1:action" content="/game">
+        <meta property="og:image" content="${baseUrl}/api/shared-game?state=${encodeURIComponent(state as string)}&result=${encodeURIComponent(result as string)}">
+        <meta property="og:title" content="POD Play - Tic-Tac-Toe Game">
+        <meta property="og:description" content="Check out this game of Tic-Tac-Toe on POD Play!">
+      </head>
+      <body>
+        <h1>Shared Game State</h1>
+      </body>
+      </html>
+    `;
+    return new Response(html, {
+      headers: { 'Content-Type': 'text/html' },
+    });
+  }
+
   let decodedState;
   try {
     decodedState = state ? decodeState(state as string) : {
@@ -1058,6 +1087,7 @@ app.frame('/shared-game', (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
+
 
 
 
