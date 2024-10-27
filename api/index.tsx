@@ -749,7 +749,7 @@ app.frame('/game', async (c) => {
             ? 'I lost 😔'
             : gameResult === 'draw'
             ? "It's a draw"
-            : ''
+            : '😕'
         } Frame by @goldie & @themrsazon`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-game?state=${encodedState}&result=${gameResult}`)}`}>
           Share Results
         </Button.Link>
