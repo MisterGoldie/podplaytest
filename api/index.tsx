@@ -1045,7 +1045,7 @@ app.frame('/shared-game', (c) => {
           textAlign: 'center',
           maxWidth: '900px',
         }}>
-          Game Over! Can you do better?
+          Can you beat the CPU?
         </div>
       </div>
     ),
