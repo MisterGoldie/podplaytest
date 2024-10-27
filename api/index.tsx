@@ -742,7 +742,7 @@ app.frame('/game', async (c) => {
         <Button action="/game">New Game</Button>,
         <Button action={`/next?result=${gameResult}`}>Next</Button>,
         <Button action="/share">Your Stats</Button>,
-        <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Toe on POD Play! ${gameResult === 'win' ? 'I won!' : gameResult === 'lose' ? 'I lost!' : "It's a draw!"} Can you beat me? 🕹️`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-game?state=${encodedState}&result=${gameResult}`)}`}>
+        <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Toe on POD Play! ${gameResult === 'win' ? 'I won!' : gameResult === 'lose' ? 'I lost!' : "It's a draw!"} Can you beat me? 🕹️`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-game?state=${encodedState}`)}`}>
           Share Result
         </Button.Link>
       ]
@@ -998,45 +998,11 @@ app.frame('/share', async (c) => {
   });
 });
 
+// Update the /shared-game route
 app.frame('/shared-game', (c) => {
-  const { state, result } = c.req.query();
-  
-  // If it's a web request, return HTML with meta tags
-  if (c.req.header('accept')?.includes('text/html')) {
-    const baseUrl = 'https://podplay.vercel.app';
-    const imageUrl = `${baseUrl}/api/shared-game/image?state=${encodeURIComponent(state as string)}&result=${encodeURIComponent(result as string)}`;
-    
-    const html = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>POD Play - Shared Game</title>
-        <meta property="fc:frame" content="vNext">
-        <meta property="fc:frame:image" content="${imageUrl}">
-        <meta property="fc:frame:image:aspect_ratio" content="1:1">
-        <meta property="fc:frame:button:1" content="Play New Game">
-        <meta property="fc:frame:button:1:action" content="post">
-        <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
-        <meta property="og:image" content="${imageUrl}">
-        <meta property="og:title" content="POD Play - Shared Game">
-        <meta property="og:description" content="Check out this game of Tic-Tac-Toe!">
-      </head>
-      <body>
-        <h1>Shared Game State</h1>
-      </body>
-      </html>
-    `;
-    return new Response(html, {
-      headers: { 
-        'Content-Type': 'text/html',
-        'Cache-Control': 'no-store, private, must-revalidate'
-      },
-    });
-  }
+  const { state } = c.req.query();
+  const baseUrl = 'https://podplay.vercel.app';
 
-  // For image requests
   let decodedState;
   try {
     decodedState = state ? decodeState(state as string) : {
@@ -1044,6 +1010,7 @@ app.frame('/shared-game', (c) => {
       currentPlayer: 'O',
       isGameOver: false
     };
+    console.log('Decoded state:', decodedState);
   } catch (error) {
     console.error('Error decoding state:', error);
     decodedState = {
@@ -1052,7 +1019,33 @@ app.frame('/shared-game', (c) => {
       isGameOver: false
     };
   }
+  // Return HTML for frame requests
+  if (c.req.header('accept')?.includes('text/html')) {
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>POD Play - Shared Game</title>
+        <meta property="fc:frame" content="vNext">
+        <meta property="fc:frame:image" content="${baseUrl}/api/shared-game?state=${encodeURIComponent(state as string)}">
+        <meta property="fc:frame:image:aspect_ratio" content="1:1">
+        <meta property="fc:frame:button:1" content="Start New Game">
+        <meta property="fc:frame:button:1:action" content="post">
+        <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
+      </head>
+      <body>
+        <h1>Shared Game State</h1>
+      </body>
+      </html>
+    `;
+    return new Response(html, {
+      headers: { 'Content-Type': 'text/html' },
+    });
+  }
 
+  // Return image
   return c.res({
     image: (
       <div style={{
@@ -1092,4 +1085,31 @@ app.frame('/shared-game', (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
