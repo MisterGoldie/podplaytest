@@ -832,7 +832,7 @@ app.frame('/next', (c) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Your Stats: ${result}</title>
+      <title>Game Result: ${result}</title>
       <meta property="fc:frame" content="vNext">
       <meta property="fc:frame:image" content="${gifUrl}">
       <meta property="fc:frame:image:aspect_ratio" content="1:1">
@@ -1001,6 +1001,9 @@ app.frame('/share', async (c) => {
     intents: [
       <Button action="/game">Play Again</Button>,
       <Button action="https://moxie-frames.airstack.xyz/stim?t=cid_thepod">/thepod FT</Button>,
+      <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`Check out my POD Play stats!\n\nPOD Score: ${podScore}\nRecord: ${userRecord.wins}W - ${userRecord.losses}L - ${userRecord.ties}T\nTotal Games: ${totalGamesPlayed}\n/thepod Tokens: ${thepodTokenBalance.toFixed(2)}\n\nFrame by @goldie & @themrsazon`)}&embeds[]=${encodeURIComponent('https://podplay.vercel.app/api')}`}>
+        Share Stats
+      </Button.Link>,
       <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent('Play Tic-Tac-Maxi by POD Play presented by @moxie.eth! Frame by @goldie & @themrsazon')}&embeds[]=${encodeURIComponent('https://podplay.vercel.app/api')}`}>
         Share Frame
       </Button.Link>
