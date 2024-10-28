@@ -1001,13 +1001,68 @@ app.frame('/share', async (c) => {
     intents: [
       <Button action="/game">Play Again</Button>,
       <Button action="https://moxie-frames.airstack.xyz/stim?t=cid_thepod">/thepod FT</Button>,
-      <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`Check out my POD Play stats!\n\nPOD Score: ${podScore}\nRecord: ${userRecord.wins}W - ${userRecord.losses}L - ${userRecord.ties}T\nTotal Games: ${totalGamesPlayed}\n/thepod Tokens: ${thepodTokenBalance.toFixed(2)}\n\nFrame by @goldie & @themrsazon`)}&embeds[]=${encodeURIComponent('https://podplay.vercel.app/api')}`}>
+      <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Maxi on POD Play! Check out my stats!`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-stats?wins=${userRecord.wins}&losses=${userRecord.losses}&ties=${userRecord.ties}&games=${totalGamesPlayed}&tokens=${thepodTokenBalance}&score=${podScore}&username=${encodeURIComponent(username)}`)}`}>
         Share Stats
       </Button.Link>,
       <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent('Play Tic-Tac-Maxi by POD Play presented by @moxie.eth! Frame by @goldie & @themrsazon')}&embeds[]=${encodeURIComponent('https://podplay.vercel.app/api')}`}>
         Share Frame
       </Button.Link>
     ],
+  });
+});
+
+// Add new route for shared stats
+app.frame('/shared-stats', (c) => {
+  const { wins, losses, ties, games, tokens, score, username } = c.req.query();
+  
+  return c.res({
+    image: (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column' as const,
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: 'url(https://bafybeihovflkpmq47zq5gfxws47wju63vakkaqjnmmbaab4rtxu3oipbve.ipfs.w3s.link/Frame%2025%20(8).png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>{decodeURIComponent(username as string)}'s Stats</h1>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column' as const,
+          alignItems: 'flex-start',
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          padding: '20px',
+          borderRadius: '10px',
+          width: '80%',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+            <span style={{ fontSize: '36px' }}>POD Score:</span>
+            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{score}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+            <span style={{ fontSize: '36px' }}>Record:</span>
+            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{wins}W - {losses}L - {ties}T</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+            <span style={{ fontSize: '36px' }}>Total Games Played:</span>
+            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{games}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+            <span style={{ fontSize: '36px' }}>/thepod Fan Tokens owned:</span>
+            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{Number(tokens).toFixed(2)}</span>
+          </div>
+        </div>
+        <p style={{ fontSize: '28px', marginTop: '20px' }}>Frame by @goldie & @themrsazon</p>
+      </div>
+    ),
+    intents: [
+      <Button action="/game">Play Now</Button>
+    ]
   });
 });
 
