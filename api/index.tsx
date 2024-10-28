@@ -932,7 +932,7 @@ app.frame('/share', async (c) => {
         alignItems: 'center',
         width: '1080px',
         height: '1080px',
-        backgroundImage: 'url(https://bafybeihovflkpmq47zq5gfxws47wju63vakkaqjnmmbaab4rtxu3oipbve.ipfs.w3s.link/Frame%2025%20(8).png)',
+        backgroundImage: 'url(https://bafybeiax2usqi6g7cglrvxa5n3vw7vimqruklebxnmmpm5bo7ah4yldhwi.ipfs.w3s.link/Frame%2039%20(2).png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
@@ -1024,7 +1024,7 @@ app.frame('/shared-stats', (c) => {
         alignItems: 'center',
         width: '1080px',
         height: '1080px',
-        backgroundImage: 'url(https://bafybeihovflkpmq47zq5gfxws47wju63vakkaqjnmmbaab4rtxu3oipbve.ipfs.w3s.link/Frame%2025%20(8).png)',
+        backgroundImage: 'url(https://bafybeiax2usqi6g7cglrvxa5n3vw7vimqruklebxnmmpm5bo7ah4yldhwi.ipfs.w3s.link/Frame%2039%20(2).png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         color: 'white',
@@ -1061,7 +1061,7 @@ app.frame('/shared-stats', (c) => {
       </div>
     ),
     intents: [
-      <Button action="/game">Play Now</Button>
+      <Button action="/game">Play</Button>
     ]
   });
 });
