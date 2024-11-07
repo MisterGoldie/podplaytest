@@ -960,7 +960,7 @@ app.frame('/next', (c) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Game Result: ${result}</title>
+      <title>Your Stats: ${result}</title>
       <meta property="fc:frame" content="vNext">
       <meta property="fc:frame:image" content="${gifUrl}">
       <meta property="fc:frame:image:aspect_ratio" content="1:1">
@@ -973,7 +973,7 @@ app.frame('/next', (c) => {
       <meta property="fc:frame:button:2:target" content="${baseUrl}/api/share">
     </head>
     <body>
-      <h1>Your Stats: ${result}</h1>
+      <h1>Game Result: ${result}</h1>
     </body>
     </html>
   `;
