@@ -754,7 +754,7 @@ app.frame('/game', async (c) => {
       board: Array(9).fill(null),
       currentPlayer: 'O',
       isGameOver: false,
-      difficulty: difficulty
+      difficulty
     };
     message = `New game started on ${difficulty.toUpperCase()} mode! Your turn, ${username}`;
   } else if (buttonValue?.startsWith('move:')) {
@@ -877,12 +877,11 @@ app.frame('/game', async (c) => {
     image: (
       <div style={{
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'column' as const,
         alignItems: 'center',
         justifyContent: 'center',
         width: '1080px',
         height: '1080px',
-        gap: '20px',
         backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -890,44 +889,9 @@ app.frame('/game', async (c) => {
         fontSize: '36px',
         fontFamily: '"Silkscreen", sans-serif',
       }}>
-        <div style={{
-          fontSize: '24px',
-          padding: '10px 20px',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          borderRadius: '10px',
-          color: state.difficulty === 'easy' ? '#4CAF50' : 
-                 state.difficulty === 'medium' ? '#FFC107' : '#F44336'
-        }}>
-          {state.difficulty.toUpperCase()} MODE
-        </div>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '20px',
-        }}>
-          {[0, 1, 2].map(row => (
-            <div key={row} style={{ display: 'flex', gap: '20px' }}>
-              {[0, 1, 2].map(col => {
-                const index = row * 3 + col;
-                return (
-                  <div key={index} style={{
-                    width: '200px',
-                    height: '200px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '120px',
-                    background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
-                    border: '4px solid black',
-                  }}>
-                    {state.board[index]}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
+        {renderBoard(state.board)}
         <div style={{ 
+          marginTop: '40px', 
           maxWidth: '900px', 
           textAlign: 'center', 
           backgroundColor: 'rgba(255, 255, 255, 0.7)', 
