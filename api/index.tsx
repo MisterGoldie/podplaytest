@@ -1032,34 +1032,13 @@ app.frame('/share', async (c) => {
     }
   }
 
-  let resultMessage = '';
-  switch (result) {
-    case 'win':
-      resultMessage = `${username} won!`;
-      break;
-    case 'lose':
-      resultMessage = `${username} lost!`;
-      break;
-    case 'draw':
-      resultMessage = "It's a draw!";
-      break;
-    default:
-      resultMessage = "Game result";
-  }
-
-  const difficultyText = decodedState ? ` on ${decodedState.difficulty.toUpperCase()} mode` : '';
-  const shareText = `I just played Tic-Tac-Maxi${difficultyText}! ${resultMessage} My POD Score is ${podScore}. Can you beat me? 🕹️`;
-  const baseUrl = 'https://podplay.vercel.app';
-  const shareUrl = `${baseUrl}/api/shared-game?state=${state}&result=${result}`;
-  const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`;
-
   return c.res({
     image: (
       <div style={{
         display: 'flex',
         flexDirection: 'column' as const,
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'center',
         width: '1080px',
         height: '1080px',
         backgroundImage: 'url(https://bafybeiax2usqi6g7cglrvxa5n3vw7vimqruklebxnmmpm5bo7ah4yldhwi.ipfs.w3s.link/Frame%2039%20(2).png)',
@@ -1068,37 +1047,7 @@ app.frame('/share', async (c) => {
         color: 'white',
         fontFamily: 'Arial, sans-serif',
       }}>
-        {profileImage ? (
-          <img 
-            src={profileImage} 
-            alt="User profile"
-            width={200}
-            height={200}
-            style={{
-              borderRadius: '50%',
-              border: '3px solid white',
-              marginBottom: '20px',
-              objectFit: 'cover',
-            }}
-          />
-        ) : (
-          <div style={{
-            width: '200px',
-            height: '200px',
-            borderRadius: '50%',
-            border: '3px solid white',
-            marginBottom: '20px',
-            backgroundColor: '#303095',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '72px',
-            color: 'white',
-          }}>
-            {fid ? fid.toString().slice(0, 2) : 'P'}
-          </div>
-        )}
-        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>{resultMessage}</h1>
+        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>{username}'s Stats</h1>
         <div style={{
           display: 'flex',
           flexDirection: 'column' as const,
@@ -1129,9 +1078,7 @@ app.frame('/share', async (c) => {
       </div>
     ),
     intents: [
-      <Button action="/game">Play Again</Button>,
-      <Button action="https://moxie-frames.airstack.xyz/stim?t=cid_thepod">/thepod FT</Button>,
-      <Button.Link href={farcasterShareURL}>
+      <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Maxi and my POD Score is ${podScore.toFixed(1)} 🕹️. Keep playing to increase your POD Score! Frame by @goldie & @themrsazon. Powered by @moxie.eth`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-stats?wins=${userRecord.wins}&losses=${userRecord.losses}&ties=${userRecord.ties}&games=${totalGamesPlayed}&tokens=${thepodTokenBalance}&score=${podScore}&username=${encodeURIComponent(username)}`)}`}>
         Share Stats
       </Button.Link>,
       <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent('Play Tic-Tac-Maxi by POD Play presented by @moxie.eth! Frame by @goldie & @themrsazon')}&embeds[]=${encodeURIComponent('https://podplay.vercel.app/api')}`}>
@@ -1248,7 +1195,7 @@ app.frame('/shared-game', (c) => {
       </div>
     ),
     intents: [
-      <Button action="/game">Play</Button>
+      <Button action="/difficulty">Play</Button>
     ]
   });
 });
