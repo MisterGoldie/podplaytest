@@ -685,8 +685,35 @@ app.frame('/', () => {
   })
 })
 
+app.frame('/howtoplay', () => {
+  const imageUrl = 'https://bafybeifzk7uojcicnh6yhnqvoldkpzuf32sullm34ela266xthbidca6ny.ipfs.w3s.link/HowToPlay%20(1).png'
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>How to Play Tic-Tac-Maxi</title>
+      <meta property="fc:frame" content="vNext">
+      <meta property="fc:frame:image" content="${imageUrl}">
+      <meta property="fc:frame:image:aspect_ratio" content="1:1">
+      <meta property="fc:frame:button:1" content="Choose Difficulty">
+      <meta property="fc:frame:button:1:action" content="post">
+      <meta property="fc:frame:post_url" content="https://podplay.vercel.app/api/difficulty">
+    </head>
+    <body>
+    </body>
+    </html>
+  `
+
+  return new Response(html, {
+    headers: { 'Content-Type': 'text/html' },
+  })
+})
+
 // How to Play route
-app.frame('/howtoplay', (c) => {
+app.frame('/difficulty', (c) => {
   return c.res({
     image: (
       <div style={{
