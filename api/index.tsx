@@ -960,7 +960,7 @@ app.frame('/next', (c) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Your Stats: ${result}</title>
+      <title>Game Result: ${result}</title>
       <meta property="fc:frame" content="vNext">
       <meta property="fc:frame:image" content="${gifUrl}">
       <meta property="fc:frame:image:aspect_ratio" content="1:1">
@@ -1068,37 +1068,7 @@ app.frame('/share', async (c) => {
         color: 'white',
         fontFamily: 'Arial, sans-serif',
       }}>
-        {profileImage ? (
-          <img 
-            src={profileImage} 
-            alt="User profile"
-            width={200}
-            height={200}
-            style={{
-              borderRadius: '50%',
-              border: '3px solid white',
-              marginBottom: '20px',
-              objectFit: 'cover',
-            }}
-          />
-        ) : (
-          <div style={{
-            width: '200px',
-            height: '200px',
-            borderRadius: '50%',
-            border: '3px solid white',
-            marginBottom: '20px',
-            backgroundColor: '#303095',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '72px',
-            color: 'white',
-          }}>
-            {fid ? fid.toString().slice(0, 2) : 'P'}
-          </div>
-        )}
-        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>{resultMessage}</h1>
+        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Your Stats</h1>
         <div style={{
           display: 'flex',
           flexDirection: 'column' as const,
@@ -1130,12 +1100,10 @@ app.frame('/share', async (c) => {
     ),
     intents: [
       <Button action="/difficulty">Play Again</Button>,
+      <Button action="/share">Your Stats</Button>,
       <Button action="https://moxie-frames.airstack.xyz/stim?t=cid_thepod">/thepod FT</Button>,
-      <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Maxi and my POD Score is ${podScore.toFixed(1)} 🕹️. Keep playing to increase your POD Score! Frame by @goldie & @themrsazon. Powered by @moxie.eth`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-stats?wins=${userRecord.wins}&losses=${userRecord.losses}&ties=${userRecord.ties}&games=${totalGamesPlayed}&tokens=${thepodTokenBalance}&score=${podScore}&username=${encodeURIComponent(username)}`)}`}>
-        Share Stats
-      </Button.Link>,
-      <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent('Play Tic-Tac-Maxi by POD Play presented by @moxie.eth! Frame by @goldie & @themrsazon')}&embeds[]=${encodeURIComponent('https://podplay.vercel.app/api')}`}>
-        Share Frame
+      <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`}>
+        Share Results
       </Button.Link>
     ],
   });
