@@ -115,6 +115,7 @@ type GameState = {
   board: (string | null)[];
   currentPlayer: 'O' | 'X';
   isGameOver: boolean;
+  difficulty: 'easy' | 'medium' | 'hard';
 }
 
 function calculatePODScore(wins: number, ties: number, losses: number, totalGames: number, tokenBalance: number): number {
@@ -393,6 +394,7 @@ async function getUserProfilePicture(fid: string): Promise<string | null> {
   }
 }
 
+// Update the updateUserTie function to include difficulty
 async function updateUserTie(fid: string) {
   console.log(`Attempting to update tie for FID: ${fid}`);
   try {
@@ -416,46 +418,80 @@ async function updateUserTieAsync(fid: string) {
   }
 }
 
-async function getUserRecord(fid: string): Promise<{ wins: number; losses: number; ties: number }> {
-  console.log(`Attempting to get user record for FID: ${fid}`);
+// Update the user record type
+type UserRecord = {
+  wins: number;
+  losses: number;
+  ties: number;
+  easyWins: number;
+  mediumWins: number;
+  hardWins: number;
+}
+
+// Update the getUserRecord function
+async function getUserRecord(fid: string): Promise<UserRecord> {
+  console.log(`Getting user record for FID: ${fid}`);
   try {
     const database = getDb();
     const userDoc = await database.collection('users').doc(fid).get();
     if (!userDoc.exists) {
-      console.log(`No record found for FID: ${fid}. Returning default record.`);
-      return { wins: 0, losses: 0, ties: 0 };
+      return {
+        wins: 0,
+        losses: 0,
+        ties: 0,
+        easyWins: 0,
+        mediumWins: 0,
+        hardWins: 0
+      };
     }
     const userData = userDoc.data();
-    console.log(`User data for FID ${fid}:`, userData);
-    return { 
-      wins: userData?.wins || 0, 
+    return {
+      wins: userData?.wins || 0,
       losses: userData?.losses || 0,
-      ties: userData?.ties || 0
+      ties: userData?.ties || 0,
+      easyWins: userData?.easyWins || 0,
+      mediumWins: userData?.mediumWins || 0,
+      hardWins: userData?.hardWins || 0
     };
   } catch (error) {
     console.error(`Error getting user record for FID ${fid}:`, error);
-    // Return default record in case of error
-    return { wins: 0, losses: 0, ties: 0 };
+    return {
+      wins: 0,
+      losses: 0,
+      ties: 0,
+      easyWins: 0,
+      mediumWins: 0,
+      hardWins: 0
+    };
   }
 }
 
-async function updateUserRecord(fid: string, isWin: boolean) {
-  console.log(`Attempting to update user record for FID: ${fid}, isWin: ${isWin}`);
+// Update the updateUserRecord function
+async function updateUserRecord(fid: string, isWin: boolean, difficulty: 'easy' | 'medium' | 'hard') {
+  console.log(`Updating user record for FID ${fid}, isWin: ${isWin}, difficulty: ${difficulty}`);
   try {
     const database = getDb();
     const userRef = database.collection('users').doc(fid);
-    await userRef.set({
+    const update: any = {
       [isWin ? 'wins' : 'losses']: admin.firestore.FieldValue.increment(1)
-    }, { merge: true });
+    };
+    
+    // Add difficulty-specific win counter
+    if (isWin) {
+      update[`${difficulty}Wins`] = admin.firestore.FieldValue.increment(1);
+    }
+    
+    await userRef.set(update, { merge: true });
     console.log(`User record updated successfully for FID: ${fid}`);
   } catch (error) {
     console.error(`Error updating user record for FID ${fid}:`, error);
   }
 }
 
-async function updateUserRecordAsync(fid: string, isWin: boolean) {
+// Update the updateUserRecordAsync function to include difficulty
+async function updateUserRecordAsync(fid: string, isWin: boolean, difficulty: 'easy' | 'medium' | 'hard') {
   try {
-    await updateUserRecord(fid, isWin);
+    await updateUserRecord(fid, isWin, difficulty);
     console.log(`User record updated asynchronously for FID: ${fid}`);
   } catch (error) {
     console.error(`Error updating user record asynchronously for FID ${fid}:`, error);
@@ -542,7 +578,12 @@ function encodeState(state: GameState): string {
 }
 
 function decodeState(encodedState: string): GameState {
-  return JSON.parse(Buffer.from(encodedState, 'base64').toString());
+  const decoded = JSON.parse(Buffer.from(encodedState, 'base64').toString());
+  // Ensure difficulty exists in decoded state
+  return {
+    ...decoded,
+    difficulty: decoded.difficulty || 'medium' // Default to medium if not specified
+  };
 }
 
 function renderBoard(board: (string | null)[]) {
@@ -617,33 +658,46 @@ app.frame('/', () => {
 })
 
 // How to Play route
-app.frame('/howtoplay', () => {
-  const imageUrl = 'https://bafybeifzk7uojcicnh6yhnqvoldkpzuf32sullm34ela266xthbidca6ny.ipfs.w3s.link/HowToPlay%20(1).png'
-  const baseUrl = 'https://podplay.vercel.app' // Update this to your actual domain
-
-  const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>How to Play Tic-Tac-Maxi</title>
-      <meta property="fc:frame" content="vNext">
-      <meta property="fc:frame:image" content="${imageUrl}">
-      <meta property="fc:frame:image:aspect_ratio" content="1:1">
-      <meta property="fc:frame:button:1" content="Start Game">
-      <meta property="fc:frame:button:1:action" content="post">
-      <meta property="fc:frame:post_url" content="${baseUrl}/api/game">
-    </head>
-    <body>
-    </body>
-    </html>
-  `
-
-  return new Response(html, {
-    headers: { 'Content-Type': 'text/html' },
-  })
-})
+app.frame('/howtoplay', (c) => {
+  return c.res({
+    image: (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column' as const,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: 'url(https://bafybeiax2usqi6g7cglrvxa5n3vw7vimqruklebxnmmpm5bo7ah4yldhwi.ipfs.w3s.link/Frame%2039%20(2).png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontFamily: 'Arial, sans-serif',
+      }}>
+        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Select Difficulty</h1>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column' as const,
+          gap: '20px',
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          padding: '40px',
+          borderRadius: '10px',
+          width: '80%',
+        }}>
+          <p style={{ fontSize: '32px', textAlign: 'center' }}>Choose your difficulty level:</p>
+          <p style={{ fontSize: '28px', marginBottom: '10px' }}>🟢 Easy: For casual fun</p>
+          <p style={{ fontSize: '28px', marginBottom: '10px' }}>🟡 Medium: For a challenge</p>
+          <p style={{ fontSize: '28px', marginBottom: '10px' }}>🔴 Hard: For experts</p>
+        </div>
+      </div>
+    ),
+    intents: [
+      <Button value="start:easy">Easy Mode 🟢</Button>,
+      <Button value="start:medium">Medium Mode 🟡</Button>,
+      <Button value="start:hard">Hard Mode 🔴</Button>
+    ],
+  });
+});
 
 app.frame('/game', async (c) => {
   console.log('Entering /game route');
@@ -661,7 +715,7 @@ app.frame('/game', async (c) => {
     }
   }
 
-  let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false };
+  let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false, difficulty: 'easy' };
   let message = `New game started! Your turn, ${username}`;
   let gameResult: 'win' | 'lose' | 'draw' | null = null;
 
@@ -682,7 +736,7 @@ app.frame('/game', async (c) => {
           message = `${username} wins! Game over.`;
           state.isGameOver = true;
           if (fid) {
-            updateUserRecordAsync(fid.toString(), true);
+            updateUserRecordAsync(fid.toString(), true, state.difficulty);
           }
         } else if (state.board.every((cell) => cell !== null)) {
           gameResult = 'draw';
@@ -701,7 +755,7 @@ app.frame('/game', async (c) => {
             message += ` Computer wins! Game over.`;
             state.isGameOver = true;
             if (fid) {
-              updateUserRecordAsync(fid.toString(), false);
+              updateUserRecordAsync(fid.toString(), false, state.difficulty);
             }
           } else if (state.board.every((cell) => cell !== null)) {
             gameResult = 'draw';
@@ -865,8 +919,17 @@ app.frame('/share', async (c) => {
   const result = c.req.query('result');
   const state = c.req.query('state');
 
+  let decodedState: GameState | null = null;
+  if (state) {
+    try {
+      decodedState = decodeState(state as string);
+    } catch (error) {
+      console.error('Error decoding state:', error);
+    }
+  }
+
   let profileImage: string | null = null;
-  let userRecord = { wins: 0, losses: 0, ties: 0 };
+  let userRecord = { wins: 0, losses: 0, ties: 0, easyWins: 0, mediumWins: 0, hardWins: 0 };
   let totalGamesPlayed = 0;
   let podScore = 0;
   let ownsThepodToken = false;
@@ -890,14 +953,6 @@ app.frame('/share', async (c) => {
       thepodTokenBalance = fanTokenResult.balance;
       username = usernameResult;
       podScore = calculatePODScore(userRecord.wins, userRecord.ties, userRecord.losses, totalGamesPlayed, thepodTokenBalance);
-
-      console.log(`Profile image URL for FID ${fid}:`, profileImage);
-      console.log(`User record for FID ${fid}:`, userRecord);
-      console.log(`Total games played for FID ${fid}:`, totalGamesPlayed);
-      console.log(`POD Score for FID ${fid}:`, podScore);
-      console.log(`Owns 'thepod' fan token for FID ${fid}:`, ownsThepodToken);
-      console.log(`'thepod' fan token balance for FID ${fid}:`, thepodTokenBalance);
-      console.log(`Username for FID ${fid}:`, username);
     } catch (error) {
       console.error(`Error fetching data for FID ${fid}:`, error);
     }
@@ -918,7 +973,8 @@ app.frame('/share', async (c) => {
       resultMessage = "Game result";
   }
 
-  const shareText = `I just played Tic-Tac-Maxi on POD Play! ${resultMessage} My POD Score is ${podScore}. Can you beat me? 🕹️`;
+  const difficultyText = decodedState ? ` on ${decodedState.difficulty.toUpperCase()} mode` : '';
+  const shareText = `I just played Tic-Tac-Maxi${difficultyText}! ${resultMessage} My POD Score is ${podScore}. Can you beat me? 🕹️`;
   const baseUrl = 'https://podplay.vercel.app';
   const shareUrl = `${baseUrl}/api/shared-game?state=${state}&result=${result}`;
   const farcasterShareURL = `https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`;
@@ -993,6 +1049,18 @@ app.frame('/share', async (c) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
             <span style={{ fontSize: '36px' }}>/thepod Fan Tokens owned:</span>
             <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{thepodTokenBalance.toFixed(2)}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+            <span style={{ fontSize: '36px' }}>Easy Mode Wins:</span>
+            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{userRecord.easyWins}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+            <span style={{ fontSize: '36px' }}>Medium Mode Wins:</span>
+            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{userRecord.mediumWins}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+            <span style={{ fontSize: '36px' }}>Hard Mode Wins:</span>
+            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{userRecord.hardWins}</span>
           </div>
         </div>
         <p style={{ fontSize: '28px', marginTop: '20px' }}>Frame by @goldie & @themrsazon</p>
