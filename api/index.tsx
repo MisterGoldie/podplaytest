@@ -1157,23 +1157,11 @@ app.frame('/share', async (c) => {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
             <span style={{ fontSize: '36px' }}>Total Games Played:</span>
-            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{totalGamesPlayed}</span>
+            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{userRecord.wins + userRecord.losses + userRecord.ties}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
             <span style={{ fontSize: '36px' }}>/thepod Fan Tokens owned:</span>
             <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{thepodTokenBalance.toFixed(2)}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
-            <span style={{ fontSize: '36px' }}>Easy Mode Wins:</span>
-            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{userRecord.easyWins}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
-            <span style={{ fontSize: '36px' }}>Medium Mode Wins:</span>
-            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{userRecord.mediumWins}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
-            <span style={{ fontSize: '36px' }}>Hard Mode Wins:</span>
-            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{userRecord.hardWins}</span>
           </div>
         </div>
         <p style={{ fontSize: '28px', marginTop: '20px' }}>Frame by @goldie & @themrsazon</p>
