@@ -11,7 +11,6 @@ const AIRSTACK_API_URL = 'https://api.airstack.xyz/gql';
 const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
 const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as string;
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
-const MOXIE_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_protocol_stats_mainnet/version/latest";
 const MOXIE_VESTING_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_vesting_mainnet/version/latest";
 const WIN_GIF_URL = 'https://bafybeie6qqm6r24chds5smesevkrdsg3jqmgw5wdmwzat7zdze3ukcgd5m.ipfs.w3s.link/giphy-downsized%202.GIF'
 const LOSE_GIF_URL = 'https://bafybeighyzexsg3vjxli5o6yfxfxuwrwsjoljnruvwhpqklqdyddpsxxry.ipfs.w3s.link/giphy%202.GIF'
@@ -119,11 +118,11 @@ type GameState = {
 }
 
 function calculatePODScore(wins: number, ties: number, losses: number, totalGames: number, tokenBalance: number): number {
-  const baseScore = (wins * 2) + ties + (losses * 0.5);
-  const gamesBonusScore = totalGames >= 25 ? 10 : 0;
-  const tokenBonusScore = Math.floor(tokenBalance) * 25; // 25 points for each whole token
-  const totalScore = baseScore + gamesBonusScore + tokenBonusScore;
-  return Math.round(totalScore * 10) / 10; // Round to one decimal place
+  const baseScore = (wins * 3) + ties - losses;
+  const experienceMultiplier = Math.log10(totalGames + 1);
+  const tokenMultiplier = Math.log10(tokenBalance + 1);
+  
+  return Math.round(baseScore * (1 + experienceMultiplier) * (1 + tokenMultiplier));
 }
 
 
@@ -214,43 +213,56 @@ async function getVestingContractAddress(beneficiaryAddresses: string[]): Promis
   }
 }
 
-async function getOwnedFanTokens(addresses: string[]): Promise<TokenHolding[] | null> {
-  const graphQLClient = new GraphQLClient(MOXIE_API_URL);
+// Add delay between API calls
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-  const query = gql`
-    query MyQuery($userAddresses: [ID!]) {
-      users(where: { id_in: $userAddresses }) {
-        portfolio {
-          balance
-          buyVolume
-          sellVolume
-          subjectToken {
-            name
-            symbol
-            currentPriceInMoxie
+// Use it in getOwnedFanTokens
+async function getOwnedFanTokens(addresses: string[]): Promise<any> {
+  try {
+    // Add delay between batches of requests
+    await delay(1000); // 1 second delay
+    const client = new GraphQLClient('https://api.moxie.xyz/graphql');
+    const query = `
+      query MyQuery($userAddresses: [ID!]) {
+        users(where: { id_in: $userAddresses }) {
+          portfolio {
+            balance
+            buyVolume
+            sellVolume
+            subjectToken {
+              name
+              symbol
+              currentPriceInMoxie
+            }
           }
         }
       }
+    `;
+
+    const response = await client.request(query, { userAddresses: addresses });
+    return response;
+  } catch (error: any) {
+    if (error?.response?.status === 429) {
+      console.log('Rate limit hit, using fallback values');
+      // Return fallback data
+      return {
+        users: addresses.map(() => ({
+          portfolio: {
+            balance: 0,
+            buyVolume: 0,
+            sellVolume: 0,
+            subjectToken: {
+              name: 'thepod',
+              symbol: 'POD',
+              currentPriceInMoxie: 0
+            }
+          }
+        }))
+      };
     }
-  `;
-
-  const variables = {
-    userAddresses: addresses.map(address => address.toLowerCase())
-  };
-
-  try {
-    const data = await graphQLClient.request<any>(query, variables);
-    console.log('Moxie API response for owned tokens:', JSON.stringify(data, null, 2));
-
-    if (!data.users || data.users.length === 0) {
-      console.log(`No fan tokens found for addresses: ${addresses.join(', ')}`);
-      return null;
-    }
-
-    return data.users.flatMap((user: { portfolio: TokenHolding[] }) => user.portfolio);
-  } catch (error) {
-    console.error('Error fetching owned fan tokens from Moxie API:', error);
-    return null;
+    throw error;
   }
 }
 
@@ -270,8 +282,10 @@ async function checkFanTokenOwnership(fid: string): Promise<{ ownsToken: boolean
       return { ownsToken: false, balance: 0 };
     }
 
-    const thepodToken = ownedTokens.find(token => 
-      token.subjectToken.symbol.toLowerCase() === "cid:thepod"
+    const thepodToken = ownedTokens.users.find((user: { portfolio: any[]; }) => 
+      user.portfolio.some(token => 
+        token.subjectToken.symbol.toLowerCase() === "cid:thepod"
+      )
     );
 
     if (thepodToken && parseFloat(thepodToken.balance) > 0) {
