@@ -993,17 +993,8 @@ app.frame('/share', async (c) => {
   const result = c.req.query('result');
   const state = c.req.query('state');
 
-  let decodedState: GameState | null = null;
-  if (state) {
-    try {
-      decodedState = decodeState(state as string);
-    } catch (error) {
-      console.error('Error decoding state:', error);
-    }
-  }
-
   let profileImage: string | null = null;
-  let userRecord = { wins: 0, losses: 0, ties: 0, easyWins: 0, mediumWins: 0, hardWins: 0 };
+  let userRecord = { wins: 0, losses: 0, ties: 0 };
   let totalGamesPlayed = 0;
   let podScore = 0;
   let ownsThepodToken = false;
@@ -1027,6 +1018,8 @@ app.frame('/share', async (c) => {
       thepodTokenBalance = fanTokenResult.balance;
       username = usernameResult;
       podScore = calculatePODScore(userRecord.wins, userRecord.ties, userRecord.losses, totalGamesPlayed, thepodTokenBalance);
+
+      console.log(`Profile image URL for FID ${fid}:`, profileImage);
     } catch (error) {
       console.error(`Error fetching data for FID ${fid}:`, error);
     }
@@ -1037,8 +1030,8 @@ app.frame('/share', async (c) => {
       <div style={{
         display: 'flex',
         flexDirection: 'column' as const,
-        alignItems: 'center',
         justifyContent: 'center',
+        alignItems: 'center',
         width: '1080px',
         height: '1080px',
         backgroundImage: 'url(https://bafybeiax2usqi6g7cglrvxa5n3vw7vimqruklebxnmmpm5bo7ah4yldhwi.ipfs.w3s.link/Frame%2039%20(2).png)',
@@ -1047,6 +1040,36 @@ app.frame('/share', async (c) => {
         color: 'white',
         fontFamily: 'Arial, sans-serif',
       }}>
+        {profileImage ? (
+          <img 
+            src={profileImage} 
+            alt="User profile"
+            width={200}
+            height={200}
+            style={{
+              borderRadius: '50%',
+              border: '3px solid white',
+              marginBottom: '20px',
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
+          <div style={{
+            width: '200px',
+            height: '200px',
+            borderRadius: '50%',
+            border: '3px solid white',
+            marginBottom: '20px',
+            backgroundColor: '#303095',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '72px',
+            color: 'white',
+          }}>
+            {fid ? fid.toString().slice(0, 2) : 'P'}
+          </div>
+        )}
         <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>{username}'s Stats</h1>
         <div style={{
           display: 'flex',
@@ -1078,6 +1101,8 @@ app.frame('/share', async (c) => {
       </div>
     ),
     intents: [
+      <Button action="/game">Play Again</Button>,
+      <Button action="https://moxie-frames.airstack.xyz/stim?t=cid_thepod">/thepod FT</Button>,
       <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Maxi and my POD Score is ${podScore.toFixed(1)} 🕹️. Keep playing to increase your POD Score! Frame by @goldie & @themrsazon. Powered by @moxie.eth`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-stats?wins=${userRecord.wins}&losses=${userRecord.losses}&ties=${userRecord.ties}&games=${totalGamesPlayed}&tokens=${thepodTokenBalance}&score=${podScore}&username=${encodeURIComponent(username)}`)}`}>
         Share Stats
       </Button.Link>,
@@ -1089,9 +1114,17 @@ app.frame('/share', async (c) => {
 });
 
 
-app.frame('/shared-stats', (c) => {
+app.frame('/shared-stats', async (c) => {
   const { wins, losses, ties, games, tokens, score, username } = c.req.query();
   
+  // Fetch the profile image
+  let profileImage: string | null = null;
+  try {
+    profileImage = await getUserProfilePicture(username as string);
+  } catch (error) {
+    console.error('Error fetching profile image:', error);
+  }
+
   return c.res({
     image: (
       <div style={{
@@ -1107,6 +1140,9 @@ app.frame('/shared-stats', (c) => {
         color: 'white',
         fontFamily: 'Arial, sans-serif',
       }}>
+        {profileImage && (
+          <img src={profileImage} alt="Profile" style={{ borderRadius: '50%', width: '150px', height: '150px', marginBottom: '20px' }} />
+        )}
         <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>{decodeURIComponent(username as string)}'s Stats</h1>
         <div style={{
           display: 'flex',
