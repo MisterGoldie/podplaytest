@@ -638,7 +638,7 @@ function renderBoard(board: (string | null)[]) {
 function getCPUMove(board: (string | null)[], difficulty: 'easy' | 'medium' | 'hard'): number {
   // Easy mode: Mostly random moves with occasional blocking
   if (difficulty === 'easy') {
-    if (Math.random() < 0.7) {
+    if (Math.random() < 0.5) {
       const availableMoves = board.reduce((acc, cell, index) => {
         if (cell === null) acc.push(index);
         return acc;
@@ -649,7 +649,7 @@ function getCPUMove(board: (string | null)[], difficulty: 'easy' | 'medium' | 'h
 
   // Medium mode: Mix of random and strategic moves
   if (difficulty === 'medium') {
-    if (Math.random() < 0.4) {
+    if (Math.random() < 0.3) {
       const availableMoves = board.reduce((acc, cell, index) => {
         if (cell === null) acc.push(index);
         return acc;
