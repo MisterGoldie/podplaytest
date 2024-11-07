@@ -788,9 +788,16 @@ app.frame('/game', async (c) => {
 
   let state: GameState = {
     board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false,
-    difficulty: 'easy'
+    difficulty: 'easy' // Default difficulty
   };
-  let message = `New game started! Your turn, ${username}`;
+  
+  // Set difficulty based on buttonValue if starting a new game
+  if (status === 'response' && buttonValue && buttonValue.startsWith('start:')) {
+    const [, difficulty] = buttonValue.split(':');
+    state.difficulty = difficulty as 'easy' | 'medium' | 'hard';
+  }
+  
+  let message = `New game started on ${state.difficulty} mode! Your turn, ${username}`;
   let gameResult: 'win' | 'lose' | 'draw' | null = null;
 
   if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
@@ -807,14 +814,14 @@ app.frame('/game', async (c) => {
         
         if (checkWin(state.board)) {
           gameResult = 'win';
-          message = `${username} wins! Game over.`;
+          message = `${username} wins on ${state.difficulty} mode! Game over.`;
           state.isGameOver = true;
           if (fid) {
             updateUserRecordAsync(fid.toString(), true, state.difficulty);
           }
         } else if (state.board.every((cell) => cell !== null)) {
           gameResult = 'draw';
-          message = "Game over! It's a Tie.";
+          message = `Game over! It's a Tie on ${state.difficulty} mode.`;
           state.isGameOver = true;
           if (fid) {
             updateUserTieAsync(fid.toString());
@@ -826,14 +833,14 @@ app.frame('/game', async (c) => {
           
           if (checkWin(state.board)) {
             gameResult = 'lose';
-            message += ` Computer wins! Game over.`;
+            message += ` Computer wins on ${state.difficulty} mode! Game over.`;
             state.isGameOver = true;
             if (fid) {
               updateUserRecordAsync(fid.toString(), false, state.difficulty);
             }
           } else if (state.board.every((cell) => cell !== null)) {
             gameResult = 'draw';
-            message += " It's a draw. Game over.";
+            message += ` It's a draw on ${state.difficulty} mode. Game over.`;
             state.isGameOver = true;
             if (fid) {
               updateUserTieAsync(fid.toString());
