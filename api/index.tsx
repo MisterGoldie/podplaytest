@@ -749,7 +749,6 @@ app.frame('/game', async (c) => {
 
   // Handle difficulty selection
   if (buttonValue?.startsWith('start:')) {
-    console.log('Starting new game with difficulty:', buttonValue);
     const difficulty = buttonValue.split(':')[1] as 'easy' | 'medium' | 'hard';
     state = {
       board: Array(9).fill(null),
@@ -758,50 +757,7 @@ app.frame('/game', async (c) => {
       difficulty: difficulty
     };
     message = `New game started on ${difficulty.toUpperCase()} mode! Your turn, ${username}`;
-  } else {
-    // Default state if no valid button value
-    console.log('No valid button value, returning to difficulty selection');
-    return c.res({
-      image: (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column' as const,
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '1080px',
-          height: '1080px',
-          backgroundImage: 'url(https://bafybeiax2usqi6g7cglrvxa5n3vw7vimqruklebxnmmpm5bo7ah4yldhwi.ipfs.w3s.link/Frame%2039%20(2).png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          color: 'white',
-          fontFamily: 'Arial, sans-serif',
-        }}>
-          <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Select Difficulty</h1>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column' as const,
-            gap: '20px',
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            padding: '40px',
-            borderRadius: '10px',
-            width: '80%',
-          }}>
-            <p style={{ fontSize: '32px', textAlign: 'center' }}>Choose your difficulty level:</p>
-            <p style={{ fontSize: '28px', marginBottom: '10px' }}>🟢 Easy: For casual fun</p>
-            <p style={{ fontSize: '28px', marginBottom: '10px' }}>🟡 Medium: For a challenge</p>
-            <p style={{ fontSize: '28px', marginBottom: '10px' }}>🔴 Hard: For experts</p>
-          </div>
-        </div>
-      ),
-      intents: [
-        <Button action="/game" value="start:easy">Easy Mode 🟢</Button>,
-        <Button action="/game" value="start:medium">Medium Mode 🟡</Button>,
-        <Button action="/game" value="start:hard">Hard Mode 🔴</Button>
-      ],
-    });
-  }
-  // Handle game moves
-  if (buttonValue?.startsWith('move:')) {
+  } else if (buttonValue?.startsWith('move:')) {
     console.log('Processing move');
     try {
       const [, encodedState, moveIndex] = buttonValue.split(':');
@@ -866,11 +822,47 @@ app.frame('/game', async (c) => {
       };
       message = "An error occurred while processing your move. Please try again.";
     }
+  } else {
+    // Return difficulty selection screen
+    return c.res({
+      image: (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column' as const,
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '1080px',
+          height: '1080px',
+          backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          color: 'white',
+          fontFamily: '"Silkscreen", sans-serif',
+        }}>
+          <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Select Difficulty</h1>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column' as const,
+            gap: '20px',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            padding: '40px',
+            borderRadius: '10px',
+            width: '80%',
+          }}>
+            <p style={{ fontSize: '32px', textAlign: 'center' }}>Choose your difficulty level:</p>
+            <p style={{ fontSize: '28px', marginBottom: '10px' }}>🟢 Easy: For casual fun</p>
+            <p style={{ fontSize: '28px', marginBottom: '10px' }}>🟡 Medium: For a challenge</p>
+            <p style={{ fontSize: '28px', marginBottom: '10px' }}>🔴 Hard: For experts</p>
+          </div>
+        </div>
+      ),
+      intents: [
+        <Button action="/game" value="start:easy">Easy Mode 🟢</Button>,
+        <Button action="/game" value="start:medium">Medium Mode 🟡</Button>,
+        <Button action="/game" value="start:hard">Hard Mode 🔴</Button>
+      ],
+    });
   }
-
-  console.log('Final game state:', state);
-  console.log('Message:', message);
-  console.log('Game result:', gameResult);
 
   const encodedState = encodeState(state);
   const availableMoves = state.board.reduce((acc, cell, index) => {
@@ -880,16 +872,17 @@ app.frame('/game', async (c) => {
 
   const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
 
-  // Show the game board with the current difficulty level
+  // Return game board screen
   return c.res({
     image: (
       <div style={{
         display: 'flex',
-        flexDirection: 'column' as const,
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         width: '1080px',
         height: '1080px',
+        gap: '20px',
         backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -899,7 +892,6 @@ app.frame('/game', async (c) => {
       }}>
         <div style={{
           fontSize: '24px',
-          marginBottom: '20px',
           padding: '10px 20px',
           backgroundColor: 'rgba(0, 0, 0, 0.7)',
           borderRadius: '10px',
@@ -908,9 +900,34 @@ app.frame('/game', async (c) => {
         }}>
           {state.difficulty.toUpperCase()} MODE
         </div>
-        {renderBoard(state.board)}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+        }}>
+          {[0, 1, 2].map(row => (
+            <div key={row} style={{ display: 'flex', gap: '20px' }}>
+              {[0, 1, 2].map(col => {
+                const index = row * 3 + col;
+                return (
+                  <div key={index} style={{
+                    width: '200px',
+                    height: '200px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '120px',
+                    background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
+                    border: '4px solid black',
+                  }}>
+                    {state.board[index]}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
         <div style={{ 
-          marginTop: '40px', 
           maxWidth: '900px', 
           textAlign: 'center', 
           backgroundColor: 'rgba(255, 255, 255, 0.7)', 
