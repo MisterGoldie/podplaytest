@@ -1201,6 +1201,7 @@ app.frame('/shared-game', (c) => {
   
   let decodedState;
   try {
+    console.log('Received state:', state);
     decodedState = state ? decodeState(state as string) : {
       board: Array(9).fill(null),
       currentPlayer: 'O',
