@@ -720,9 +720,9 @@ app.frame('/howtoplay', (c) => {
       </div>
     ),
     intents: [
-      <Button value="start:easy">Easy Mode 🟢</Button>,
-      <Button value="start:medium">Medium Mode 🟡</Button>,
-      <Button value="start:hard">Hard Mode 🔴</Button>
+      <Button action="/game" value="start:easy">Easy Mode 🟢</Button>,
+      <Button action="/game" value="start:medium">Medium Mode 🟡</Button>,
+      <Button action="/game" value="start:hard">Hard Mode 🔴</Button>
     ],
   });
 });
