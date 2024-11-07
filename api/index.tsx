@@ -867,7 +867,7 @@ app.frame('/game', async (c) => {
 
   const intents = state.isGameOver
     ? [
-        <Button action="/game">Play Again</Button>,
+        <Button action="/difficulty">Play Again</Button>,
         <Button action="https://moxie-frames.airstack.xyz/stim?t=cid_thepod">/thepod FT</Button>,
         <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Maxi by POD Play presented by @moxie.eth! ${
           gameResult === 'win' 
