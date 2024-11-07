@@ -973,7 +973,7 @@ app.frame('/next', (c) => {
       <meta property="fc:frame:button:2:target" content="${baseUrl}/api/share">
     </head>
     <body>
-      <h1>Game Result: ${result}</h1>
+      <h1>Your Stats: ${result}</h1>
     </body>
     </html>
   `;
