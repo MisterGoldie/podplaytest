@@ -1105,7 +1105,7 @@ app.frame('/share', async (c) => {
       <Button action="/difficulty">Play Again</Button>,
       <Button action="/share">Your Stats</Button>,
       <Button action="https://moxie-frames.airstack.xyz/stim?t=cid_thepod">/thepod FT</Button>,
-      <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(shareText)}&embeds[]=${encodeURIComponent(shareUrl)}`}>
+      <Button.Link href={`${baseUrl}/api/shared-stats?wins=${userRecord.wins}&losses=${userRecord.losses}&ties=${userRecord.ties}&games=${totalGamesPlayed}&tokens=${thepodTokenBalance}&score=${podScore}&username=${encodeURIComponent(username)}`}>
         Share Results
       </Button.Link>
     ],
