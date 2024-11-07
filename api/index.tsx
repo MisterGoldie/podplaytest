@@ -933,13 +933,13 @@ app.frame('/game', async (c) => {
     ),
     intents: state.isGameOver
       ? [
-          <Button value="start:easy">New Game (Easy) 🟢</Button>,
-          <Button value="start:medium">New Game (Medium) 🟡</Button>,
-          <Button value="start:hard">New Game (Hard) 🔴</Button>,
+          <Button action="/game" value="start:easy">New Game (Easy) 🟢</Button>,
+          <Button action="/game" value="start:medium">New Game (Medium) 🟡</Button>,
+          <Button action="/game" value="start:hard">New Game (Hard) 🔴</Button>,
           <Button action="/share">Share Stats</Button>
         ]
       : shuffledMoves.map((index) => 
-          <Button value={`move:${encodedState}:${index}`}>
+          <Button action="/game" value={`move:${encodedState}:${index}`}>
             {COORDINATES[index]}
           </Button>
         ),
