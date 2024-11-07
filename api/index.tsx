@@ -12,6 +12,7 @@ const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
 const AIRSTACK_API_KEY_SECONDARY = process.env.AIRSTACK_API_KEY_SECONDARY as string;
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY as string;
 const MOXIE_VESTING_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_vesting_mainnet/version/latest";
+const MOXIE_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_protocol_stats_mainnet/version/latest";
 const WIN_GIF_URL = 'https://bafybeie6qqm6r24chds5smesevkrdsg3jqmgw5wdmwzat7zdze3ukcgd5m.ipfs.w3s.link/giphy-downsized%202.GIF'
 const LOSE_GIF_URL = 'https://bafybeighyzexsg3vjxli5o6yfxfxuwrwsjoljnruvwhpqklqdyddpsxxry.ipfs.w3s.link/giphy%202.GIF'
 const DRAW_GIF_URL = 'https://bafybeigniqc263vmmcwmy2l4hitkklyarbu2e6s3q46izzalxswe5wbyaa.ipfs.w3s.link/giphy.GIF'
@@ -219,85 +220,77 @@ function delay(ms: number): Promise<void> {
 }
 
 // Use it in getOwnedFanTokens
-async function getOwnedFanTokens(addresses: string[]): Promise<any> {
-  try {
-    // Add delay between batches of requests
-    await delay(1000); // 1 second delay
-    const client = new GraphQLClient('https://api.moxie.xyz/graphql');
-    const query = `
-      query MyQuery($userAddresses: [ID!]) {
-        users(where: { id_in: $userAddresses }) {
-          portfolio {
-            balance
-            buyVolume
-            sellVolume
-            subjectToken {
-              name
-              symbol
-              currentPriceInMoxie
-            }
+async function getOwnedFanTokens(addresses: string[]): Promise<TokenHolding[] | null> {
+  const graphQLClient = new GraphQLClient(MOXIE_API_URL)
+  const query = gql`
+    query MyQuery($userAddresses: [ID!]) {
+      users(where: { id_in: $userAddresses }) {
+        portfolio {
+          balance
+          buyVolume
+          sellVolume
+          subjectToken {
+            name
+            symbol
+            currentPriceInMoxie
           }
         }
       }
-    `;
-
-    const response = await client.request(query, { userAddresses: addresses });
-    return response;
-  } catch (error: any) {
-    if (error?.response?.status === 429) {
-      console.log('Rate limit hit, using fallback values');
-      // Return fallback data
-      return {
-        users: addresses.map(() => ({
-          portfolio: {
-            balance: 0,
-            buyVolume: 0,
-            sellVolume: 0,
-            subjectToken: {
-              name: 'thepod',
-              symbol: 'POD',
-              currentPriceInMoxie: 0
-            }
-          }
-        }))
-      };
     }
-    throw error;
+  `
+
+  try {
+    const data = await graphQLClient.request<any>(query, {
+      userAddresses: addresses.map(address => address.toLowerCase())
+    });
+    
+    console.log('Moxie API Response:', JSON.stringify(data, null, 2));
+    
+    return data.users?.[0]?.portfolio || null;
+  } catch (error) {
+    console.error('Error fetching fan tokens:', error);
+    return null;
   }
 }
 
 async function checkFanTokenOwnership(fid: string): Promise<{ ownsToken: boolean; balance: number }> {
   try {
     const addresses = await getFarcasterAddressesFromFID(fid);
-    console.log(`Associated addresses for FID ${fid}:`, addresses);
+    console.log('Found addresses:', addresses);
 
-    const vestingContractAddress = await getVestingContractAddress(addresses);
-    if (vestingContractAddress) {
-      addresses.push(vestingContractAddress);
-      console.log(`Added vesting contract address:`, vestingContractAddress);
-    }
-
-    const ownedTokens = await getOwnedFanTokens(addresses);
-    if (!ownedTokens) {
+    if (!addresses || addresses.length === 0) {
       return { ownsToken: false, balance: 0 };
     }
 
-    const thepodToken = ownedTokens.users.find((user: { portfolio: any[]; }) => 
-      user.portfolio.some(token => 
-        token.subjectToken.symbol.toLowerCase() === "cid:thepod"
-      )
+    // Get vesting contract address if it exists
+    const vestingAddress = await getVestingContractAddress(addresses);
+    if (vestingAddress) {
+      addresses.push(vestingAddress);
+    }
+
+    const fanTokenData = await getOwnedFanTokens(addresses);
+    console.log('Fan token data:', fanTokenData);
+
+    if (!fanTokenData) {
+      return { ownsToken: false, balance: 0 };
+    }
+
+    // Fix: Correctly find the thepod token
+    const thepodToken = fanTokenData.find((token: TokenHolding) => 
+      token.subjectToken.symbol.toLowerCase() === "cid:thepod"
     );
 
+    console.log('Found thepod token:', thepodToken);
+
     if (thepodToken && parseFloat(thepodToken.balance) > 0) {
-      const formattedBalance = parseFloat(thepodToken.balance) / 1e18; // Convert from wei to whole tokens
-      console.log(`User owns ${formattedBalance} of the thepod token`);
-      return { ownsToken: true, balance: formattedBalance };
-    } else {
-      console.log(`User does not own any thepod tokens`);
-      return { ownsToken: false, balance: 0 };
+      const balance = parseFloat(thepodToken.balance) / 1e18; // Convert from wei
+      console.log('Calculated balance:', balance);
+      return { ownsToken: true, balance };
     }
+
+    return { ownsToken: false, balance: 0 };
   } catch (error) {
-    console.error('Error in checkFanTokenOwnership:', error);
+    console.error('Error checking fan token ownership:', error);
     return { ownsToken: false, balance: 0 };
   }
 }
