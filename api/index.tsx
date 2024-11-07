@@ -763,9 +763,9 @@ app.frame('/difficulty', (c) => {
       </div>
     ),
     intents: [
-      <Button action="/game" value="start:easy">Easy Mode 🟢</Button>,
-      <Button action="/game" value="start:medium">Medium Mode 🟡</Button>,
-      <Button action="/game" value="start:hard">Hard Mode 🔴</Button>
+      <Button action="/game" value="start:easy">Easy 🟢</Button>,
+      <Button action="/game" value="start:medium">Medium 🟡</Button>,
+      <Button action="/game" value="start:hard">Hard 🔴</Button>
     ],
   });
 });
@@ -797,7 +797,7 @@ app.frame('/game', async (c) => {
     state.difficulty = difficulty as 'easy' | 'medium' | 'hard';
   }
   
-  let message = `New game started on ${state.difficulty} mode! Your turn, ${username}`;
+  let message = `New game started on ${state.difficulty}! Your turn, ${username}`;
   let gameResult: 'win' | 'lose' | 'draw' | null = null;
 
   if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
@@ -814,14 +814,14 @@ app.frame('/game', async (c) => {
         
         if (checkWin(state.board)) {
           gameResult = 'win';
-          message = `${username} wins on ${state.difficulty} mode! Game over.`;
+          message = `${username} wins! Game over.`;
           state.isGameOver = true;
           if (fid) {
             updateUserRecordAsync(fid.toString(), true, state.difficulty);
           }
         } else if (state.board.every((cell) => cell !== null)) {
           gameResult = 'draw';
-          message = `Game over! It's a Tie on ${state.difficulty} mode.`;
+          message = `It's a draw! Game over.`;
           state.isGameOver = true;
           if (fid) {
             updateUserTieAsync(fid.toString());
@@ -833,14 +833,14 @@ app.frame('/game', async (c) => {
           
           if (checkWin(state.board)) {
             gameResult = 'lose';
-            message += ` Computer wins on ${state.difficulty} mode! Game over.`;
+            message = `Computer wins! Game over.`;
             state.isGameOver = true;
             if (fid) {
               updateUserRecordAsync(fid.toString(), false, state.difficulty);
             }
           } else if (state.board.every((cell) => cell !== null)) {
             gameResult = 'draw';
-            message += ` It's a draw on ${state.difficulty} mode. Game over.`;
+            message += ` It's a draw. Game over.`;
             state.isGameOver = true;
             if (fid) {
               updateUserTieAsync(fid.toString());
