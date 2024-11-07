@@ -618,6 +618,34 @@ function renderBoard(board: (string | null)[]) {
   )
 }
 
+// Add this function before the game route
+function getCPUMove(board: (string | null)[], difficulty: 'easy' | 'medium' | 'hard'): number {
+  // Easy mode: Mostly random moves with occasional blocking
+  if (difficulty === 'easy') {
+    if (Math.random() < 0.7) {
+      const availableMoves = board.reduce((acc, cell, index) => {
+        if (cell === null) acc.push(index);
+        return acc;
+      }, [] as number[]);
+      return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+    }
+  }
+
+  // Medium mode: Mix of random and strategic moves
+  if (difficulty === 'medium') {
+    if (Math.random() < 0.4) {
+      const availableMoves = board.reduce((acc, cell, index) => {
+        if (cell === null) acc.push(index);
+        return acc;
+      }, [] as number[]);
+      return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+    }
+  }
+
+  // Hard mode (or fallback for medium): Use getBestMove
+  return getBestMove(board, 'X');
+}
+
 // Routes will be defined here...
 
 // Initial route
@@ -715,11 +743,23 @@ app.frame('/game', async (c) => {
     }
   }
 
-  let state: GameState = { board: Array(9).fill(null), currentPlayer: 'O', isGameOver: false, difficulty: 'easy' };
-  let message = `New game started! Your turn, ${username}`;
+  let state: GameState;
+  let message: string;
   let gameResult: 'win' | 'lose' | 'draw' | null = null;
 
-  if (status === 'response' && buttonValue && buttonValue.startsWith('move:')) {
+  // Handle difficulty selection
+  if (buttonValue?.startsWith('start:')) {
+    const difficulty = buttonValue.split(':')[1] as 'easy' | 'medium' | 'hard';
+    state = {
+      board: Array(9).fill(null),
+      currentPlayer: 'O',
+      isGameOver: false,
+      difficulty: difficulty
+    };
+    message = `New game started on ${difficulty.toUpperCase()} mode! Your turn, ${username}`;
+  }
+  // Handle game moves
+  else if (buttonValue?.startsWith('move:')) {
     console.log('Processing move');
     try {
       const [, encodedState, moveIndex] = buttonValue.split(':');
@@ -746,7 +786,8 @@ app.frame('/game', async (c) => {
             updateUserTieAsync(fid.toString());
           }
         } else {
-          const computerMove = getBestMove(state.board, 'X');
+          // Use the CPU move based on difficulty
+          const computerMove = getCPUMove(state.board, state.difficulty);
           state.board[computerMove] = 'X';
           message += ` Computer moved at ${COORDINATES[computerMove]}.`;
           
@@ -775,8 +816,63 @@ app.frame('/game', async (c) => {
       }
     } catch (error) {
       console.error('Error processing move:', error);
+      state = {
+        board: Array(9).fill(null),
+        currentPlayer: 'O',
+        isGameOver: false,
+        difficulty: 'medium'
+      };
       message = "An error occurred while processing your move. Please try again.";
     }
+  }
+  // Default new game state
+  else {
+    state = {
+      board: Array(9).fill(null),
+      currentPlayer: 'O',
+      isGameOver: false,
+      difficulty: 'medium'
+    };
+    message = `Choose a difficulty to start!`;
+    // Return to difficulty selection if no valid button value
+    return c.res({
+      image: (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column' as const,
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '1080px',
+          height: '1080px',
+          backgroundImage: 'url(https://bafybeiax2usqi6g7cglrvxa5n3vw7vimqruklebxnmmpm5bo7ah4yldhwi.ipfs.w3s.link/Frame%2039%20(2).png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          color: 'white',
+          fontFamily: 'Arial, sans-serif',
+        }}>
+          <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Select Difficulty</h1>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column' as const,
+            gap: '20px',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            padding: '40px',
+            borderRadius: '10px',
+            width: '80%',
+          }}>
+            <p style={{ fontSize: '32px', textAlign: 'center' }}>Choose your difficulty level:</p>
+            <p style={{ fontSize: '28px', marginBottom: '10px' }}>🟢 Easy: For casual fun</p>
+            <p style={{ fontSize: '28px', marginBottom: '10px' }}>🟡 Medium: For a challenge</p>
+            <p style={{ fontSize: '28px', marginBottom: '10px' }}>🔴 Hard: For experts</p>
+          </div>
+        </div>
+      ),
+      intents: [
+        <Button value="start:easy">Easy Mode 🟢</Button>,
+        <Button value="start:medium">Medium Mode 🟡</Button>,
+        <Button value="start:hard">Hard Mode 🔴</Button>
+      ],
+    });
   }
 
   console.log('Final game state:', state);
@@ -791,29 +887,7 @@ app.frame('/game', async (c) => {
 
   const shuffledMoves = shuffleArray(availableMoves).slice(0, 4);
 
-  const intents = state.isGameOver
-    ? [
-        <Button action="/game">New Game</Button>,
-        <Button action={`/next?result=${gameResult}`}>Next</Button>,
-        <Button action="/share">Your Stats</Button>,
-        <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Maxi by POD Play presented by @moxie.eth! ${
-          gameResult === 'win' 
-            ? 'I won! 😁' 
-            : gameResult === 'lose'
-            ? 'I lost 😔'
-            : gameResult === 'draw'
-            ? "It's a draw!"
-            : ''
-        } Frame by @goldie & @themrsazon`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-game?state=${encodedState}&result=${gameResult}`)}`}>
-          Share Results
-        </Button.Link>
-      ]
-    : shuffledMoves.map((index) => 
-        <Button value={`move:${encodedState}:${index}`}>
-          {COORDINATES[index]}
-        </Button>
-      );
-
+  // Show the game board with the current difficulty level
   return c.res({
     image: (
       <div style={{
@@ -830,6 +904,17 @@ app.frame('/game', async (c) => {
         fontSize: '36px',
         fontFamily: '"Silkscreen", sans-serif',
       }}>
+        <div style={{
+          fontSize: '24px',
+          marginBottom: '20px',
+          padding: '10px 20px',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          borderRadius: '10px',
+          color: state.difficulty === 'easy' ? '#4CAF50' : 
+                 state.difficulty === 'medium' ? '#FFC107' : '#F44336'
+        }}>
+          {state.difficulty.toUpperCase()} MODE
+        </div>
         {renderBoard(state.board)}
         <div style={{ 
           marginTop: '40px', 
@@ -846,7 +931,18 @@ app.frame('/game', async (c) => {
         </div>
       </div>
     ),
-    intents: intents,
+    intents: state.isGameOver
+      ? [
+          <Button value="start:easy">New Game (Easy) 🟢</Button>,
+          <Button value="start:medium">New Game (Medium) 🟡</Button>,
+          <Button value="start:hard">New Game (Hard) 🔴</Button>,
+          <Button action="/share">Share Stats</Button>
+        ]
+      : shuffledMoves.map((index) => 
+          <Button value={`move:${encodedState}:${index}`}>
+            {COORDINATES[index]}
+          </Button>
+        ),
   });
 });
 
