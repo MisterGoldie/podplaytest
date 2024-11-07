@@ -1191,10 +1191,68 @@ app.frame('/shared-stats', (c) => {
       </div>
     ),
     intents: [
+      <Button action="/game">Play</Button>
+    ]
+  });
+});
+
+app.frame('/shared-game', (c) => {
+  const { state } = c.req.query();
+  
+  let decodedState;
+  try {
+    decodedState = state ? decodeState(state as string) : {
+      board: Array(9).fill(null),
+      currentPlayer: 'O',
+      isGameOver: false
+    };
+    console.log('Decoded state:', decodedState);
+  } catch (error) {
+    console.error('Error decoding state:', error);
+    decodedState = {
+      board: Array(9).fill(null),
+      currentPlayer: 'O',
+      isGameOver: false
+    };
+  }
+
+  // Just return the final game state image
+  return c.res({
+    image: (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: 'url(https://bafybeidmy2f6x42tjkgtrsptnntcjulfehlvt3ddjoyjbieaz7sywohpxy.ipfs.w3s.link/Frame%2039%20(1).png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'white',
+        fontFamily: '"Silkscreen", sans-serif',
+      }}>
+        {renderBoard(decodedState.board)}
+        <div style={{
+          marginTop: '40px',
+          padding: '20px',
+          backgroundColor: 'rgba(255, 255, 255, 0.7)',
+          borderRadius: '10px',
+          color: 'black',
+          fontSize: '36px',
+          textAlign: 'center',
+          maxWidth: '900px',
+        }}>
+          Can you beat the CPU?
+        </div>
+      </div>
+    ),
+    intents: [
       <Button action="/difficulty">Play</Button>
     ]
   });
 });
+
 
 app.frame('/shared-game', (c) => {
   const { state } = c.req.query();
