@@ -820,7 +820,7 @@ app.frame('/game', async (c) => {
             updateUserTieAsync(fid.toString());
           }
         } else {
-          const computerMove = getBestMove(state.board, 'X');
+          const computerMove = getCPUMove(state.board, state.difficulty);
           state.board[computerMove] = 'X';
           message += ` Computer moved at ${COORDINATES[computerMove]}.`;
           
