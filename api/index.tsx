@@ -1068,10 +1068,37 @@ app.frame('/share', async (c) => {
         color: 'white',
         fontFamily: 'Arial, sans-serif',
       }}>
-        {profileImage && (
-          <img src={profileImage} alt="Profile" style={{ borderRadius: '50%', width: '150px', height: '150px', marginBottom: '20px' }} />
+        {profileImage ? (
+          <img 
+            src={profileImage} 
+            alt="User profile"
+            width={200}
+            height={200}
+            style={{
+              borderRadius: '50%',
+              border: '3px solid white',
+              marginBottom: '20px',
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
+          <div style={{
+            width: '200px',
+            height: '200px',
+            borderRadius: '50%',
+            border: '3px solid white',
+            marginBottom: '20px',
+            backgroundColor: '#303095',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '72px',
+            color: 'white',
+          }}>
+            {fid ? fid.toString().slice(0, 2) : 'P'}
+          </div>
         )}
-        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Your Stats</h1>
+        <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>{resultMessage}</h1>
         <div style={{
           display: 'flex',
           flexDirection: 'column' as const,
@@ -1091,7 +1118,7 @@ app.frame('/share', async (c) => {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
             <span style={{ fontSize: '36px' }}>Total Games Played:</span>
-            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{userRecord.wins + userRecord.losses + userRecord.ties}</span>
+            <span style={{ fontSize: '36px', fontWeight: 'bold' }}>{totalGamesPlayed}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
             <span style={{ fontSize: '36px' }}>/thepod Fan Tokens owned:</span>
@@ -1102,11 +1129,13 @@ app.frame('/share', async (c) => {
       </div>
     ),
     intents: [
-      <Button action="/difficulty">Play Again</Button>,
-      <Button action="/share">Your Stats</Button>,
+      <Button action="/game">Play Again</Button>,
       <Button action="https://moxie-frames.airstack.xyz/stim?t=cid_thepod">/thepod FT</Button>,
-      <Button.Link href={`${baseUrl}/api/shared-stats?wins=${userRecord.wins}&losses=${userRecord.losses}&ties=${userRecord.ties}&games=${totalGamesPlayed}&tokens=${thepodTokenBalance}&score=${podScore}&username=${encodeURIComponent(username)}`}>
-        Share Results
+      <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent(`I just played Tic-Tac-Maxi and my POD Score is ${podScore.toFixed(1)} 🕹️. Keep playing to increase your POD Score! Frame by @goldie & @themrsazon. Powered by @moxie.eth`)}&embeds[]=${encodeURIComponent(`https://podplay.vercel.app/api/shared-stats?wins=${userRecord.wins}&losses=${userRecord.losses}&ties=${userRecord.ties}&games=${totalGamesPlayed}&tokens=${thepodTokenBalance}&score=${podScore}&username=${encodeURIComponent(username)}`)}`}>
+        Share Stats
+      </Button.Link>,
+      <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent('Play Tic-Tac-Maxi by POD Play presented by @moxie.eth! Frame by @goldie & @themrsazon')}&embeds[]=${encodeURIComponent('https://podplay.vercel.app/api')}`}>
+        Share Frame
       </Button.Link>
     ],
   });
