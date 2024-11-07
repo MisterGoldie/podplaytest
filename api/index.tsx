@@ -1068,6 +1068,9 @@ app.frame('/share', async (c) => {
         color: 'white',
         fontFamily: 'Arial, sans-serif',
       }}>
+        {profileImage && (
+          <img src={profileImage} alt="Profile" style={{ borderRadius: '50%', width: '150px', height: '150px', marginBottom: '20px' }} />
+        )}
         <h1 style={{ fontSize: '52px', marginBottom: '20px' }}>Your Stats</h1>
         <div style={{
           display: 'flex',
