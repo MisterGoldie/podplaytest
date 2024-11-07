@@ -1190,7 +1190,7 @@ app.frame('/shared-stats', (c) => {
       </div>
     ),
     intents: [
-      <Button action="/game">Play</Button>
+      <Button action="/difficulty">Play</Button>
     ]
   });
 });
@@ -1247,7 +1247,7 @@ app.frame('/shared-game', (c) => {
       </div>
     ),
     intents: [
-      <Button action="/game">Play</Button>
+      <Button action="/difficulty">Play</Button>
     ]
   });
 });
