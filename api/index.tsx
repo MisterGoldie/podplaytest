@@ -1114,7 +1114,7 @@ app.frame('/share', async (c) => {
         Share Stats
       </Button.Link>,
       <Button.Link href={`https://warpcast.com/~/compose?text=${encodeURIComponent('Play Tic-Tac-Maxi by POD Play presented by @moxie.eth! Frame by @goldie & @themrsazon')}&embeds[]=${encodeURIComponent('https://podplay.vercel.app/api')}`}>
-        Share Frame
+        Share Game
       </Button.Link>
     ],
   });
