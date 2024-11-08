@@ -119,20 +119,20 @@ type GameState = {
 }
 
 function calculatePODScore(wins: number, ties: number, losses: number, totalGames: number, tokenBalance: number): number {
-  // Base score: 2 points for wins, 1 point for ties, 0.5 points for losses
+  // Base score calculation
   const baseScore = (wins * 2) + ties + (losses * 0.5);
-
-  // Experience multiplier based on total games
-  const experienceMultiplier = Math.log10(totalGames + 1);
-
-  // Token multiplier based on POD tokens owned
-  const tokenMultiplier = Math.log10(tokenBalance + 1);
   
-  // Calculate final score with multipliers
-  const finalScore = Math.round(baseScore * (1 + experienceMultiplier) * (1 + tokenMultiplier));
-
+  // Games bonus: +10 points for every 25 games played
+  const gamesBonus = Math.floor(totalGames / 25) * 10;
+  
+  // Token bonus: +25 points PER /thepod fan token owned
+  const tokenBonus = tokenBalance * 25;
+  
+  // Calculate total score
+  const totalScore = baseScore + gamesBonus + tokenBonus;
+  
   // Round to one decimal place
-  return Math.round(finalScore * 10) / 10;
+  return Math.round(totalScore * 10) / 10;
 }
 
 
