@@ -754,11 +754,13 @@ app.frame('/difficulty', (c) => {
           padding: '40px',
           borderRadius: '10px',
           width: '80%',
+          alignItems: 'center',
+          textAlign: 'center',
         }}>
           <p style={{ fontSize: '32px', textAlign: 'center' }}>Choose your difficulty level:</p>
-          <p style={{ fontSize: '28px', marginBottom: '10px' }}>🟢 Easy: For casual fun</p>
-          <p style={{ fontSize: '28px', marginBottom: '10px' }}>🟡 Medium: For a challenge</p>
-          <p style={{ fontSize: '28px', marginBottom: '10px' }}>🔴 Hard: For experts</p>
+          <p style={{ fontSize: '28px', marginBottom: '10px', textAlign: 'center' }}>🟢 Easy: For casual fun</p>
+          <p style={{ fontSize: '28px', marginBottom: '10px', textAlign: 'center' }}>🟡 Medium: For a challenge</p>
+          <p style={{ fontSize: '28px', marginBottom: '10px', textAlign: 'center' }}>🔴 Hard: For experts</p>
         </div>
       </div>
     ),
