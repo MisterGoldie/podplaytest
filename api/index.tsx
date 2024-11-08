@@ -1181,7 +1181,7 @@ app.frame('/shared-stats', async (c) => {
       </div>
     ),
     intents: [
-      <Button action="/game">Play</Button>
+      <Button action="/howtoplay">Play</Button>
     ]
   });
 });
