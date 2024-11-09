@@ -628,15 +628,32 @@ function renderBoard(board: (string | null)[]) {
                 border: '4px solid black',
               }}>
                 {board[index] && (
-                  <img 
-                    src={board[index] === 'X' ? X_IMAGE_URL : O_IMAGE_URL}
-                    alt={board[index]}
-                    style={{
-                      width: '160px',
-                      height: '160px',
-                      objectFit: 'contain'
-                    }}
-                  />
+                  <>
+                    <img 
+                      src={board[index] === 'X' ? X_IMAGE_URL : O_IMAGE_URL}
+                      alt={board[index]}
+                      style={{
+                        width: '160px',
+                        height: '160px',
+                        objectFit: 'contain',
+                        display: 'none'
+                      }}
+                      onLoad={(e: { target: HTMLImageElement; }) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'block';
+                        const fallback = target.nextElementSibling as HTMLDivElement;
+                        if (fallback) fallback.style.display = 'none';
+                      }}
+                    />
+                    <div style={{
+                      fontSize: '120px',
+                      color: 'white',
+                      fontFamily: '"Silkscreen", sans-serif',
+                      fontWeight: 'bold'
+                    }}>
+                      {board[index]}
+                    </div>
+                  </>
                 )}
               </div>
             );
@@ -644,7 +661,7 @@ function renderBoard(board: (string | null)[]) {
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 // Add this function before the game route
