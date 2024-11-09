@@ -606,6 +606,7 @@ function decodeState(encodedState: string): GameState {
 }
 
 function renderBoard(board: (string | null)[]) {
+  console.log('Rendering board with state:', board);
   return (
     <div style={{
       display: 'flex',
