@@ -6,6 +6,8 @@ import { neynar } from 'frog/middlewares'
 import { NeynarVariables } from 'frog/middlewares'
 import admin from 'firebase-admin';
 import { gql, GraphQLClient } from "graphql-request";
+import xImage from '../assets/x.png'
+import oImage from '../assets/o.png'
 
 const AIRSTACK_API_URL = 'https://api.airstack.xyz/gql';
 const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
@@ -620,11 +622,20 @@ function renderBoard(board: (string | null)[]) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '120px',
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
               }}>
-                {board[index]}
+                {board[index] && (
+                  <img 
+                    src={board[index] === 'X' ? xImage : oImage}
+                    alt={board[index]}
+                    style={{
+                      width: '160px',
+                      height: '160px',
+                      objectFit: 'contain'
+                    }}
+                  />
+                )}
               </div>
             );
           })}
