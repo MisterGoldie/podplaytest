@@ -626,6 +626,7 @@ function renderBoard(board: (string | null)[]) {
                 justifyContent: 'center',
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
+                position: 'relative',
               }}>
                 {board[index] && (
                   <>
@@ -636,23 +637,29 @@ function renderBoard(board: (string | null)[]) {
                         width: '160px',
                         height: '160px',
                         objectFit: 'contain',
-                        display: 'none'
                       }}
-                      onLoad={(e: { target: HTMLImageElement; }) => {
+                      onError={(e: Event) => {
                         const target = e.target as HTMLImageElement;
-                        target.style.display = 'block';
-                        const fallback = target.nextElementSibling as HTMLDivElement;
-                        if (fallback) fallback.style.display = 'none';
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        const fallbackText = parent?.querySelector('.fallback-text');
+                        if (fallbackText) {
+                          (fallbackText as HTMLElement).style.display = 'flex';
+                        }
                       }}
                     />
-                    <div style={{
-                      fontSize: '120px',
-                      color: 'white',
-                      fontFamily: '"Silkscreen", sans-serif',
-                      fontWeight: 'bold'
-                    }}>
+                    <span 
+                      className="fallback-text"
+                      style={{
+                        display: 'none',
+                        color: 'white',
+                        fontSize: '160px',
+                        fontFamily: 'Silkscreen, sans-serif',
+                        position: 'absolute',
+                      }}
+                    >
                       {board[index]}
-                    </div>
+                    </span>
                   </>
                 )}
               </div>
