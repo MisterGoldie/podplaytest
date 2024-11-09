@@ -131,7 +131,7 @@ function calculatePODScore(wins: number, ties: number, losses: number, totalGame
   // Token bonus: +25 points PER /thepod fan token owned
   const tokenBonus = tokenBalance * 25;
   
-  // Calculate total score
+  // Calculate total scores
   const totalScore = baseScore + gamesBonus + tokenBonus;
   
   // Round to one decimal place
