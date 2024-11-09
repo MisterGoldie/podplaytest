@@ -6,8 +6,6 @@ import { neynar } from 'frog/middlewares'
 import { NeynarVariables } from 'frog/middlewares'
 import admin from 'firebase-admin';
 import { gql, GraphQLClient } from "graphql-request";
-import xImage from '../assets/x.png'
-import oImage from '../assets/o.png'
 
 const AIRSTACK_API_URL = 'https://api.airstack.xyz/gql';
 const AIRSTACK_API_KEY = process.env.AIRSTACK_API_KEY as string;
@@ -18,6 +16,9 @@ const MOXIE_API_URL = "https://api.studio.thegraph.com/query/23537/moxie_protoco
 const WIN_GIF_URL = 'https://bafybeie6qqm6r24chds5smesevkrdsg3jqmgw5wdmwzat7zdze3ukcgd5m.ipfs.w3s.link/giphy-downsized%202.GIF'
 const LOSE_GIF_URL = 'https://bafybeighyzexsg3vjxli5o6yfxfxuwrwsjoljnruvwhpqklqdyddpsxxry.ipfs.w3s.link/giphy%202.GIF'
 const DRAW_GIF_URL = 'https://bafybeigniqc263vmmcwmy2l4hitkklyarbu2e6s3q46izzalxswe5wbyaa.ipfs.w3s.link/giphy.GIF'
+
+const X_IMAGE_URL = 'https://bafybeic5hssrhvxmx5aw2zzbc72garlfh5utgmd5za5nsr2s3w4sn7fbka.ipfs.w3s.link/x.png'
+const O_IMAGE_URL = 'https://bafybeih7s32girdj6mbexsfgr5e22nc4jffoxy4gy2rcmbonf7suglar7a.ipfs.w3s.link/o.png'
 
 let db: admin.firestore.Firestore | null = null;
 let initializationError: Error | null = null;
@@ -627,7 +628,7 @@ function renderBoard(board: (string | null)[]) {
               }}>
                 {board[index] && (
                   <img 
-                    src={board[index] === 'X' ? xImage : oImage}
+                    src={board[index] === 'X' ? X_IMAGE_URL : O_IMAGE_URL}
                     alt={board[index]}
                     style={{
                       width: '160px',
