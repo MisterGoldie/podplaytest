@@ -17,8 +17,8 @@ const WIN_GIF_URL = 'https://bafybeie6qqm6r24chds5smesevkrdsg3jqmgw5wdmwzat7zdze
 const LOSE_GIF_URL = 'https://bafybeighyzexsg3vjxli5o6yfxfxuwrwsjoljnruvwhpqklqdyddpsxxry.ipfs.w3s.link/giphy%202.GIF'
 const DRAW_GIF_URL = 'https://bafybeigniqc263vmmcwmy2l4hitkklyarbu2e6s3q46izzalxswe5wbyaa.ipfs.w3s.link/giphy.GIF'
 
-const X_IMAGE_URL = 'https://bafybeic5hssrhvxmx5aw2zzbc72garlfh5utgmd5za5nsr2s3w4sn7fbka.ipfs.w3s.link/x.png'
-const O_IMAGE_URL = 'https://bafybeih7s32girdj6mbexsfgr5e22nc4jffoxy4gy2rcmbonf7suglar7a.ipfs.w3s.link/o.png'
+const X_IMAGE_URL = 'https://bafybeihqppdlxm5ixjr3twnc3wtciopxm4orwrfqt2ztqfeeoo4dxrzmfe.ipfs.w3s.link/X%20(1).png'
+const O_IMAGE_URL = 'https://bafybeicfhxjxo4dxr5fnxjvhcxqd3gvafk5yxhqbcjvmbc3qnxwcvvxhei.ipfs.w3s.link/O%20(1).png'
 
 let db: admin.firestore.Firestore | null = null;
 let initializationError: Error | null = null;
