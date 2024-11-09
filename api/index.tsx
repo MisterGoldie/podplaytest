@@ -17,9 +17,6 @@ const WIN_GIF_URL = 'https://bafybeie6qqm6r24chds5smesevkrdsg3jqmgw5wdmwzat7zdze
 const LOSE_GIF_URL = 'https://bafybeighyzexsg3vjxli5o6yfxfxuwrwsjoljnruvwhpqklqdyddpsxxry.ipfs.w3s.link/giphy%202.GIF'
 const DRAW_GIF_URL = 'https://bafybeigniqc263vmmcwmy2l4hitkklyarbu2e6s3q46izzalxswe5wbyaa.ipfs.w3s.link/giphy.GIF'
 
-const X_IMAGE_URL = 'https://bafybeihqppdlxm5ixjr3twnc3wtciopxm4orwrfqt2ztqfeeoo4dxrzmfe.ipfs.w3s.link/X%20(1).png'
-const O_IMAGE_URL = 'https://bafybeicfhxjxo4dxr5fnxjvhcxqd3gvafk5yxhqbcjvmbc3qnxwcvvxhei.ipfs.w3s.link/O%20(1).png'
-
 let db: admin.firestore.Firestore | null = null;
 let initializationError: Error | null = null;
 
@@ -131,7 +128,7 @@ function calculatePODScore(wins: number, ties: number, losses: number, totalGame
   // Token bonus: +25 points PER /thepod fan token owned
   const tokenBonus = tokenBalance * 25;
   
-  // Calculate total scores
+  // Calculate total score
   const totalScore = baseScore + gamesBonus + tokenBonus;
   
   // Round to one decimal place
@@ -606,7 +603,6 @@ function decodeState(encodedState: string): GameState {
 }
 
 function renderBoard(board: (string | null)[]) {
-  console.log('Rendering board with state:', board);
   return (
     <div style={{
       display: 'flex',
@@ -624,51 +620,18 @@ function renderBoard(board: (string | null)[]) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                fontSize: '120px',
                 background: 'linear-gradient(135deg, #0F0F2F 0%, #303095 100%)',
                 border: '4px solid black',
-                position: 'relative',
               }}>
-                {board[index] && (
-                  <>
-                    <img 
-                      src={board[index] === 'X' ? X_IMAGE_URL : O_IMAGE_URL}
-                      alt={board[index]}
-                      style={{
-                        width: '160px',
-                        height: '160px',
-                        objectFit: 'contain',
-                      }}
-                      onError={(e: Event) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        const fallbackText = parent?.querySelector('.fallback-text');
-                        if (fallbackText) {
-                          (fallbackText as HTMLElement).style.display = 'flex';
-                        }
-                      }}
-                    />
-                    <span 
-                      className="fallback-text"
-                      style={{
-                        display: 'none',
-                        color: 'white',
-                        fontSize: '160px',
-                        fontFamily: 'Silkscreen, sans-serif',
-                        position: 'absolute',
-                      }}
-                    >
-                      {board[index]}
-                    </span>
-                  </>
-                )}
+                {board[index]}
               </div>
             );
           })}
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 // Add this function before the game route
@@ -1286,4 +1249,3 @@ app.frame('/shared-game', (c) => {
 
 export const GET = handle(app)
 export const POST = handle(app)
-
