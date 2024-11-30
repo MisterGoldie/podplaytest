@@ -434,7 +434,7 @@ async function updateUserTieAsync(fid: string) {
   }
 }
 
-// Update the user record type
+// Update UserRecord type to include profile image
 type UserRecord = {
   wins: number;
   losses: number;
@@ -442,77 +442,150 @@ type UserRecord = {
   easyWins: number;
   mediumWins: number;
   hardWins: number;
+  timestamp: admin.firestore.Timestamp;
+  profileImage?: string;  // Added this field
 }
 
-// Update the getUserRecord function
-async function getUserRecord(fid: string): Promise<UserRecord> {
-  console.log(`Getting user record for FID: ${fid}`);
-  try {
-    const database = getDb();
-    const userDoc = await database.collection('users').doc(fid).get();
-    if (!userDoc.exists) {
-      return {
-        wins: 0,
-        losses: 0,
-        ties: 0,
-        easyWins: 0,
-        mediumWins: 0,
-        hardWins: 0
-      };
-    }
-    const userData = userDoc.data();
-    return {
-      wins: userData?.wins || 0,
-      losses: userData?.losses || 0,
-      ties: userData?.ties || 0,
-      easyWins: userData?.easyWins || 0,
-      mediumWins: userData?.mediumWins || 0,
-      hardWins: userData?.hardWins || 0
-    };
-  } catch (error) {
-    console.error(`Error getting user record for FID ${fid}:`, error);
-    return {
-      wins: 0,
-      losses: 0,
-      ties: 0,
-      easyWins: 0,
-      mediumWins: 0,
-      hardWins: 0
-    };
-  }
-}
-
-// Update the updateUserRecord function
+// When updating user record, also store their profile image
 async function updateUserRecord(fid: string, isWin: boolean, difficulty: 'easy' | 'medium' | 'hard') {
-  console.log(`Updating user record for FID ${fid}, isWin: ${isWin}, difficulty: ${difficulty}`);
   try {
     const database = getDb();
     const userRef = database.collection('users').doc(fid);
+    
+    // Get profile image
+    const profileImage = await getUserProfilePicture(fid);
+    
     const update: any = {
-      [isWin ? 'wins' : 'losses']: admin.firestore.FieldValue.increment(1)
+      [isWin ? 'wins' : 'losses']: admin.firestore.FieldValue.increment(1),
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      profileImage: profileImage  // Store profile image URL
     };
     
-    // Add difficulty-specific win counter
     if (isWin) {
       update[`${difficulty}Wins`] = admin.firestore.FieldValue.increment(1);
     }
     
     await userRef.set(update, { merge: true });
-    console.log(`User record updated successfully for FID: ${fid}`);
   } catch (error) {
     console.error(`Error updating user record for FID ${fid}:`, error);
   }
 }
 
-// Update the updateUserRecordAsync function to include difficulty
-async function updateUserRecordAsync(fid: string, isWin: boolean, difficulty: 'easy' | 'medium' | 'hard') {
+// Function to get recent players with their profile images
+async function getRecentPlayers(limit: number = 8): Promise<Array<{fid: string, profileImage: string | null}>> {
   try {
-    await updateUserRecord(fid, isWin, difficulty);
-    console.log(`User record updated asynchronously for FID: ${fid}`);
+    const database = getDb();
+    const usersSnapshot = await database.collection('users')
+      .orderBy('timestamp', 'desc')
+      .limit(limit)
+      .get();
+
+    const playerPromises = usersSnapshot.docs.map(async (doc) => {
+      const fid = doc.id;
+      // Fetch profile image directly from Airstack instead of using stored data
+      const profileImage = await getUserProfilePicture(fid);
+      return { fid, profileImage };
+    });
+
+    const players = await Promise.all(playerPromises);
+    return players.filter(player => player.profileImage !== null);
   } catch (error) {
-    console.error(`Error updating user record asynchronously for FID ${fid}:`, error);
+    console.error('Error getting recent players:', error);
+    return [];
   }
 }
+
+async function getTotalPlayers(): Promise<number> {
+  try {
+    const database = getDb();
+    const snapshot = await database.collection('users').count().get();
+    return snapshot.data().count;
+  } catch (error) {
+    console.error('Error getting total player count:', error);
+    return 0;
+  }
+}
+
+// Update the initial routes
+app.frame('/', async (c) => {
+  const gifUrl = 'https://bafybeidnv5uh2ne54dlzyummobyv3bmc7uzuyt5htodvy27toqqhijf4xu.ipfs.w3s.link/PodPlay.gif';
+  const baseUrl = 'https://podplay.vercel.app';
+
+  // Get total players
+  const totalPlayers = await getTotalPlayers();
+  
+  // Get both profile images
+  const [profileImage1, profileImage2] = await Promise.all([
+    getUserProfilePicture('7472'),
+    getUserProfilePicture('14871')
+  ]);
+
+  // Subtract 2 from totalPlayers since we're showing those two separately
+  const displayTotal = totalPlayers - 2;
+
+  return c.res({
+    image: (
+      <div style={{
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+        width: '1080px',
+        height: '1080px',
+        backgroundImage: `url(${gifUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        paddingBottom: '100px'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          background: 'white',
+          padding: '15px 25px',
+          borderRadius: '12px',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+          }}>
+            <img 
+              src={profileImage1 || ''}
+              alt=""
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                border: '2px solid white',
+                zIndex: 2
+              }}
+            />
+            <img 
+              src={profileImage2 || ''}
+              alt=""
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                border: '2px solid white',
+                marginLeft: '-12px',
+                zIndex: 1
+              }}
+            />
+          </div>
+          <span style={{ 
+            fontSize: '24px', 
+            color: '#666'
+          }}>
+            +{displayTotal} players have enjoyed the game
+          </span>
+        </div>
+      </div>
+    ),
+    intents: [
+      <Button action="/howtoplay">Start Game</Button>
+    ]
+  });
+});
 
 function shuffleArray<T>(array: T[]): T[] {
   for (let i = array.length - 1; i > 0; i--) {
@@ -819,7 +892,7 @@ app.frame('/game', async (c) => {
           message = `${username} wins! Game over.`;
           state.isGameOver = true;
           if (fid) {
-            updateUserRecordAsync(fid.toString(), true, state.difficulty);
+            updateUserRecord(fid.toString(), true, state.difficulty);
           }
         } else if (state.board.every((cell) => cell !== null)) {
           gameResult = 'draw';
@@ -838,7 +911,7 @@ app.frame('/game', async (c) => {
             message = `Computer wins! Game over.`;
             state.isGameOver = true;
             if (fid) {
-              updateUserRecordAsync(fid.toString(), false, state.difficulty);
+              updateUserRecord(fid.toString(), false, state.difficulty);
             }
           } else if (state.board.every((cell) => cell !== null)) {
             gameResult = 'draw';
@@ -994,7 +1067,22 @@ app.frame('/next', (c) => {
   });
 });
 
+// Add this function to get user record
+async function getUserRecord(fid: string): Promise<UserRecord> {
+  try {
+    const database = getDb();
+    const userDoc = await database.collection('users').doc(fid).get();
+    if (!userDoc.exists) {
+      return { wins: 0, losses: 0, ties: 0, easyWins: 0, mediumWins: 0, hardWins: 0, timestamp: admin.firestore.Timestamp.fromDate(new Date()) };
+    }
+    return userDoc.data() as UserRecord;
+  } catch (error) {
+    console.error(`Error getting user record for FID ${fid}:`, error);
+    return { wins: 0, losses: 0, ties: 0, easyWins: 0, mediumWins: 0, hardWins: 0, timestamp: admin.firestore.Timestamp.fromDate(new Date()) };
+  }
+}
 
+// Then update the /share route to use getUserRecord instead of userRecord
 app.frame('/share', async (c) => {
   console.log('Entering /share route');
   const { frameData } = c;
