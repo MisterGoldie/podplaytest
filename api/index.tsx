@@ -574,7 +574,7 @@ app.frame('/', async (c) => {
             color: '#333',
             fontWeight: '500'
           }}>
-            +{displayTotal} players have enjoyed the game
+            +{displayTotal} players have played Tic-Tac-Maxi
           </span>
         </div>
       </div>
