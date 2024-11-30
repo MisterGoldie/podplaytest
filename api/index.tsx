@@ -509,18 +509,14 @@ async function getTotalPlayers(): Promise<number> {
 // Update the initial routes
 app.frame('/', async (c) => {
   const gifUrl = 'https://bafybeidnv5uh2ne54dlzyummobyv3bmc7uzuyt5htodvy27toqqhijf4xu.ipfs.w3s.link/PodPlay.gif';
-  const baseUrl = 'https://podplay.vercel.app';
-
-  // Get total players
+  
   const totalPlayers = await getTotalPlayers();
   
-  // Get both profile images
   const [profileImage1, profileImage2] = await Promise.all([
     getUserProfilePicture('7472'),
     getUserProfilePicture('14871')
   ]);
 
-  // Subtract 2 from totalPlayers since we're showing those two separately
   const displayTotal = totalPlayers - 2;
 
   return c.res({
@@ -534,15 +530,16 @@ app.frame('/', async (c) => {
         backgroundImage: `url(${gifUrl})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        paddingBottom: '100px'
+        paddingBottom: '150px'
       }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '10px',
+          gap: '15px',
           background: 'white',
-          padding: '15px 25px',
-          borderRadius: '12px',
+          padding: '25px 35px',
+          borderRadius: '20px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
         }}>
           <div style={{
             display: 'flex',
@@ -552,10 +549,10 @@ app.frame('/', async (c) => {
               src={profileImage1 || ''}
               alt=""
               style={{
-                width: '32px',
-                height: '32px',
+                width: '48px',
+                height: '48px',
                 borderRadius: '50%',
-                border: '2px solid white',
+                border: '3px solid white',
                 zIndex: 2
               }}
             />
@@ -563,20 +560,21 @@ app.frame('/', async (c) => {
               src={profileImage2 || ''}
               alt=""
               style={{
-                width: '32px',
-                height: '32px',
+                width: '48px',
+                height: '48px',
                 borderRadius: '50%',
-                border: '2px solid white',
-                marginLeft: '-12px',
+                border: '3px solid white',
+                marginLeft: '-16px',
                 zIndex: 1
               }}
             />
           </div>
           <span style={{ 
-            fontSize: '24px', 
-            color: '#666'
+            fontSize: '32px',
+            color: '#333',
+            fontWeight: '500'
           }}>
-            +{displayTotal} players have played Tic-Tac-Maxi
+            +{displayTotal} players have enjoyed the game
           </span>
         </div>
       </div>
