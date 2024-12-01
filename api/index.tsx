@@ -434,7 +434,7 @@ async function updateUserTieAsync(fid: string) {
   }
 }
 
-// Update UserRecord type to include profile image
+// Update UserRecord type to include profile images
 type UserRecord = {
   wins: number;
   losses: number;
