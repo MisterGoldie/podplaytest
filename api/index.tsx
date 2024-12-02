@@ -508,6 +508,7 @@ async function getTotalPlayers(): Promise<number> {
 
 // Update the initial routes
 app.frame('/', async (c) => {
+  const timestamp = c.req.query('t') || Date.now().toString();
   const gifUrl = 'https://bafybeidnv5uh2ne54dlzyummobyv3bmc7uzuyt5htodvy27toqqhijf4xu.ipfs.w3s.link/PodPlay.gif';
   
   const totalPlayers = await getTotalPlayers();
@@ -519,6 +520,9 @@ app.frame('/', async (c) => {
 
   const displayTotal = totalPlayers - 2;
 
+  // Add timestamp to the image URL
+  const imageUrl = `${gifUrl}?t=${timestamp}`;
+
   return c.res({
     image: (
       <div style={{
@@ -527,7 +531,7 @@ app.frame('/', async (c) => {
         justifyContent: 'center',
         width: '1080px',
         height: '1080px',
-        backgroundImage: `url(${gifUrl})`,
+        backgroundImage: `url(${imageUrl})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         paddingBottom: '150px'
@@ -739,6 +743,7 @@ function getCPUMove(board: (string | null)[], difficulty: 'easy' | 'medium' | 'h
 app.frame('/', () => {
   const gifUrl = 'https://bafybeidnv5uh2ne54dlzyummobyv3bmc7uzuyt5htodvy27toqqhijf4xu.ipfs.w3s.link/PodPlay.gif'
   const baseUrl = 'https://podplay.vercel.app' // Update this to your actual Domain
+  const timestamp = Date.now()
 
   const html = `
     <!DOCTYPE html>
@@ -758,7 +763,7 @@ app.frame('/', () => {
       <!-- Added Open Graph tags -->
       <meta property="og:title" content="Tic-Tac-Maxi">
       <meta property="og:description" content="Start New Game or Share!">
-      <meta property="og:image" content="${gifUrl}">
+      <meta property="og:image" content="${baseUrl}/api?t=${timestamp}">
       <meta property="og:url" content="${baseUrl}/api">
       <meta property="og:type" content="website">
     </head>
